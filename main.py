@@ -76,6 +76,8 @@ for epoch in range(args.mle_epochs):
         test_loader  = minibatch_generator(dataset_test,  args, shuffle=False)
         with torch.no_grad():
             gen.eval()
+
+            # Test loop
             for i, minibatch in enumerate(test_loader):
                 input, target, lens = minibatch
 
@@ -101,9 +103,8 @@ if args.transfer_weights_after_pretraining and args.mle_epochs > 0:
 
 
 '''
-adversarial training
+Adversarial training
 '''
-# TODO: split again in train and test loops
 for epoch in range(args.adv_epochs):
     print('ADV training epoch {}'.format(epoch))
     train_loader = minibatch_generator(dataset_train, args, shuffle=True)
@@ -169,13 +170,13 @@ for epoch in range(args.adv_epochs):
     print_and_log_scalar(writer, 'train/Critic Loss', critic_losses, writes, end_token='\n')      
 
 
-    # Test loop
     if (epoch + 1) % args.test_every == 0: 
         test_loader  = minibatch_generator(dataset_test,  args, shuffle=False)
         with torch.no_grad():
             gen_losses, disc_losses, critic_losses, ps_real, ps_fake, nlls = [], [], [], [], [], []
             gen.eval(); disc.eval()
 
+            # Test loop
             for i, minibatch in enumerate(test_loader):
                 input, target, lens = minibatch
                 
@@ -231,6 +232,3 @@ for epoch in range(args.adv_epochs):
     # save models
     if (epoch + 1) % args.save_every == 0: 
         save_models(MODELS, args.base_dir, writes)
-  
-    
-
