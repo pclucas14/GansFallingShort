@@ -12,7 +12,6 @@ from losses import *
 from args   import * 
 
 args = get_train_args()
-args.cuda = False if args.no_cuda else True
 
 # reproducibility
 torch.manual_seed(1)

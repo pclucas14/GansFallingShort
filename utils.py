@@ -8,9 +8,10 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from torch.nn import functional as F
+
 from data import * 
-from torch.distributions import Categorical, kl_divergence
 from models import * 
+from args import * 
 
 def minibatch_generator(dataset, args, shuffle=True):
     """
@@ -18,27 +19,52 @@ def minibatch_generator(dataset, args, shuffle=True):
     """
     PAD_token = 0
     SOS_token = 2
+    total_words = sum([len(x) for x in dataset])
 
     if args.stream_data:
+        # ASSUMES the given dataset is an ORDERED sequence of sentences. 
+
         if args.max_seq_len is None: 
             raise ValueError('a sentence length parameter (max_seq_len) is required when data is streamed')
-        num_batches = 10000 // args.batch_size 
+
+        # TODO: don't hardcode the 10k
+        words_per_minibatch = args.batch_size * (args.max_seq_len + 1)
+        num_batches = max(1, total_words // words_per_minibatch)
+    
+        # we need to calculate what is the last sentence index we can reach; for example, 
+        # if our dataset has sentences of length 20, and max_seq_len == 100, then we can't 
+        # start a minibatch pt with the last 4 sentences, as we would run out of words. 
+        last_available_sentence = len(dataset) 
+        words_needed = args.max_seq_len
+        while words_needed > 0: 
+            last_available_sentence -= 1
+            assert last_available_sentence >= 0, 'not enough data to generate a single sentence!'
+            words_needed -= len(dataset[last_available_sentence])
+
         current_batch = 0
+        sentence_index = 0
         while current_batch < num_batches: 
             current_batch += 1
-            max_words = args.batch_size * (args.max_seq_len + 1)
-            current_num_words = 0
-            ind = -1
             batch = []
-            while current_num_words < max_words:
+            while len(batch) < args.batch_size:
                 if shuffle: 
-                    ind = np.random.randint(len(dataset))
+                    ind = np.random.randint(last_available_sentence + 1)
                 else: 
-                    ind = (sentence_index + 1) % len(dataset)
-                batch += dataset[ind]
-                current_num_words += len(dataset[ind])
+                    ind = sentence_index % (last_available_sentence + 1)
+                    sentence_index += 1
+
+                # now, we fetch the correct amt of words from the sentence `ind` points to. 
+                current_sentence = []
+                while len(current_sentence) != args.max_seq_len + 1: 
+                    indexed_sentence = dataset[ind]
+                    words_taken = min(args.max_seq_len + 1 - len(current_sentence), \
+                                      len(indexed_sentence))
+
+                    current_sentence += indexed_sentence[:words_taken]
+
+                batch += [current_sentence]
             
-            batch_src = torch.LongTensor(batch[:max_words]).view(args.batch_size, args.max_seq_len + 1)
+            batch_src = torch.LongTensor(batch).view(args.batch_size, args.max_seq_len + 1)
             input  = batch_src[:, :-1]
             target = batch_src[:, 1:]
             len_s  = [args.max_seq_len] * args.batch_size
@@ -51,7 +77,7 @@ def minibatch_generator(dataset, args, shuffle=True):
                 input = input.cuda()
                 target = target.cuda()
                 len_s = len_s.cuda()
-
+            
             yield input, target, len_s 
             
     else: 
@@ -270,58 +296,14 @@ def get_oracle(args):
     oracle = oracle.eval()
     return oracle
 
-# returns the trained LM to be used as an oracle
-def get_reference_lm(args):
-    print('deprecated. use oad_model_from_file')
-    with open(os.path.join(args.LM_path.split('gen')[0], 'args.txt'), 'r') as f:
-        args_string = f.read().splitlines()[0]
-        parts = args_string.split(',')
-        arguments = {}
-        for i, part in enumerate(parts):
-            try: 
-                if i == 0: 
-                    part = part.split('(')[-1]
-                elif i == len(parts) -1: 
-                    part = part.split(')')[0]
-            
-                part = part.replace(' ', '')
-                key, value = part.split('=')
-                arguments[key] = value
-            except: 
-                pass
-        
-        for key, value in arguments.items():
-            value_cp = value
-            try: 
-                value = float(value)
-                int_value = int(value)
-                if int_value == value: 
-                    value = int_value
-            except: 
-                if 'False' in value: 
-                    value = False
-                elif 'True' in value:
-                    value = True
-                else:
-                    value = value_cp.replace('"', '').replace('\'', '')                    
-            arguments[key] = value
 
-        for key, value in vars(args).items():
-            if key not in arguments.keys():
-                arguments[key] = value
-
-        args_copy = to_attr(arguments)
-        LM = Generator(args_copy)        
-
-        # finally, we load weights
-        LM.load_state_dict(torch.load(args.LM_path))
-    return LM
-
-def load_model_from_file(path, args, epoch=None):
+def load_model_from_file(path, args=None, epoch=None):
     import json
     with open(os.path.join(path, 'args.json'), 'r') as f: 
         old_args = json.load(f)
     
+    if args is None: args = get_train_args()
+
     args_dict = vars(args)
     for key in args_dict.keys():
         if key not in old_args:
@@ -334,12 +316,16 @@ def load_model_from_file(path, args, epoch=None):
     if epoch is None: # get last model
         all_ = os.listdir(os.path.join(path, 'models'))
         all_ = [x[3:-4] for x in all_ if 'gen' in x and 'opt' not in x]
-        epoch = sorted([int(x) for x in all_])[-1]
+        epochs = sorted([int(x) for x in all_])
+        if len(epochs) == 0 : 
+            raise FileNotFoundError('no model files were found in %s' % path)
+        
+        epoch = epochs[-1]
        
     gen.load_state_dict(torch.load(os.path.join(path, 'models/gen%d.pth' % epoch)))
     print('model successfully loaded')
 
-    return gen
+    return gen, epoch
 
 def transfer_weights(gen, disc):
     # 1) transfer embedding

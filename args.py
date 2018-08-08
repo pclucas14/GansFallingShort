@@ -1,5 +1,4 @@
 import argparse
-
 def get_train_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--setup', type=str, default='real', choices=['real', 'oracle'])
@@ -51,7 +50,8 @@ def get_train_args():
     parser.add_argument('--LM_path', type=str)
     parser.add_argument('--debug', action='store_true')
 
-    args = parser.parse_args()
+    args = parser.parse_known_args()[0]
+    args.cuda = False if args.no_cuda else True
 
     # validate a few things
     if args.transfer_weights_after_pretraining:
@@ -59,4 +59,30 @@ def get_train_args():
             args.num_layers_gen == args.num_layers_disc, \
                 'GEN and DISC architectures must be identical to enable weight sharing'
 
-    return args 
+    return args
+
+
+# right now train and test args are kept separate. It could make sense later on to merge them
+# current code is such that merging train / test args won't break anything. Let's try and keep
+# it that way
+def get_test_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--model_path', type=str, required=True, help='path to model')
+    parser.add_argument('--model_epoch', type=int, default=None, help='epoch of saved model')
+    parser.add_argument('--tsne_log_every', type=int, default=50, help='... every _ timestep')
+    parser.add_argument('--tsne_max_t', type=int, default=400, help='run tsne exp for _ steps')
+    parser.add_argument('--tsne_batch_size', type=int, default=1000)
+    args = parser.parse_known_args()[0]
+
+    args.batch_size = args.tsne_batch_size
+
+    # TODO: Check with Will & Mass what kind of behavior we want.
+    args.stream_data = True
+    args.max_seq_len = args.tsne_max_t
+
+    train_args = get_train_args()
+    args.data_dir = train_args.data_dir
+    args.debug = train_args.debug
+    args.cuda = train_args.cuda
+
+    return args
