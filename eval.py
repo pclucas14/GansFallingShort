@@ -47,7 +47,7 @@ MODE = [('train', train_batch, OD()), ('test', test_batch, OD()), ('free_running
 
 with torch.no_grad():
     for mode, data, hs_dict in MODE: 
-        input, target, lens = data
+        input, _, _ = data
 
         # here we basically expose the model's forward pass to fetch the hidden states efficiently
         teacher_force = not mode == 'free_running'
