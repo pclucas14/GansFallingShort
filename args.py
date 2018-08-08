@@ -1,4 +1,5 @@
 import argparse
+
 def get_train_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--setup', type=str, default='real', choices=['real', 'oracle'])
