@@ -22,8 +22,8 @@ def get_train_args():
 
     # TRAINING args
     parser.add_argument('--batch_size', type=int, default=32)
-    parser.add_argument('--mle_epochs', type=int, default=1)
-    parser.add_argument('--adv_epochs', type=int, default=2)
+    parser.add_argument('--mle_epochs', type=int, default=100)
+    parser.add_argument('--adv_epochs', type=int, default=100)
     parser.add_argument('--alpha_train', type=float, default=1.)
     parser.add_argument('--alpha_test', type=float, default=1.)
     parser.add_argument('--beta', type=float, default=0.)
