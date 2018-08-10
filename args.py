@@ -1,6 +1,6 @@
 import argparse
 
-def get_train_args():
+def get_train_args(allow_unmatched_args=False):
     parser = argparse.ArgumentParser()
     parser.add_argument('--setup', type=str, default='real', choices=['real', 'oracle'])
 
@@ -48,19 +48,23 @@ def get_train_args():
     parser.add_argument('--no_cuda', action='store_true')
     parser.add_argument('--transfer_weights_after_pretraining', type=int, default=1)
     parser.add_argument('--sample_size_fast', type=int, default=500)
-    parser.add_argument('--LM_path', type=str)
+    parser.add_argument('--lm_path', type=str, default=None)
+    parser.add_argument('--lm_epoch', type=int, default=None)
     parser.add_argument('--debug', action='store_true')
 
-    args = parser.parse_known_args()[0]
+    if allow_unmatched_args: 
+        args, unmatched = parser.parse_known_args()
+    else: 
+        args = parser.parse_args()
+    
     args.cuda = False if args.no_cuda else True
-
     # validate a few things
     if args.transfer_weights_after_pretraining:
         assert args.hidden_dim_gen == args.hidden_dim_disc and \
             args.num_layers_gen == args.num_layers_disc, \
                 'GEN and DISC architectures must be identical to enable weight sharing'
 
-    return args
+    return args, unmatched if allow_unmatched_args else args
 
 
 # right now train and test args are kept separate. It could make sense later on to merge them
@@ -73,7 +77,7 @@ def get_test_args():
     parser.add_argument('--tsne_log_every', type=int, default=50, help='... every _ timestep')
     parser.add_argument('--tsne_max_t', type=int, default=400, help='run tsne exp for _ steps')
     parser.add_argument('--tsne_batch_size', type=int, default=1000)
-    args = parser.parse_known_args()[0]
+    args, unmatched = parser.parse_known_args()
 
     args.batch_size = args.tsne_batch_size
 
@@ -81,9 +85,15 @@ def get_test_args():
     args.stream_data = True
     args.max_seq_len = args.tsne_max_t
 
-    train_args = get_train_args()
+    train_args, train_unmatched = get_train_args(allow_unmatched_args=True)
     args.data_dir = train_args.data_dir
     args.debug = train_args.debug
     args.cuda = train_args.cuda
+
+    # make sure we did not parse any invalid args
+    unmatched = [x for x in unmatched if '--' in x]
+    for arg_ in unmatched: 
+        if arg_ in train_unmatched: 
+            raise ValueError('%s is not a valid argument' % arg_)
 
     return args

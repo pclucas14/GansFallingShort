@@ -40,9 +40,14 @@ writes = 0
 gen  = Generator(args)
 disc = Discriminator(args)
 
+# load a pretrained lm as Oracle to evaluate quality of samples from our model
+if args.lm_path: 
+    oracle_lm = load_model_from_file(args.lm_path, epoch=args.lm_epoch)[0]
+
 if args.cuda: 
     gen  = gen.cuda()
     disc = disc.cuda()
+    if args.lm_path: oracle_lm = oracle_lm.cuda()
 
 optimizer_gen    = optim.Adam(gen.parameters(),         lr=args.gen_lr)
 optimizer_critic = optim.Adam(disc.critic.parameters(), lr=args.critic_lr)
@@ -57,7 +62,7 @@ MLE pretraining
 for epoch in range(args.mle_epochs):
     print('MLE pretraining epoch {}/{}'.format(epoch, args.mle_epochs))
     train_loader = minibatch_generator(dataset_train, args, shuffle=True)
-    losses_train, losses_test = [], []
+    losses_train, losses_test, oracle_nlls = [], [], []
     gen.train()
 
     # Training loop
@@ -84,7 +89,18 @@ for epoch in range(args.mle_epochs):
                 loss = masked_cross_entropy(gen_logits, target, lens)
                 losses_test += [loss.data]
 
+                if args.lm_path: 
+                    # generate a sentence, a sentence, and feed to oracle lm
+                    gen_logits, gen_sample = gen(input[:, [0]])
+                    oracle_input = torch.cat([input[:, [0]], gen_sample], dim=1)
+                    oracle_logits, _ = oracle_lm(oracle_input.detach())
+                
+                    nll = NLL(oracle_logits[:, :-1], gen_sample)
+                    oracle_nlls += [nll.data] 
+
+            print_and_log_scalar(writer, 'test/oracle_nll', oracle_nlls, writes)
             print_and_log_scalar(writer, 'test/nll', losses_test, writes, end_token='\n')
+            
 
     writes += 1
        
@@ -172,7 +188,7 @@ for epoch in range(args.adv_epochs):
     if (epoch + 1) % args.test_every == 0: 
         test_loader  = minibatch_generator(dataset_test,  args, shuffle=False)
         with torch.no_grad():
-            gen_losses, disc_losses, critic_losses, ps_real, ps_fake, nlls = [], [], [], [], [], []
+            gen_losses, disc_losses, critic_losses, ps_real, ps_fake, nlls, oracle_nlls = [[] for _ in range(7)]
             gen.eval(); disc.eval()
 
             # Test loop
@@ -207,6 +223,15 @@ for epoch in range(args.adv_epochs):
                 gen_loss = reinforce_gen_loss(cumulative_rewards, fake_logits, fake_sentence, 
                                               fake_baseline, args)
                 gen_losses += [gen_loss.data]
+
+                if args.lm_path: 
+                    # generate a sentence, a sentence, and feed to oracle lm
+                    oracle_input = torch.cat([input[:, [0]], fake_sentence], dim=1)
+                    oracle_logits, _ = oracle_lm(oracle_input.detach())
+                
+                    nll = NLL(oracle_logits[:, :-1], fake_sentence)
+                    oracle_nlls += [nll.data] 
+
                 
                 # generator in teacher forcing mode
                 fake_logits, _  = gen(input)
@@ -214,6 +239,7 @@ for epoch in range(args.adv_epochs):
                 nlls += [nll.data]
         
             # logging
+            print_and_log_scalar(writer, 'test/oracle_nll', oracle_nlls, writes)
             print_and_log_scalar(writer, 'test/P(real)', ps_real, writes)      
             print_and_log_scalar(writer, 'test/P(fake)', ps_fake, writes)      
             print_and_log_scalar(writer, 'test/nll', nlls, writes)      
