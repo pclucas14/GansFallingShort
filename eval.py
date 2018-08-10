@@ -89,14 +89,13 @@ with torch.no_grad():
 timesteps=MODE[0][2].keys()
 
 for t in timesteps:
-
     X, y = create_matrix_for_tsne(MODE,t)
+    distances, image = compute_tsne(X, y, t)
+    
+    writer.add_image('eval/tsne-plot', image, t)
+    for i in range(distances.shape[0]):
+        for j in range(i + 1, distances.shape[1]):
+            writer.add_scalar('eval/distance%d-%d' % (i, j), distances[i,j])
 
-    distances = compute_tsne(X, y, t)
-
-    print(distances)
-
-
-
-
-
+import pdb; pdb.set_trace()
+x = 1

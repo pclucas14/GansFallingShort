@@ -2,6 +2,8 @@ from sklearn import manifold, datasets
 from sklearn.metrics.pairwise import pairwise_distances
 from scipy.spatial.distance import squareform
 from matplotlib.patches import Ellipse
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 import matplotlib
 matplotlib.use('Agg')
@@ -32,8 +34,7 @@ def preprocess(X, y, perplexity=30, metric='euclidean'):
     return n_points, pij
 
 
-def compute_tsne(X, y, t):
-    draw_ellipse = True
+def compute_tsne(X, y, t, draw_ellipse=True):
     n_points, pij2d = preprocess(X,y)
     i, j = np.indices(pij2d.shape)
     i = i.ravel()
@@ -73,8 +74,6 @@ def compute_tsne(X, y, t):
     if not draw_ellipse:
         plt.scatter(embed[:, 0], embed[:, 1], c=y * 1.0 / y.max())
         plt.axis('off')
-        plt.savefig('scatter_t{:03d}.png'.format(t), bbox_inches='tight')
-        plt.close(f)
     else:
         # Visualize with ellipses
         var = np.sqrt(model.logits_lv.weight.clone().exp_().cpu().data.numpy())
@@ -87,9 +86,18 @@ def compute_tsne(X, y, t):
         ax.set_xlim(-9, 9)
         ax.set_ylim(-9, 9)
         plt.axis('off')
-        plt.savefig('scatter_t{:03d}.png'.format(t), bbox_inches='tight')
-        plt.close(f)
 
-    return distances
+    # instead of saving the figure, let's convert it to an image and return it
+    canvas = FigureCanvas(f)
+    ax = f.gca()
+    ax.axis('off')
+
+    canvas.draw()       # draw the canvas, cache the renderer
+    image = np.fromstring(canvas.tostring_rgb(), dtype='uint8')
+    width, height = f.get_size_inches() * f.get_dpi()
+    image = image.reshape(int(height), int(width), 3)
+    plt.close(f)
+
+    return distances, image
 
 
