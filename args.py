@@ -64,7 +64,7 @@ def get_train_args(allow_unmatched_args=False):
             args.num_layers_gen == args.num_layers_disc, \
                 'GEN and DISC architectures must be identical to enable weight sharing'
 
-    return args, unmatched if allow_unmatched_args else args
+    return (args, unmatched) if allow_unmatched_args else args
 
 
 # right now train and test args are kept separate. It could make sense later on to merge them

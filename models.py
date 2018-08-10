@@ -51,7 +51,8 @@ class Generator(Model):
 
     def forward(self, x, hidden_state=None):
         assert len(x.size()) == 2 # bs x seq_len
-        
+        ''' note that x[:, 0] is always SOS token'''
+
         # if only one word is given, use it as starting token, than sample from your distribution 
         teacher_force  = x.size(1) != 1
         seq_len        = x.size(1) if teacher_force else self.args.max_seq_len
@@ -95,6 +96,8 @@ class Discriminator(Model):
     
     def forward(self, x, hidden_state=None):
         assert len(x.size()) == 2 # bs x seq_len
+        ''' note that x[:, 0] is NOT SOS token, but the first word of sentence '''
+
         baseline = torch.ones_like(x[:, [0]]).float() * np.log(0.5)
 
         emb = self.embedding(x)
