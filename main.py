@@ -101,7 +101,6 @@ for epoch in range(args.mle_epochs):
             print_and_log_scalar(writer, 'test/oracle_nll', oracle_nlls, writes)
             print_and_log_scalar(writer, 'test/nll', losses_test, writes, end_token='\n')
             
-
     writes += 1
        
     # save samples
@@ -231,7 +230,6 @@ for epoch in range(args.adv_epochs):
                 
                     nll = NLL(oracle_logits[:, :-1], fake_sentence)
                     oracle_nlls += [nll.data] 
-
                 
                 # generator in teacher forcing mode
                 fake_logits, _  = gen(input)
