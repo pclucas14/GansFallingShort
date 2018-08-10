@@ -95,7 +95,4 @@ for t in timesteps:
     writer.add_image('eval/tsne-plot', image, t)
     for i in range(distances.shape[0]):
         for j in range(i + 1, distances.shape[1]):
-            writer.add_scalar('eval/distance%d-%d' % (i, j), distances[i,j])
-
-import pdb; pdb.set_trace()
-x = 1
+            writer.add_scalar('eval/distance_centroids%d-%d' % (i, j), distances[i,j])
