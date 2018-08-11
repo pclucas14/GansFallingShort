@@ -5,6 +5,7 @@ import torch
 import torch.optim as optim
 import tensorboardX
 from collections import OrderedDict as OD
+import matplotlib; matplotlib.use('Agg')
 
 from tsne import compute_tsne
 from tsne_utils import create_matrix_for_tsne
