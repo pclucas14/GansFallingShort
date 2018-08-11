@@ -7,8 +7,8 @@ def get_train_args(allow_unmatched_args=False):
     # LOGGING args
     parser.add_argument('--base_dir', type=str, default='runs/test')
     parser.add_argument('--bleu_every', type=int, default=15)
-    parser.add_argument('--save_every', type=int, default=30)
-    parser.add_argument('--test_every', type=int, default=5)
+    parser.add_argument('--save_every', type=int, default=10)
+    parser.add_argument('--test_every', type=int, default=2)
 
     # MODEL args
     parser.add_argument('--rnn', type=str, default='LSTM', choices=['LSTM', 'GRU'])

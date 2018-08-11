@@ -2,8 +2,6 @@
 
 ### TODOs
 
-(MASS): add a script to run hyperparam searches
-
 (MASS): run MLE hparam search
 
 (MASS): Pick an MLE model and make it an Oracle for the LM score (add it on the repo and make default it)
