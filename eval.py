@@ -6,15 +6,6 @@ import torch.optim as optim
 import tensorboardX
 from collections import OrderedDict as OD
 
-from sklearn.metrics.pairwise import pairwise_distances
-from scipy.spatial.distance import squareform
-from matplotlib.patches import Ellipse
-
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import numpy as np
-
 from tsne import compute_tsne
 from tsne_utils import create_matrix_for_tsne
 
@@ -90,7 +81,7 @@ timesteps=MODE[0][2].keys()
 
 for t in timesteps:
     X, y = create_matrix_for_tsne(MODE,t)
-    distances, image = compute_tsne(X, y, t)
+    distances, image = compute_tsne(X, y, t, draw_ellipse=args.draw_ellipse)
     
     writer.add_image('eval/tsne-plot', image, t)
     for i in range(distances.shape[0]):

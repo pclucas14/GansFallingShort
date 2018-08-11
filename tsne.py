@@ -11,12 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import itertools
 
-
-#from wrapper import Wrapper
-# from tsne import TSNE
-#from vtsne import VTSNE
 from tsne_utils import Wrapper, VTSNE
-
 import pdb
 
 def preprocess(X, y, perplexity=30, metric='euclidean'):
@@ -34,7 +29,7 @@ def preprocess(X, y, perplexity=30, metric='euclidean'):
     return n_points, pij
 
 
-def compute_tsne(X, y, t, draw_ellipse=True):
+def compute_tsne(X, y, t, draw_ellipse=False):
     n_points, pij2d = preprocess(X,y)
     i, j = np.indices(pij2d.shape)
     i = i.ravel()

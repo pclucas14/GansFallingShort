@@ -77,6 +77,7 @@ def get_test_args():
     parser.add_argument('--tsne_log_every', type=int, default=50, help='... every _ timestep')
     parser.add_argument('--tsne_max_t', type=int, default=400, help='run tsne exp for _ steps')
     parser.add_argument('--tsne_batch_size', type=int, default=1000)
+    parser.add_argument('--draw_ellipse', action='store_true', default=False)
     args, unmatched = parser.parse_known_args()
 
     args.batch_size = args.tsne_batch_size
