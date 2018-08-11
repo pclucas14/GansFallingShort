@@ -29,8 +29,8 @@ def preprocess(X, y, perplexity=30, metric='euclidean'):
     return n_points, pij
 
 
-def compute_tsne(X, y, t, draw_ellipse=False):
-    n_points, pij2d = preprocess(X,y)
+def compute_tsne(X, y, t, args):
+    n_points, pij2d = preprocess(X, y, perplexity=args.tsne_perp)
     i, j = np.indices(pij2d.shape)
     i = i.ravel()
     j = j.ravel()
@@ -39,12 +39,10 @@ def compute_tsne(X, y, t, draw_ellipse=False):
     idx = i != j
     i, j, pij = i[idx], j[idx], pij[idx]
 
-    n_topics = 2
+    n_topics = args.n_topics
     n_dim = 2
-    n_iter = 500
+    n_iter = args.n_iter
 
-    # ! debugging
-    n_iter = 0 
 
     print(n_points, n_dim, n_topics)
 
@@ -66,7 +64,7 @@ def compute_tsne(X, y, t, draw_ellipse=False):
         distances[subset] = np.sqrt(((embed[y==subset[0]].mean(0)-embed[y==subset[1]].mean(0))**2).sum())
     
     f = plt.figure()
-    if not draw_ellipse:
+    if not args.draw_ellipse:
         plt.scatter(embed[:, 0], embed[:, 1], c=y * 1.0 / y.max())
         plt.axis('off')
     else:

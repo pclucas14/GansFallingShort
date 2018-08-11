@@ -82,7 +82,7 @@ timesteps=MODE[0][2].keys()
 
 for t in timesteps:
     X, y = create_matrix_for_tsne(MODE,t)
-    distances, image = compute_tsne(X, y, t, draw_ellipse=args.draw_ellipse)
+    distances, image = compute_tsne(X, y, t, args)
     
     writer.add_image('eval/tsne-plot', image, t)
     for i in range(distances.shape[0]):
