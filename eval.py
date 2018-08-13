@@ -91,8 +91,9 @@ with torch.no_grad():
                 hs_dict[t] = hs.cpu().data.numpy()
 
             if t % args.oracle_nll_log_every == 0 and args.lm_path: 
-                p_x_t = sum(oracle_nlls)
-                writer.add_scalar('eval/oracle_nll_%d' % t, p_x_t, 0)
+                p_x_1t = sum(oracle_nlls)
+                p_x_t = oracle_nlls[-1]
+                writer.add_scalar('eval/%s_oracle_nll' % mode , p_x_t, t)
 
 #______________________________________________________________________________________
 # from here we should do T-SNE --> the required hidden_states are stored in MODE's `OD`.
@@ -107,6 +108,7 @@ for t in timesteps:
     writer.add_image('eval/tsne-plot', image, t)
     for i in range(distances.shape[0]):
         for j in range(i + 1, distances.shape[1]):
+            import pdb; pdb.set_trace()
             writer.add_scalar('eval/distance_centroids%d-%d_timestep_%d' % (i, j, t), distances[i,j])
 
 
