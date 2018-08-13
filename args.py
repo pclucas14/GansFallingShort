@@ -82,6 +82,7 @@ def get_test_args():
     parser.add_argument('--n_topics', type=int, default=2, help="topics in VTSNE")
     parser.add_argument('--n_iter', type=int, default=200, help="number of tsne iterations")
     parser.add_argument('--tsne_perp', type=int, default=30, help="perplexity in TSNE")
+    parser.add_argument('--oracle_nll_log_every', default=10)
 
     args, unmatched = parser.parse_known_args()
 
@@ -95,6 +96,8 @@ def get_test_args():
     args.data_dir = train_args.data_dir
     args.debug = train_args.debug
     args.cuda = train_args.cuda
+    args.lm_path = train_args.lm_path
+    args.lm_epoch = train_args.lm_epoch
 
     # make sure we did not parse any invalid args
     unmatched = [x for x in unmatched if '--' in x]

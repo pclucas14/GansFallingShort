@@ -43,21 +43,26 @@ gen.eval()
 writer = tensorboardX.SummaryWriter(log_dir=os.path.join(args.model_path, 'TB'))
 writes = 0
 
+if args.lm_path: 
+    oracle_lm = load_model_from_file(args.lm_path, epoch=args.lm_epoch)[0]
+    oracle_lm.eval()
+
 if args.cuda: 
     gen  = gen.cuda()
+    if args.lm_path: oracle_lm = oracle_lm.cuda()
 
 # First experiment : log hidden states for T-SNE plots
-MODE = [('train', train_batch, OD()), ('test', test_batch, OD()), ('free_running', test_batch, OD())]
+MODE = [('train', train_batch, OD(), []), ('test', test_batch, OD(), []), ('free_running', test_batch, OD(), [])]
 
 with torch.no_grad():
-    for mode, data, hs_dict in MODE: 
+    for mode, data, hs_dict, oracle_nlls in MODE: 
         input, _, _ = data
 
         # here we basically expose the model's forward pass to fetch the hidden states efficiently
-        teacher_force = not mode == 'free_running'
-        hidden_state = None
+        teacher_force = mode != 'free_running'
+        hidden_state, hidden_state_oracle = None, None
 
-        for t in range(args.tsne_max_t):
+        for t in range(1, args.tsne_max_t):
             if teacher_force or t == 0: 
                 input_idx = input[:, [t]]
 
@@ -68,17 +73,32 @@ with torch.no_grad():
                 dist = gen.output_layer(output)
                 input_idx = Categorical(logits=dist.squeeze(1)).sample().unsqueeze(1)
 
-            if (t+1) % args.tsne_log_every == 0: 
+            if args.lm_path: 
+                if t > 1: 
+                    # query the oracle for NLL of the next work
+                    oracle_nlls += [-1. * oracle_dist.log_prob(input_idx.squeeze()).mean(dim=0).item()]
+
+                # feed the current word to the model. 
+                input_oracle = oracle_lm.embedding(input_idx)
+                output_oracle, hidden_state_oracle = oracle_lm.step(input_oracle, \
+                        hidden_state_oracle, t)
+                oracle_dist = oracle_lm.output_layer(output_oracle)
+                oracle_dist = Categorical(logits=oracle_dist.squeeze(1))
+
+            if t % args.tsne_log_every == 0: 
                 # for lstm we take the hidden state (i.e. h_t of (h_t, c_t))
                 hs = hidden_state[0] if isinstance(hidden_state, tuple) else hidden_state
                 hs_dict[t] = hs.cpu().data.numpy()
 
-
+            if t % args.oracle_nll_log_every == 0 and args.lm_path: 
+                p_x_t = sum(oracle_nlls)
+                writer.add_scalar('eval/oracle_nll_%d' % t, p_x_t, 0)
 
 #______________________________________________________________________________________
 # from here we should do T-SNE --> the required hidden_states are stored in MODE's `OD`.
 
 timesteps=MODE[0][2].keys()
+oracle_nll = MODE[-1][-1]
 
 for t in timesteps:
     X, y = create_matrix_for_tsne(MODE,t)
@@ -87,4 +107,6 @@ for t in timesteps:
     writer.add_image('eval/tsne-plot', image, t)
     for i in range(distances.shape[0]):
         for j in range(i + 1, distances.shape[1]):
-            writer.add_scalar('eval/distance_centroids%d-%d' % (i, j), distances[i,j])
+            writer.add_scalar('eval/distance_centroids%d-%d_timestep_%d' % (i, j, t), distances[i,j])
+
+
