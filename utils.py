@@ -105,7 +105,11 @@ def minibatch_generator(dataset, args, shuffle=True):
                 len_.append(len(dataset[ind]))
             
             max_ = args.max_seq_len if args.max_seq_len is not None else max(len_)
-            len_ = [ min(x, max_) for x in len_]
+            if args.mask_padding: 
+                len_ = [ min(x, max_) for x in len_]
+            else: 
+                len_ = [max_ for _ in len_]
+
             b_   = [sentence[:max_] for sentence in b_]    
 
             # we need to fill shorter sentences to make tensor
