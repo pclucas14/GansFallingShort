@@ -91,6 +91,7 @@ def get_test_args():
     # TODO: Check with Will & Mass what kind of behavior we want.
     args.stream_data = False
     args.max_seq_len = args.tsne_max_t
+    args.mask_padding = False
 
     train_args, train_unmatched = get_train_args(allow_unmatched_args=True)
     args.data_dir = train_args.data_dir
