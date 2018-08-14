@@ -94,8 +94,8 @@ with torch.no_grad():
             if t % args.oracle_nll_log_every == 0 and args.lm_path: 
                 p_x_1t = sum(oracle_nlls)
                 p_x_t = oracle_nlls[-1]
-                writer.add_scalar('eval/%s_oracle_nll' % mode , p_x_t, t)
-
+                #writer.add_scalar('eval/%s_oracle_nll' % mode , p_x_t, t)
+                print_and_log_scalar(writer, 'eval/%s_oracle_nll' % mode, p_x_t, t) 
 #______________________________________________________________________________________
 # from here we should do T-SNE --> the required hidden_states are stored in MODE's `OD`.
 
