@@ -292,11 +292,14 @@ def remove_pad_tokens(tensor, index):
     assert len(tensor.shape) == 1 and len(index.shape) == 1
     is_not_pad = (index != 0).float()
     summ = (tensor * is_not_pad).sum(dim=0)
-    if is_not_pad.sum() == 0: 
+    is_not_pad = is_not_pad.sum()
+    if is_not_pad == 0: 
         print('batch is only PAD token')
         return summ * 0. + -1
+    else: 
+        print('batch contains %d / %d active sentences' % (is_not_pad.item(), tensor.size(0)))
 
-    return summ / is_not_pad.sum()
+    return summ / is_not_pad
     
        
 
