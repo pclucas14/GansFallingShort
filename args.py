@@ -89,7 +89,7 @@ def get_test_args():
     args.batch_size = args.tsne_batch_size
 
     # TODO: Check with Will & Mass what kind of behavior we want.
-    args.stream_data = True
+    # args.stream_data = True
     args.max_seq_len = args.tsne_max_t
 
     train_args, train_unmatched = get_train_args(allow_unmatched_args=True)
