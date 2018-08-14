@@ -60,22 +60,19 @@ with torch.no_grad():
 
         # here we basically expose the model's forward pass to fetch the hidden states efficiently
         teacher_force = mode != 'free_running'
+        print('teacher forcing : {}'.format(teacher_force))
         hidden_state, hidden_state_oracle = None, None
 
         for t in range(1, args.tsne_max_t):
-            if teacher_force or t == 0: 
+            if teacher_force or t == 1: 
                 input_idx = input[:, [t]]
 
             input_t = gen.embedding(input_idx)
             output, hidden_state = gen.step(input_t, hidden_state, t)
             
-            if not teacher_force: 
-                dist = gen.output_layer(output)
-                input_idx = Categorical(logits=dist.squeeze(1)).sample().unsqueeze(1)
-
             if args.lm_path: 
                 if t > 1: 
-                    # query the oracle for NLL of the next work
+                    # query the oracle for NLL of the next word (i.e. use x_t to index p(x_t | x_{i<t})
                     oracle_nlls += [-1. * oracle_dist.log_prob(input_idx.squeeze()).mean(dim=0).item()]
 
                 # feed the current word to the model. 
@@ -84,6 +81,10 @@ with torch.no_grad():
                         hidden_state_oracle, t)
                 oracle_dist = oracle_lm.output_layer(output_oracle)
                 oracle_dist = Categorical(logits=oracle_dist.squeeze(1))
+            
+            if not teacher_force: 
+                dist = gen.output_layer(output)
+                input_idx = Categorical(logits=dist.squeeze(1)).sample().unsqueeze(1)
 
             if t % args.tsne_log_every == 0: 
                 # for lstm we take the hidden state (i.e. h_t of (h_t, c_t))
@@ -104,11 +105,9 @@ oracle_nll = MODE[-1][-1]
 for t in timesteps:
     X, y = create_matrix_for_tsne(MODE,t)
     distances, image = compute_tsne(X, y, t, args)
-    
     writer.add_image('eval/tsne-plot', image, t)
     for i in range(distances.shape[0]):
         for j in range(i + 1, distances.shape[1]):
-            import pdb; pdb.set_trace()
             writer.add_scalar('eval/distance_centroids%d-%d_timestep_%d' % (i, j, t), distances[i,j])
 
 
