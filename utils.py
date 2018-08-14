@@ -287,6 +287,17 @@ def to_attr(args_dict):
             self.__dict__ = self
 
     return AttrDict(args_dict)
+
+def remove_pad_tokens(tensor, index):
+    assert len(tensor.shape) == 1 and len(index.shape) == 1
+    is_not_pad = (index != 0).float()
+    summ = (tensor * is_not_pad).sum(dim=0)
+    if is_not_pad.sum() == 0: 
+        print('batch is only PAD token')
+        return summ * 0. + -1
+
+    return summ / is_not_pad.sum()
+    
        
 
 def get_oracle(args):

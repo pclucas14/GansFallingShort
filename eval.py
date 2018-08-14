@@ -63,17 +63,19 @@ with torch.no_grad():
         print('teacher forcing : {}'.format(teacher_force))
         hidden_state, hidden_state_oracle = None, None
 
-        for t in range(1, args.tsne_max_t):
-            if teacher_force or t == 1: 
+        for t in range(args.tsne_max_t):
+            if teacher_force or t == 0: 
                 input_idx = input[:, [t]]
 
             input_t = gen.embedding(input_idx)
             output, hidden_state = gen.step(input_t, hidden_state, t)
             
             if args.lm_path: 
-                if t > 1: 
+                if t > 0: 
                     # query the oracle for NLL of the next word (i.e. use x_t to index p(x_t | x_{i<t})
-                    oracle_nlls += [-1. * oracle_dist.log_prob(input_idx.squeeze()).mean(dim=0).item()]
+                    # oracle_nlls += [-1. * oracle_dist.log_prob(input_idx.squeeze()).mean(dim=0).item()]
+                    oracle_nll_t = -1. * oracle_dist.log_prob(input_idx.squeeze())
+                    oracle_nlls += [remove_pad_tokens(oracle_nll_t, input_idx.squeeze()).item()]
 
                 # feed the current word to the model. 
                 input_oracle = oracle_lm.embedding(input_idx)
@@ -86,12 +88,12 @@ with torch.no_grad():
                 dist = gen.output_layer(output)
                 input_idx = Categorical(logits=dist.squeeze(1)).sample().unsqueeze(1)
 
-            if t % args.tsne_log_every == 0: 
+            if (t+1) % args.tsne_log_every == 0: 
                 # for lstm we take the hidden state (i.e. h_t of (h_t, c_t))
                 hs = hidden_state[0] if isinstance(hidden_state, tuple) else hidden_state
                 hs_dict[t] = hs.cpu().data.numpy()
 
-            if t % args.oracle_nll_log_every == 0 and args.lm_path: 
+            if (t+1) % args.oracle_nll_log_every == 0 and args.lm_path: 
                 p_x_1t = sum(oracle_nlls)
                 p_x_t = oracle_nlls[-1]
                 #writer.add_scalar('eval/%s_oracle_nll' % mode , p_x_t, t)
