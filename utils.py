@@ -295,7 +295,7 @@ def remove_pad_tokens(tensor, index):
     is_not_pad = is_not_pad.sum()
     if is_not_pad == 0: 
         print('batch is only PAD token')
-        return summ * 0. + -1
+        return summ * 0. + -.1
     else: 
         print('batch contains %d / %d active sentences' % (is_not_pad.item(), tensor.size(0)))
 
