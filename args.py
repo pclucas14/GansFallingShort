@@ -76,11 +76,11 @@ def get_test_args():
     parser.add_argument('--model_path', type=str, required=True, help='path to model')
     parser.add_argument('--model_epoch', type=int, default=None, help='epoch of saved model')
     parser.add_argument('--tsne_log_every', type=int, default=3, help='... every _ timestep')
-    parser.add_argument('--tsne_max_t', type=int, default=40, help='run tsne exp for _ steps')
+    parser.add_argument('--tsne_max_t', type=int, default=45, help='run tsne exp for _ steps')
     parser.add_argument('--tsne_batch_size', type=int, default=1000)
     parser.add_argument('--draw_ellipse', action='store_true', default=False)
     parser.add_argument('--n_topics', type=int, default=2, help="topics in VTSNE")
-    parser.add_argument('--n_iter', type=int, default=200, help="number of tsne iterations")
+    parser.add_argument('--n_iter', type=int, default=10, help="number of tsne iterations")
     parser.add_argument('--tsne_perp', type=int, default=30, help="perplexity in TSNE")
     parser.add_argument('--oracle_nll_log_every', type=int, default=2)
 
