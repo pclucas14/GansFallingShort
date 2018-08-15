@@ -2,9 +2,10 @@ import argparse
 import pdb
 import numpy as np
 import torch
-import torch.optim as optim
+import torch.utils.data
 import tensorboardX
 from collections import OrderedDict as OD
+from PIL import Image
 import matplotlib; matplotlib.use('Agg')
 
 from tsne import compute_tsne
@@ -98,16 +99,102 @@ with torch.no_grad():
                 p_x_t = oracle_nlls[-1]
                 #writer.add_scalar('eval/%s_oracle_nll' % mode , p_x_t, t)
                 print_and_log_scalar(writer, 'eval/%s_oracle_nll' % mode, p_x_t, t) 
-#______________________________________________________________________________________
-# from here we should do T-SNE --> the required hidden_states are stored in MODE's `OD`.
 
-timesteps=MODE[0][2].keys()
-oracle_nll = MODE[-1][-1]
+
+# -------------------------------------------------------------------------------------
+# Evaluating the similarity of hidden states
+# -------------------------------------------------------------------------------------
+
+""" processing the data """
+timesteps = list(MODE[0][2].keys())
+
+split = int(args.tsne_batch_size * 0.8)
+# let's do a train-test split and see if we can train a simple SVM on it
+tf_states    = [MODE[0][2][t] for t in timesteps]
+fr_states    = [MODE[2][2][t] for t in timesteps]
+
+train_tf_states = [x[:, :split].squeeze() for x in tf_states]
+train_fr_states = [x[:, :split].squeeze() for x in fr_states]
+test_tf_states  = [x[:, split:].squeeze() for x in tf_states]
+test_fr_states  = [x[:, split:].squeeze() for x in fr_states]
+
+labels_train = np.concatenate([np.ones_like(train_tf_states[0][:, 0]),\
+                         np.zeros_like(train_fr_states[0][:, 0])])
+
+labels_test  = np.concatenate([np.ones_like(test_tf_states[0][:, 0]),\
+                         np.zeros_like(test_fr_states[0][:, 0])])
+
+train_Xs = [np.concatenate([x,y]) for (x,y) in zip(train_tf_states, train_fr_states)]
+test_Xs  = [np.concatenate([x,y]) for (x,y) in zip(test_tf_states,  test_fr_states)]
+
+
+""" 1st model : Linear SVM """
+from sklearn.svm import SVC
+clfs = [SVC() for _ in train_Xs]
+_    = [clf.fit(x,labels_train) for (clf, x) in zip(clfs, train_Xs)]
+accs = [clf.score(x, labels_test) for (clf, x) in zip(clfs, test_Xs)]
+for t, acc in zip(timesteps, accs):
+    print_and_log_scalar(writer, 'eval/SVM_test_acc', acc, t)
+
+""" 2nd model : simple NN """
+hidden_state_size = train_Xs[0].shape[1]
+create_model = lambda : nn.Sequential(
+            nn.Linear(hidden_state_size, hidden_state_size // 2),
+            nn.ReLU(True),
+            nn.Linear(hidden_state_size // 2, hidden_state_size // 4),
+            nn.ReLU(True), 
+            nn.Linear(hidden_state_size // 4, 2)).cuda()
+
+def run_epoch(model, X, Y, opt=None):
+    train_model = opt is not None
+    model.train() if train_model else model.eval()
+    accs, losses = [], []
+    data = [d for d in zip(X,Y)]
+    loader = torch.utils.data.DataLoader(data, shuffle=True, batch_size=64)
+    
+    for (x,y) in loader: 
+        x, y = x.cuda(), y.long().cuda()
+        pred = model(x)
+        loss = F.cross_entropy(pred, y)
+        loss = loss.sum(dim=0) / pred.shape[0]
+
+        if train_model: apply_loss(opt, loss)
+        
+        # calculate acc
+        pred_choice = pred.data.max(1)[1]
+        correct = pred_choice.eq(y.data).cpu().sum()    
+        acc = float(correct.item()) / int(x.shape[0])   
+    
+        losses += [loss.item()]
+        accs   += [acc]
+
+    return np.mean(losses), np.mean(accs)
+
+for i in range(len(train_Xs)): 
+    model = create_model()
+    opt = torch.optim.Adam(model.parameters())
+    for ep in range(100):
+        train_loss, train_acc = run_epoch(model, train_Xs[0], labels_train, opt=opt)
+        test_loss,  test_acc  = run_epoch(model, test_Xs[0], labels_test)
+
+        if ep % 5 == 0 : 
+            print_and_log_scalar(writer, 'eval/NN_test_acc_t=%d'   % timesteps[i], test_acc, ep)
+            print_and_log_scalar(writer, 'eval/NN_train_acc_t=%d'  % timesteps[i], train_acc, ep)
+            print_and_log_scalar(writer, 'eval/NN_test_loss_t=%d'  % timesteps[i], test_loss, ep)
+            print_and_log_scalar(writer, 'eval/NN_train_loss_t=%d' % timesteps[i], train_loss, ep)
+
+""" finally, create T-SNE plots of hidden states """
 
 for t in timesteps:
     X, y = create_matrix_for_tsne(MODE,t)
     distances, image = compute_tsne(X, y, t, args)
     writer.add_image('eval/tsne-plot', image, t)
+    
+    # also backup as a separate image
+    img_path = os.path.join(os.path.join(args.model_path, \
+        'TB_tnse{}'.format(args.n_iter)), 'tsne-plot_%d.png' % t)
+    Image.fromarray(image).save(img_path)
+
     for i in range(distances.shape[0]):
         for j in range(i + 1, distances.shape[1]):
             writer.add_scalar('eval/distance_centroids%d-%d' % (i, j), distances[i,j], t)
