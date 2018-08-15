@@ -40,7 +40,7 @@ gen.eval()
 
 # Logging
 # maybe_create_dir(os.path.join(args.model_path, 'eval/%s_epoch' % loaded_epoch)) # TODO: maybe put in TB directly ?
-writer = tensorboardX.SummaryWriter(log_dir=os.path.join(args.model_path, 'TB'))
+writer = tensorboardX.SummaryWriter(log_dir=os.path.join(args.model_path, 'TB_tnse{}'.format(args.tsne_log_every)))
 writes = 0
 
 if args.lm_path: 
