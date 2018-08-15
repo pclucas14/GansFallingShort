@@ -19,8 +19,8 @@ from args   import *
 args  = get_test_args()
 
 # reproducibility
-torch.manual_seed(1)
-np.random.seed(1)
+torch.manual_seed(2)
+np.random.seed(2)
 
 # dataset creation
 if args.debug: # --> allows for faster iteration when coding 
@@ -93,7 +93,7 @@ with torch.no_grad():
                 hs = hidden_state[0] if isinstance(hidden_state, tuple) else hidden_state
                 hs_dict[t] = hs.cpu().data.numpy()
 
-            if (t+1) % args.oracle_nll_log_every == 0 and args.lm_path: 
+            if (t+1) % args.oracle_nll_log_every == 0 and args.lm_path and t > 0: 
                 p_x_1t = sum(oracle_nlls)
                 p_x_t = oracle_nlls[-1]
                 #writer.add_scalar('eval/%s_oracle_nll' % mode , p_x_t, t)

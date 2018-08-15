@@ -82,7 +82,7 @@ def get_test_args():
     parser.add_argument('--n_topics', type=int, default=2, help="topics in VTSNE")
     parser.add_argument('--n_iter', type=int, default=200, help="number of tsne iterations")
     parser.add_argument('--tsne_perp', type=int, default=30, help="perplexity in TSNE")
-    parser.add_argument('--oracle_nll_log_every', default=2)
+    parser.add_argument('--oracle_nll_log_every', type=int, default=2)
 
     args, unmatched = parser.parse_known_args()
 
