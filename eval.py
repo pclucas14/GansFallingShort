@@ -70,6 +70,7 @@ with torch.no_grad():
 
             input_t = gen.embedding(input_idx)
             output, hidden_state = gen.step(input_t, hidden_state, t)
+            #is_not_pad = (index != 0).float() if t==0 else torch.cat(is_not_pad, (index != 0).float())
             
             if args.lm_path: 
                 if t > 0: 
@@ -77,6 +78,7 @@ with torch.no_grad():
                     # oracle_nlls += [-1. * oracle_dist.log_prob(input_idx.squeeze()).mean(dim=0).item()]
                     oracle_nll_t = -1. * oracle_dist.log_prob(input_idx.squeeze())
                     oracle_nlls += [remove_pad_tokens(oracle_nll_t, input_idx.squeeze()).item()]
+                    full_oracle_nll = oracle_nll_t.view(-1,1) if t==1 else torch.cat((full_oracle_nll,oracle_nll_t.view(-1,1)),1)
 
                 # feed the current word to the model. 
                 input_oracle = oracle_lm.embedding(input_idx)
@@ -84,10 +86,17 @@ with torch.no_grad():
                         hidden_state_oracle, t)
                 oracle_dist = oracle_lm.output_layer(output_oracle)
                 oracle_dist = Categorical(logits=oracle_dist.squeeze(1))
-            
+           
+            # compute entropy (! does not take car of <pad>)
+            dist = gen.output_layer(output)
+            entropy = Categorical(logits=dist.squeeze(1)).entropy().cpu().numpy().mean()
+            print_and_log_scalar(writer, 'eval/%s_entropy' % mode, entropy, t) 
+
             if not teacher_force: 
                 dist = gen.output_layer(output)
                 input_idx = Categorical(logits=dist.squeeze(1)).sample().unsqueeze(1)
+                seq = input_idx if t==0 else torch.cat((seq,input_idx), 1)
+
 
             if (t+1) % args.tsne_log_every == 0: 
                 # for lstm we take the hidden state (i.e. h_t of (h_t, c_t))
@@ -99,6 +108,27 @@ with torch.no_grad():
                 p_x_t = oracle_nlls[-1]
                 #writer.add_scalar('eval/%s_oracle_nll' % mode , p_x_t, t)
                 print_and_log_scalar(writer, 'eval/%s_oracle_nll' % mode, p_x_t, t) 
+
+        # print most/less likely sequences
+        if teacher_force:
+            seq = input[:,1:]
+        
+        seq_len = (seq != 0).sum(1)
+        tot_oracle_nll = full_oracle_nll.sum(1)
+        avg_oracle_nll = tot_oracle_nll.cpu().numpy() / seq_len.cpu().numpy()
+
+        sentences = id_to_words(seq.cpu().data.numpy(), word_dict)
+        sorted_idx = np.argsort(avg_oracle_nll)
+        
+        print("most likely sentences under oracle:")
+        for i in range(3):
+            print(sentences[sorted_idx[i]])
+            print("nll oracle: {}".format(avg_oracle_nll[sorted_idx[i]]))
+        
+        print("least likely sentences under oracle:")
+        for i in range(1,4):
+            print(sentences[sorted_idx[-i]])
+            print("nll oracle: {}".format(avg_oracle_nll[sorted_idx[-i]]))
 
 
 # -------------------------------------------------------------------------------------
