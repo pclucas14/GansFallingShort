@@ -19,11 +19,14 @@ np.random.seed(1)
 
 # dataset creation
 if args.debug: # --> allows for faster iteration when coding 
-    dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), train=True)
+    dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
+        train=True, char_level=args.character_level)
     dataset_test = dataset_train
 else: 
-    dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'train.txt'), train=True)
-    dataset_test,  word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), train=False, word_dict=word_dict)
+    dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'train.txt'), \
+        train=True, char_level=args.character_level)
+    dataset_test,  word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
+        train=False, word_dict=word_dict, char_level=args.character_level)
 
 # add extra args
 args.vocab_size = len(word_dict)

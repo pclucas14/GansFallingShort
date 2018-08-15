@@ -44,6 +44,7 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--stream_data', action='store_true')
     parser.add_argument('--max_seq_len', type=int, default=20)
     parser.add_argument('--mask_padding', action='store_true', default=False)
+    parser.add_argument('--character_level', action='store_true', default=False)
 
     # OTHER args
     parser.add_argument('--no_cuda', action='store_true')
@@ -83,6 +84,12 @@ def get_test_args():
     parser.add_argument('--n_iter', type=int, default=10, help="number of tsne iterations")
     parser.add_argument('--tsne_perp', type=int, default=30, help="perplexity in TSNE")
     parser.add_argument('--oracle_nll_log_every', type=int, default=2)
+    
+    # classifer exps
+    parser.add_argument('--run_svm',  action='store_true', default=False)
+    parser.add_argument('--run_nn' ,  action='store_true', default=False)
+    parser.add_argument('--run_rnn',  action='store_true', default=False)
+    parser.add_argument('--run_tsne', action='store_true', default=False)
 
     args, unmatched = parser.parse_known_args()
 
@@ -99,6 +106,7 @@ def get_test_args():
     args.cuda = train_args.cuda
     args.lm_path = train_args.lm_path
     args.lm_epoch = train_args.lm_epoch
+    args.character_level = train_args.character_level
 
     # make sure we did not parse any invalid args
     unmatched = [x for x in unmatched if '--' in x]
