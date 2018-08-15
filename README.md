@@ -2,11 +2,12 @@
 
 ### TODOs
 
-(MASS): run MLE hparam search
-
-(MASS): Pick an MLE model and make it an Oracle for the LM score (add it on the repo and make default it)
 
 (MASS): run GAN hparam search (crossvalidating with LM score)
+
+(MASS): monitor conditional entropy w.r.t timesteps
+
+(MASS): make tsne early stop
 
 #### Then,
 
