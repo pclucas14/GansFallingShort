@@ -25,11 +25,14 @@ np.random.seed(2)
 
 # dataset creation
 if args.debug: # --> allows for faster iteration when coding 
-    dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), train=True)
+    dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
+        train=True, char_level=args.character_level)
     dataset_test = dataset_train
 else: 
-    dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'train.txt'), train=True)
-    dataset_test,  word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), train=False, word_dict=word_dict)
+    dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'train.txt'), \
+        train=True, char_level=args.character_level)
+    dataset_test,  word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
+        train=False, word_dict=word_dict, char_level=args.character_level)
 
 # fetch one minibatch of data
 train_batch = next(minibatch_generator(dataset_train, args, shuffle=False))
@@ -157,76 +160,112 @@ labels_test  = np.concatenate([np.ones_like(test_tf_states[0][:, 0]),\
 train_Xs = [np.concatenate([x,y]) for (x,y) in zip(train_tf_states, train_fr_states)]
 test_Xs  = [np.concatenate([x,y]) for (x,y) in zip(test_tf_states,  test_fr_states)]
 
-
 """ 1st model : Linear SVM """
-from sklearn.svm import SVC
-clfs = [SVC() for _ in train_Xs]
-_    = [clf.fit(x,labels_train) for (clf, x) in zip(clfs, train_Xs)]
-accs = [clf.score(x, labels_test) for (clf, x) in zip(clfs, test_Xs)]
-for t, acc in zip(timesteps, accs):
-    print_and_log_scalar(writer, 'eval/SVM_test_acc', acc, t)
+if args.run_svm:
+    from sklearn.svm import SVC
+    clfs = [SVC() for _ in train_Xs]
+    _    = [clf.fit(x,labels_train) for (clf, x) in zip(clfs, train_Xs)]
+    accs = [clf.score(x, labels_test) for (clf, x) in zip(clfs, test_Xs)]
+    for t, acc in zip(timesteps, accs):
+        print_and_log_scalar(writer, 'eval/SVM_test_acc', acc, t)
 
 """ 2nd model : simple NN """
-hidden_state_size = train_Xs[0].shape[1]
-create_model = lambda : nn.Sequential(
-            nn.Linear(hidden_state_size, hidden_state_size // 2),
-            nn.ReLU(True),
-            nn.Linear(hidden_state_size // 2, hidden_state_size // 4),
-            nn.ReLU(True), 
-            nn.Linear(hidden_state_size // 4, 2)).cuda()
+if args.run_nn or args.run_rnn:
+    hidden_state_size = train_Xs[0].shape[1]
 
-def run_epoch(model, X, Y, opt=None):
-    train_model = opt is not None
-    model.train() if train_model else model.eval()
-    accs, losses = [], []
-    data = [d for d in zip(X,Y)]
-    loader = torch.utils.data.DataLoader(data, shuffle=True, batch_size=64)
-    
-    for (x,y) in loader: 
-        x, y = x.cuda(), y.long().cuda()
-        pred = model(x)
-        loss = F.cross_entropy(pred, y)
-        loss = loss.sum(dim=0) / pred.shape[0]
-
-        if train_model: apply_loss(opt, loss)
+    def run_epoch(model, X, Y, opt=None):
+        train_model = opt is not None
+        model.train() if train_model else model.eval()
+        accs, losses = [], []
+        data = [d for d in zip(X,Y)]
+        loader = torch.utils.data.DataLoader(data, shuffle=True, batch_size=64)
         
-        # calculate acc
-        pred_choice = pred.data.max(1)[1]
-        correct = pred_choice.eq(y.data).cpu().sum()    
-        acc = float(correct.item()) / int(x.shape[0])   
+        for (x,y) in loader: 
+            x, y = x.cuda(), y.long().cuda()
+            pred = model(x)
+            loss = F.cross_entropy(pred, y)
+            loss = loss.sum(dim=0) / pred.shape[0]
+
+            if train_model: apply_loss(opt, loss)
+            
+            # calculate acc
+            pred_choice = pred.data.max(1)[1]
+            correct = pred_choice.eq(y.data).cpu().sum()    
+            acc = float(correct.item()) / int(x.shape[0])   
+        
+            losses += [loss.item()]
+            accs   += [acc]
+
+        return np.mean(losses), np.mean(accs)
     
-        losses += [loss.item()]
-        accs   += [acc]
+    if args.run_nn:
+        for i in range(len(train_Xs)): 
+            model = nn.Sequential(
+                nn.Linear(hidden_state_size, hidden_state_size // 2),
+                nn.ReLU(True),
+                nn.Linear(hidden_state_size // 2, hidden_state_size // 4),
+                nn.ReLU(True), 
+                nn.Linear(hidden_state_size // 4, 2)).cuda()
+            opt = torch.optim.Adam(model.parameters())
 
-    return np.mean(losses), np.mean(accs)
+            for ep in range(100):
+                train_loss, train_acc = run_epoch(model, train_Xs[0], labels_train, opt=opt)
+                test_loss,  test_acc  = run_epoch(model, test_Xs[0], labels_test)
 
-for i in range(len(train_Xs)): 
-    model = create_model()
-    opt = torch.optim.Adam(model.parameters())
-    for ep in range(100):
-        train_loss, train_acc = run_epoch(model, train_Xs[0], labels_train, opt=opt)
-        test_loss,  test_acc  = run_epoch(model, test_Xs[0], labels_test)
+                if ep % 5 == 0 : 
+                    print_and_log_scalar(writer, 'eval/NN_test_acc_t=%d'   \
+                        % timesteps[i], test_acc, ep)
+                    print_and_log_scalar(writer, 'eval/NN_train_acc_t=%d'  \
+                        % timesteps[i], train_acc, ep)
+                    print_and_log_scalar(writer, 'eval/NN_test_loss_t=%d'  \
+                        % timesteps[i], test_loss, ep)
+                    print_and_log_scalar(writer, 'eval/NN_train_loss_t=%d' \
+                        % timesteps[i], train_loss, ep)
+        
 
-        if ep % 5 == 0 : 
-            print_and_log_scalar(writer, 'eval/NN_test_acc_t=%d'   % timesteps[i], test_acc, ep)
-            print_and_log_scalar(writer, 'eval/NN_train_acc_t=%d'  % timesteps[i], train_acc, ep)
-            print_and_log_scalar(writer, 'eval/NN_test_loss_t=%d'  % timesteps[i], test_loss, ep)
-            print_and_log_scalar(writer, 'eval/NN_train_loss_t=%d' % timesteps[i], train_loss, ep)
+""" 3rd model : RNN on the hidden state sequences """
+if args.run_rnn:
+     assert args.tsne_log_every == 1, 'states are not from a continuous sequence!'
+
+     class RNN(nn.Module):
+         def __init__(self):
+             super(RNN, self).__init__()
+             self.lstm = nn.LSTM(hidden_state_size, hidden_state_size, num_layers=2, batch_first=True)
+             self.out = nn.Linear(hidden_state_size, 2)
+
+         def forward(self, x):
+             last_hs = self.lstm(x)[0][:, -1]
+             return self.out(last_hs)
+
+     train_X, test_X = [np.stack(x, axis=1) for x in [train_Xs, test_Xs]]
+     model = RNN().cuda()
+     opt = torch.optim.Adam(model.parameters(), lr=1e-4)
+
+     for ep in range(1000):
+         train_loss, train_acc = run_epoch(model, train_X, labels_train, opt=opt)
+         test_loss,  test_acc  = run_epoch(model, test_X, labels_test)
+
+         if ep % 50 == 0 : 
+             print_and_log_scalar(writer, 'eval/RNN_test_acc'  , test_acc, ep)
+             print_and_log_scalar(writer, 'eval/RNN_train_acc' , train_acc, ep)
+             print_and_log_scalar(writer, 'eval/RNN_test_loss' , test_loss, ep)
+             print_and_log_scalar(writer, 'eval/RNN_train_loss', train_loss, ep)
+     
 
 """ finally, create T-SNE plots of hidden states """
-
-for t in timesteps:
-    X, y = create_matrix_for_tsne(MODE,t)
-    distances, image = compute_tsne(X, y, t, args)
-    writer.add_image('eval/tsne-plot', image, t)
+if args.run_tsne: 
+    for t in timesteps:
+        X, y = create_matrix_for_tsne(MODE,t)
+        distances, image = compute_tsne(X, y, t, args)
+        writer.add_image('eval/tsne-plot', image, t)
     
-    # also backup as a separate image
-    img_path = os.path.join(os.path.join(args.model_path, \
-        'TB_tnse{}'.format(args.n_iter)), 'tsne-plot_%d.png' % t)
-    Image.fromarray(image).save(img_path)
+        # also backup as a separate image
+        img_path = os.path.join(os.path.join(args.model_path, \
+            'TB_tnse{}'.format(args.n_iter)), 'tsne-plot_%d.png' % t)
+        Image.fromarray(image).save(img_path)
 
-    for i in range(distances.shape[0]):
-        for j in range(i + 1, distances.shape[1]):
-            writer.add_scalar('eval/distance_centroids%d-%d' % (i, j), distances[i,j], t)
+        for i in range(distances.shape[0]):
+            for j in range(i + 1, distances.shape[1]):
+                writer.add_scalar('eval/distance_centroids%d-%d' % (i, j), distances[i,j], t)
 
 
