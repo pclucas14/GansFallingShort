@@ -50,7 +50,7 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--no_cuda', action='store_true')
     parser.add_argument('--transfer_weights_after_pretraining', type=int, default=1)
     parser.add_argument('--sample_size_fast', type=int, default=500)
-    parser.add_argument('--lm_path', type=str, default='oracles/news')
+    parser.add_argument('--lm_path', type=str, default='oracles/news/word')
     parser.add_argument('--lm_epoch', type=int, default=None)
     parser.add_argument('--debug', action='store_true')
 
@@ -76,7 +76,7 @@ def get_test_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_path', type=str, required=True, help='path to model')
     parser.add_argument('--model_epoch', type=int, default=None, help='epoch of saved model')
-    parser.add_argument('--tsne_log_every', type=int, default=3, help='... every _ timestep')
+    parser.add_argument('--tsne_log_every', type=int, default=1, help='... every _ timestep')
     parser.add_argument('--tsne_max_t', type=int, default=45, help='run tsne exp for _ steps')
     parser.add_argument('--tsne_batch_size', type=int, default=1000)
     parser.add_argument('--draw_ellipse', action='store_true', default=False)
@@ -84,6 +84,7 @@ def get_test_args():
     parser.add_argument('--n_iter', type=int, default=10, help="number of tsne iterations")
     parser.add_argument('--tsne_perp', type=int, default=30, help="perplexity in TSNE")
     parser.add_argument('--oracle_nll_log_every', type=int, default=2)
+    parser.add_argument('--alpha_test', type=float, default=1.0)
     
     # classifer exps
     parser.add_argument('--run_svm',  action='store_true', default=False)
