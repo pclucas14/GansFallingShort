@@ -84,15 +84,27 @@ def tokenize(path, train=False, word_dict=None, char_level=False):
         for i, line in enumerate(f):
             # line = line.decode('utf-8', 'strict')
             words = re.findall(r"[\w']+|[.,!?;]", line, 
-                    flags=re.UNICODE) 
-            if words[-1] == '.':
-                words[-1] = '<eos>'
-            elif words[-1] == '?':
-                words[-1] =  '<qm>'
-            elif words[-1] == '!':
-                words[-1]  ='<em>'
-            else:
-                import pdb; pdb.set_trace()
+                    flags=re.UNICODE)
+            
+            if char_level: 
+                chars = []
+                for word in words: 
+                    for cc in word: 
+                        chars += [cc]
+                    chars += [' ']
+            
+                # remove last space
+                chars = chars[:-1]
+                words = chars
+            else: 
+                if words[-1] == '.':
+                    words[-1] = '<eos>'
+                elif words[-1] == '?':
+                    words[-1] =  '<qm>'
+                elif words[-1] == '!':
+                    words[-1]  ='<em>'
+                else:
+                    import pdb; pdb.set_trace()
 
             token = 0
             idx = list(range(len(words)))
