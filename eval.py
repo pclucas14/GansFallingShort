@@ -40,11 +40,13 @@ test_batch  = next(minibatch_generator(dataset_test,  args, shuffle=False))
 
 # load model that will be evaluated
 gen, loaded_epoch = load_model_from_file(args.model_path, epoch=args.model_epoch)
+gen.args.alpha_test = args.alpha_test
 gen.eval()
+print('switching the temperature to {}'.format(gen.args.alpha_test))
 
 # Logging
 # maybe_create_dir(os.path.join(args.model_path, 'eval/%s_epoch' % loaded_epoch)) # TODO: maybe put in TB directly ?
-writer = tensorboardX.SummaryWriter(log_dir=os.path.join(args.model_path, 'TB_tnse{}'.format(args.n_iter)))
+writer = tensorboardX.SummaryWriter(log_dir=os.path.join(args.model_path, 'TB_alpha{}'.format(gen.args.alpha_test)))
 writes = 0
 
 if args.lm_path: 
@@ -73,7 +75,6 @@ with torch.no_grad():
 
             input_t = gen.embedding(input_idx)
             output, hidden_state = gen.step(input_t, hidden_state, t)
-            #is_not_pad = (index != 0).float() if t==0 else torch.cat(is_not_pad, (index != 0).float())
             
             if args.lm_path: 
                 if t > 0: 
@@ -97,6 +98,7 @@ with torch.no_grad():
 
             if not teacher_force: 
                 dist = gen.output_layer(output)
+                dist *= gen.args.alpha_test
                 input_idx = Categorical(logits=dist.squeeze(1)).sample().unsqueeze(1)
                 seq = input_idx if t==0 else torch.cat((seq,input_idx), 1)
 
@@ -143,7 +145,8 @@ timesteps = list(MODE[0][2].keys())
 
 split = int(args.tsne_batch_size * 0.8)
 # let's do a train-test split and see if we can train a simple SVM on it
-tf_states    = [MODE[0][2][t] for t in timesteps]
+#tf_states    = [MODE[0][2][t] for t in timesteps]
+tf_states    = [MODE[1][2][t] for t in timesteps]
 fr_states    = [MODE[2][2][t] for t in timesteps]
 
 train_tf_states = [x[:, :split].squeeze() for x in tf_states]
@@ -241,11 +244,11 @@ if args.run_rnn:
      model = RNN().cuda()
      opt = torch.optim.Adam(model.parameters(), lr=1e-4)
 
-     for ep in range(1000):
+     for ep in range(250):
          train_loss, train_acc = run_epoch(model, train_X, labels_train, opt=opt)
          test_loss,  test_acc  = run_epoch(model, test_X, labels_test)
 
-         if ep % 50 == 0 : 
+         if ep % 10 == 0 : 
              print_and_log_scalar(writer, 'eval/RNN_test_acc'  , test_acc, ep)
              print_and_log_scalar(writer, 'eval/RNN_train_acc' , train_acc, ep)
              print_and_log_scalar(writer, 'eval/RNN_test_loss' , test_loss, ep)
