@@ -1,0 +1,1040 @@
+/home/optimass/torch/lib/python3.6/site-packages/torch/nn/functional.py:1006: UserWarning: nn.functional.sigmoid is deprecated. Use torch.sigmoid instead.
+  warnings.warn("nn.functional.sigmoid is deprecated. Use torch.sigmoid instead.")
+creating new word dictionary
+Namespace(adv_clip=5.0, adv_epochs=220, alpha_test=1.0, alpha_train=1.0, base_dir='/home/optimass/scratch/OnExposureBias/word/news/gan_VDGEN0.3_VDDISC0.3_BS1024_GLR0.0001_DLR0.0005_MLE80_DE1_DTI20_GTI1_MTI0_HD512_SQ51_ats1_beta0', batch_size=1024, beta=0.0, bleu_every=15, character_level=False, critic_lr=0.001, cuda=True, data_dir='data/news', debug=False, disc_lr=0.0005, disc_pretrain_epochs=1, disc_train_iterations=20, gamma=0.95, gen_lr=0.0001, gen_train_iterations=1, grad_clip=10.0, hidden_dim_disc=512, hidden_dim_gen=512, lm_epoch=None, lm_path='oracles/news/word', mask_padding=False, max_seq_len=51, mle_epochs=80, mle_train_iterations=0, no_cuda=False, num_layers_disc=1, num_layers_gen=1, rnn='LSTM', sample_size_fast=500, save_every=10, seqgan_reward=0, setup='real', stream_data=False, test_every=2, transfer_weights_after_pretraining=1, use_baseline=1, var_dropout_p_disc=0.3, var_dropout_p_gen=0.3, vocab_size=5697)
+Warning: new arg 'character_level' given value 'False'
+model successfully loaded
+MLE pretraining epoch 0/80
+train/nll                                @ write 0 = 4.0928
+
+samples generated after 0 epochs
+Andrew immune Week thoughts wanted survival of time design you results both he . ' to
+boy they after farmers of us idea .
+powers journey first big may more got journey he gather for average a to the him but 1 a making former .
+best trade rather , as compared Clinton , safe fantasy I role is of all education not its , it like . in
+The chance maybe per forced I , he said to lose , which starting back the Act to and was Academy economic , almost Paris woman That of .
+
+
+MLE pretraining epoch 1/80
+train/nll                                @ write 1 = 3.1315
+
+test/oracle_nll                          @ write 1 = 3.7852
+test/nll                                 @ write 1 = 2.9953
+
+samples generated after 1 epochs
+I conditions ' s a point enjoy year between Argentina of the percent with and records 4 of the ground US 1 a week good and where friends said .
+Greg One could the truth world after to make fine opening targeted on Democratic six white .
+The border was as that post has been given good today that although of the before main an four spokesman the British officials a parliamentary of heat in for care , they says the bacteria those out wrote .
+I want to , the drug options a team . S of doors Reserve .
+He News are Aleppo in the Scottish was view , said he from remaining part than .
+
+
+MLE pretraining epoch 2/80
+train/nll                                @ write 2 = 2.9379
+
+samples generated after 2 epochs
+If that is work as trains in a investigation to vote and the US of an life , ranks .
+I approach got never us at least security she was that .
+While million special addressed truly , the total content message offer with the government photo patients back of Monday with the way well years 100 of capital . years .
+race aside training to the stadium of the way your people wave than the election of the extent seems individuals government they had got . Clinton how in November candidates in Britain .
+We
+
+
+MLE pretraining epoch 3/80
+train/nll                                @ write 3 = 2.8241
+
+test/oracle_nll                          @ write 3 = 3.4897
+test/nll                                 @ write 3 = 2.7469
+
+samples generated after 3 epochs
+' s one or harassment minister also but the described girls first the first time he won residents to games whether the same higher judge .
+He said after executive City very Best in the doctors office to let him in the Republican , June only militant estate potential able .
+No will be successful to do it there ' s extensive some of sorry things ' s what which is such that ' Foundation know of just just work a new your hero will .
+An certain involved deep , or housing are rape in Pennsylvania down who was have no job face I ' ve able to carry out back .
+This survey have been leaving and that you will try for about this country , democracy won ' t be a place to make a special , he said .
+
+
+MLE pretraining epoch 4/80
+train/nll                                @ write 4 = 2.7491
+
+samples generated after 4 epochs
+A debate study urge ' s a number before in 2015 in 2015 in 2012 , I ' m not awareness Bill with a victory .
+As This because I knew it against the athletes , I ' m have to face a challenge , she pulled about in repeat but so this to play consumer his life .
+While a restaurant and surface , consumers not responsible at Sweden , and it might ever have decided to reach ' s Syria .
+As , or things in terms , it addressing a mother more guys you are to watch much and As .
+In a week , either talked a win concern the York holidays from the team , he has grown married deaths that they have their more ' s guilty .
+
+
+MLE pretraining epoch 5/80
+train/nll                                @ write 5 = 2.6945
+
+test/oracle_nll                          @ write 5 = 3.3048
+test/nll                                 @ write 5 = 2.6294
+
+samples generated after 5 epochs
+I felt found things you are working straight . m mistakes and the same side , which was one ?
+She said she came , and funny they should be frequently over our important because he ' s agenda for you know my families have other European information in .
+Among , would referring to fight on its Australian students a step , new and address stronger in 2018 rival . for the UK City of the same country in the United States .
+All I got up on the 22 of them , the company did a lot of men outside , to it , aides .
+his loved Clinton and Democrats , for its 88 season to blocks the dispute low different from their 20 generated and their homes .
+
+
+MLE pretraining epoch 6/80
+train/nll                                @ write 6 = 2.6521
+
+samples generated after 6 epochs
+Police comes to the members Bernie the rest of using January free to as small action of the citizens membership , according they have to Aleppo as them .
+If you go to him in a other article price , but it has already been born in possible .
+He was in a situation , Clinton that he is moved at Clinton and July from helping disappeared , he said .
+The same is the winds of the language American application to paid being written over the parts of 22 with his studies vote officials later , attacks .
+I know that I expect to play to build a shock better than defeat to talk with Where of him on future to me because he ' s getting dangerous to Cuba towards with all politics ' s competition that he was .
+
+
+MLE pretraining epoch 7/80
+train/nll                                @ write 7 = 2.6168
+
+test/oracle_nll                          @ write 7 = 3.1208
+test/nll                                 @ write 7 = 2.5547
+
+samples generated after 7 epochs
+After that the ground would expect it for the rest of conduct , candidates the winner man ' s sold devices Andrew how correct him have been working in 2015 , which gathered 14 percent .
+The man year of the people among paid in 2005 for months other migrants to change , while a solution lead source in fighting .
+Facebook for the legislation and Britain ' s population in a Turkish crisis have found to less , with parents changes to talk .
+And , he said , the people who their rent or their husband lives , and his Paris arrest asked his family was Mexico .
+However , and never care behind have been more than 000 documentary that , countries and the hunt had
+
+
+MLE pretraining epoch 8/80
+train/nll                                @ write 8 = 2.5873
+
+samples generated after 8 epochs
+I was a very kind of time , though I was very good away , things when he live him , B of those people who have a constitution .
+In doctors only , measured and took the park , and rights in Turkey to cut 20 , inflation using for the Chinese this year .
+Both I will be coming goals but there started have left images stands resources is that keeps this is in the gap in line .
+Since a day ' s Defense rules has been unusual already broke from all on building , and has the candidates heard we are supporting really to a film .
+A dispute Brexit PM this regardless , and he was obvious a running in a politician attack , after which had me on together but they will be elected for country .
+
+
+MLE pretraining epoch 9/80
+train/nll                                @ write 9 = 2.5617
+
+test/oracle_nll                          @ write 9 = 3.0525
+test/nll                                 @ write 9 = 2.4999
+
+samples generated after 9 epochs
+The storm had seen plans during the bathroom on Saturday hand the ban he stood to 1 . 5 per cent .
+On the front Council of the government ' s economy Westminster notice toxic sharing longer than missing as they ' ve transferred to the kitchen Mr Trump and former USA and management it .
+Sometimes the power of shoppers protests thinks , running , should , you don ' t have that in .
+Many of them rally out there has even more in their big system and aid when you can change aggressive to make this kind of the fined all onto to restore to mass .
+Donald Trump said .
+
+
+saved 1 models
+MLE pretraining epoch 10/80
+train/nll                                @ write 10 = 2.5388
+
+samples generated after 10 epochs
+If you have to attract the Olympics to France , you could serve all type in fact , the opportunity is required here .
+I don ' t think I haven ' t sure this that of purchase locals , if I don ' t live recorded the best , as I don ' t established , Mr . it appeared .
+That ' s how many people in the 1990s season ' goes into the past when and that has shows it these time in going over they follow .
+Brazil ' s political prime minister has won , Warner ' s abuse safer in this area and could be significant criminal from the line .
+It will cause obvious to play this election day , but spending Hillary Clinton at the gallery , and in a song of Aleppo has been a holiday into .
+
+
+MLE pretraining epoch 11/80
+train/nll                                @ write 11 = 2.5182
+
+test/oracle_nll                          @ write 11 = 2.9728
+test/nll                                 @ write 11 = 2.4573
+
+samples generated after 11 epochs
+So we ' ll be something about working . . I don ' t finish doing in any position I can get out about the different side .
+They have heard a lot more integrity I manage to take a bit different because I still have a hearing everything , he said .
+That ' s probably gave all of the small this season , especially now there ' s only a great problem .
+We thought footage there will be implemented of the Sydney , the latest industry was displaced for in the world of patients .
+We offer the help room on track and getting the fate of problems in poverty with the future for the way we want to describe from the family .
+
+
+MLE pretraining epoch 12/80
+train/nll                                @ write 12 = 2.4997
+
+samples generated after 12 epochs
+Up to the Senate Bank one of his appropriate rival ' s behaviour , her hundreds of a year has been submitted by Labour .
+She said kids believed she would stick to think about that security movement so he doesn ' t realise how much one track go !
+For others showed her staff face it is beautiful , what was going down from with ISIS , what players the right way .
+We knew these meant targets , Sanders said and decided to cover hate 17 lifestyle to Syria , said by September authorities with Saudi Arabia , Wales said .
+All of the historical hoping we ' d linked to have allowed now that ' s happened , ' from other ways .
+
+
+MLE pretraining epoch 13/80
+train/nll                                @ write 13 = 2.4826
+
+test/oracle_nll                          @ write 13 = 2.9286
+test/nll                                 @ write 13 = 2.4228
+
+samples generated after 13 epochs
+I ' m people absolutely made the best choice or the last Liverpool through my restaurant , but I could make a popular chance for all arguing .
+The rest of those who have been shared about 10 per cent and 33 , and other movies Olympics is clearly to use a completely link .
+No request step in public become a real investigation in North Carolina , in place the referendum , such as less as well .
+We wish to bring this sees in England and can always kill them when we keep them .
+Later we are subject to carry cities and research from the teaching so that might be addressed correct .
+
+
+MLE pretraining epoch 14/80
+train/nll                                @ write 14 = 2.4669
+
+samples generated after 14 epochs
+But , I got an hospital that mouth wants to meet my potential would like last day , and I don ' t think they will be for good for Donald Trump .
+In the last few days , then you occasionally under the area that students more likely play , are giving a dream and you have to tell anyone else leaving on promotion .
+For four games in December Berlin , losing aged age of dollar under the documents , asking they showed its daily overall 12 , rating to 82 , 000 at 15 .
+Though I ' ve worked a lot of perspective , or what ' s motivated , maybe we Dylan you put and then they ' re referred to people moving dedicated , which extremely national different age .
+One of five managers say they had heart , who was sentenced by private hospitals provided police officers and New York , almost Maryland and other Antonio for this project .
+
+
+MLE pretraining epoch 15/80
+train/nll                                @ write 15 = 2.4521
+
+test/oracle_nll                          @ write 15 = 2.8655
+test/nll                                 @ write 15 = 2.3931
+
+samples generated after 15 epochs
+On Tuesday , the choice has been said in the arrest power if she sees the council to succeed and they had her office effectively a car and that and his vision with his favourite exposure .
+My are the best side that there will be an 18 an end of a record on all all day , dating particularly and than those cases because you ' re too good what is going to be big or right .
+The move is the same again to release the question this time that allows can be the backing of it ' s further .
+After is a time of tweets , it was a photograph of innovative career , and the fact we had much recovery of the impact involved .
+We are understood a lot when did should happen to turn out up way , and they need them to sign it around from platforms .
+
+
+MLE pretraining epoch 16/80
+train/nll                                @ write 16 = 2.4383
+
+samples generated after 16 epochs
+My mum for a very great way , especially on American people because they know my family is really because it was the first degree of my life ?
+The most Dutch say that when she returned to run parents Turkey or data , young people could go through laws .
+But they set to keep an individual risk and the manager are likely to go through work without things .
+It ' s very good you but this decision will pass on the bench of work hard for her job , every week said .
+It ' s quite a small thing to say , but their players is some clear , that might not exist .
+
+
+MLE pretraining epoch 17/80
+train/nll                                @ write 17 = 2.4257
+
+test/oracle_nll                          @ write 17 = 2.8341
+test/nll                                 @ write 17 = 2.3675
+
+samples generated after 17 epochs
+But the company found up the government at home these share over the current market , based from which appeared to a government substantial living with a drink in sanctions .
+The recent attempts were to try since the fans was produced to a house during edge inside baseball changed after mid troops held bank grade refugees in custody .
+One Nation in a captain ' s best statement will remain overwhelming for a family ' s history in the future , even if he is trying to learn it in which ' s some of the three campaign .
+And he said it would make a significant you from the EU proposal ; it would have missed a Russian gold billion in next year .
+It ' s hard to draw any longer requirements waiting in our own swimming and more part of below the UK earnings .
+
+
+MLE pretraining epoch 18/80
+train/nll                                @ write 18 = 2.4136
+
+samples generated after 18 epochs
+I ' d like him and says it ' s not a little County learning that he ' s wrapped back at a list .
+He told The New York Times after Friday morning , Pennsylvania in Ohio about the disease she is not to try to ask English more you to meet with practices will investigate a separate culture , but is them 50 .
+41 points , last cars now over 20 hours in 12 finals in next season , Top involve the east of the day .
+The judges had played strong coaches to face registered and thus enough to make attending the numbers of complaints in Beijing .
+The order front runner has closed any long problem as Barack Obama to councils becoming target , according to the official point .
+
+
+MLE pretraining epoch 19/80
+train/nll                                @ write 19 = 2.4025
+
+test/oracle_nll                          @ write 19 = 2.7652
+test/nll                                 @ write 19 = 2.3459
+
+samples generated after 19 epochs
+A 2013 position Image caption came on Twitter slightly on Western Tuesday , according to a view are trying to end breach .
+The central bank ' s District to ensure that would increase in the most effective territory and was a Chinese form of decline throughout the EU .
+Of this a series of a small unit , he went love asking , needed to a hospital back on him his win .
+Under people that helping adults a safe suspected of people are taking over the past six , 000 .
+The strength said they came to a fee or Facebook to like the biggest League in house to come from the South developing city .
+
+
+saved 1 models
+MLE pretraining epoch 20/80
+train/nll                                @ write 20 = 2.3917
+
+samples generated after 20 epochs
+We have fun to put this bad decision but we ' re not just trying to say , because it must be an part of the league .
+But we hope , I ' d like to be looking at the end in the top and I ' ve got my brilliant element from the cycle outside the United States .
+They can this aim with as a member of overall , starting to mortgage school trips an hour from the end .
+He ' s an opportunity to the election , before Premier place Republican , but we have to do good maybe the only score price .
+For the time a positive long wage like I was to racism , had to keep up around the next race and when somebody are few times back to the changes , says kind of 44 .
+
+
+MLE pretraining epoch 21/80
+train/nll                                @ write 21 = 2.3817
+
+test/oracle_nll                          @ write 21 = 2.7577
+test/nll                                 @ write 21 = 2.3261
+
+samples generated after 21 epochs
+Perhaps , is some time people are protected to do it all hours , waiting to explain how early you are doing .
+It ' s a big effort so far growth in the most interest than when they were , or leave well and rising , they still feel out , whose new school sites see that talking for the players turned to work .
+That ' s not how it many people like our customers of this country or it , our party communities , she said .
+I take the ' s positive situation for years in the world living and few a talent of eighth and it it is still harder to she afford .
+No matter what was here and it felt to listen to the early circumstances of France , because they are treated and there were no thing in luxury .
+
+
+MLE pretraining epoch 22/80
+train/nll                                @ write 22 = 2.3722
+
+samples generated after 22 epochs
+I was behind all Netflix but would be a laugh cut if I can get a stand directly and wanted to tell I is holding a massive programme .
+It ' s important to beat the people that the care players and a parent of chances from what they calls to live .
+Northern Ireland and the United States may have also a positive explosion to Britain and Paris groups on Europe and Syria .
+Apple is also a small part .
+Jason ' s death had a tight shift to 22 excess white documents in the first involved had last week marks a two of two occasions .
+
+
+MLE pretraining epoch 23/80
+train/nll                                @ write 23 = 2.3632
+
+test/oracle_nll                          @ write 23 = 2.6957
+test/nll                                 @ write 23 = 2.3086
+
+samples generated after 23 epochs
+I ' m not certain at the moment , what I ' ve done by that said ,
+An officer later related was based in the reaction on Tuesday and odd reports of EU services would have killed by his staff .
+The new group wasn ' t important to come place in our own out , he said on the university stage .
+The young class does not since any Democratic primary and truly not have been using them to more build up for details this year and anger .
+The letter will be educated for the arrest of the UN quarter House , he said , said Sunday .
+
+
+MLE pretraining epoch 24/80
+train/nll                                @ write 24 = 2.3548
+
+samples generated after 24 epochs
+It ' s been stake in a high afternoon , at least the 28 year old lifted at five times .
+Mrs Clinton chief won one record , is also childhood and where she of the crash to travel and the joint nation needs to take further to contact with politicians .
+One woman who said he ' d know that he was sentenced by the paper stated but he added that he would not be the only girl in the NBA .
+But then if he got his back up their first film opening , he says the game is now demanding .
+It ' s one , and of course I can ' t fully check , you know should you ' re at dinner for you giving them your way a plan for these things .
+
+
+MLE pretraining epoch 25/80
+train/nll                                @ write 25 = 2.3464
+
+test/oracle_nll                          @ write 25 = 2.6587
+test/nll                                 @ write 25 = 2.2936
+
+samples generated after 25 epochs
+A Florida international suspect shows the United States will hopefully , after the terrorists Roberts come , allowing the people ' s exercise to determine nice supplies .
+So it has the time things to win and this in recent years , it ' s an orange 10 . Louis , says the media ride .
+He wanted to take the right in , so she was good to ask them for office and he said the country will lose the full government ' s draft .
+Nearly analysts , she will have to call a the ground yet at three minute , will attend her death for a wall of abuse , a woman professor .
+That means my type of voice seems , he says , which is simply about Rubio ' s best interests for the New York Times .
+
+
+MLE pretraining epoch 26/80
+train/nll                                @ write 26 = 2.3388
+
+samples generated after 26 epochs
+He noted that it seems something they are explained , because that , which we need to achieve lessons and build a reference of the international gap , we joined anyone who gets coming to .
+This is something amazing , but we ' re going to be able to play big players in a different way .
+I gave off a few my way through offshore , but it ' s a fantastic that was something not that great , so it wasn ' t coming to live .
+When I came into the second half that I saw sacked I thought I could feel scared have to remember my boyfriend a and kind championship spirit the night .
+That ' s why investment feels backs there , finish the gap between 40 but so they don ' t need a commitment to deal with confidence .
+
+
+MLE pretraining epoch 27/80
+train/nll                                @ write 27 = 2.3314
+
+test/oracle_nll                          @ write 27 = 2.6409
+test/nll                                 @ write 27 = 2.2797
+
+samples generated after 27 epochs
+It is not completely much as even when we still know we can get better off to our affairs and ask if it ' s going to be on which we are different from our economy , it is real .
+In the worst case of Tory MPs about Syria , there will be some serious part the money even , he claimed .
+Trump got big rock games last year , if he gets off in jail than a danger , Mr Hammond said .
+It ' s been listening to pay for a TV list of air pollution ' s negative , he said .
+Up them , the Trump office has no among voters Clinton , and Cruz may need his release in rural next week , Sanders said We .
+
+
+MLE pretraining epoch 28/80
+train/nll                                @ write 28 = 2.3247
+
+samples generated after 28 epochs
+He made the interior on luxury meetings and violence that he will not be available to these events ; I had home to letting him across him to describe some of his tree .
+If he had gone up of the suspects , and won ' t have three thoughts yet in January .
+Because in two days dream , not my game talking about its feet , so why sick I was sad for it .
+The Western fly are announced that someone can take an update to raise team , and we know that this in the refugee way has a number of other children .
+The thing also insisted that Yahoo is not just to be told to allow children to try or a feed but where being highly hurt .
+
+
+MLE pretraining epoch 29/80
+train/nll                                @ write 29 = 2.3178
+
+test/oracle_nll                          @ write 29 = 2.6292
+test/nll                                 @ write 29 = 2.2670
+
+samples generated after 29 epochs
+' s long comes as I ' m hoping to be given a positive chance for him near each other , a German team said .
+I was aware tested I , who meant me a few thousand catch into the building that Republican running mate .
+This day is pushing the way I really wanted to happen as a great photo caused to score bowl , all around the display .
+The existing dust is as coastal snow eventually at the end , where women are playing in every operation and medium and emotional developments , worried about their own day ' lives , he said .
+I matter for Hong Kong floor she then as much money , and television frequently seems to speak business by anyone .
+
+
+saved 1 models
+MLE pretraining epoch 30/80
+train/nll                                @ write 30 = 2.3116
+
+samples generated after 30 epochs
+During the UK , it began to lift the bank , though , which had done from China sites .
+We have lost the NFL of the same campaign we need to vote on when we are trying to consider ourselves on the terms .
+That ' s this specialist of one and lost with my religious so I can tell them being a really good good guy to air to me because they can boost it .
+In Edinburgh said that the planet she had faced home has issued numerous military personnel over the killing during the last two months .
+Among the total number of complaints employees had been running on the tennis Rock it was now first would be introduced from one of the main sanctions where the company would stand up , 86 . 2 million , but by 0 . 4 per cent in a group rate .
+
+
+MLE pretraining epoch 31/80
+train/nll                                @ write 31 = 2.3054
+
+test/oracle_nll                          @ write 31 = 2.6088
+test/nll                                 @ write 31 = 2.2556
+
+samples generated after 31 epochs
+Do you need have done , so they ' ve cool those enough players in the terms we don ' t want it to happen .
+Britain ' s membership of the conflict , Norway , July , supports and had very much common , she said in a statement .
+This month , the balance of your family , where I play rugby cricket , I can hope the names of some important identity now , Germany said .
+If all we could have five weeks over the age of ten primaries in the middle of those programs , they ' ve got the right to the next 12 garden .
+Britain ' s post legal bill system has sacked between Italy over July as a April of electoral coalition center military prices .
+
+
+MLE pretraining epoch 32/80
+train/nll                                @ write 32 = 2.2995
+
+samples generated after 32 epochs
+In response to the such changes with students a formal economist , even more performing 65 items different platforms , United declined to make a divorce .
+The unexpected law said in a sense of trying to you make it in , the court documentary said that it would be difficult for such as 8 seconds and had not described evidence in the bloc .
+It ' s really special and at the moment , and we ' ve invested a huge problem at all and we ' ll be happy .
+But its economists target at AFP and development this move has been put a run on cooperation policy its first year scale in a near just weeks gold .
+It just features how to close laws to see what happened the minutes of 100 , 000 , making some of a be on track .
+
+
+MLE pretraining epoch 33/80
+train/nll                                @ write 33 = 2.2937
+
+test/oracle_nll                          @ write 33 = 2.5752
+test/nll                                 @ write 33 = 2.2454
+
+samples generated after 33 epochs
+As your family just of you can ' t heart , the word you can feel , it doesn ' t happen .
+In this , Dan , Ms Clinton said she hoped she wins a greater strategy , but did not know why she approached a nomination .
+The man there were similar police officers involved in his final shooting , had escaped 30 surgery in his arrest city to Monday .
+As long as we do one other side and several of us , I don ' t see by these countries , with a lot of prospects .
+Jones ' s official told the BBC committee that the speculation will take over the past six months and the changes in the EU society .
+
+
+MLE pretraining epoch 34/80
+train/nll                                @ write 34 = 2.2886
+
+samples generated after 34 epochs
+In a statement , Mr Clark said .
+The people in Scotland I fought in the outcome of him again the last year and I thought he was not great if someone was going to talk .
+He ' s been trying to lay a lot of fears , so I said to me that we were going back a near honour and went out here what with their first danger and basketball and we were there .
+I told my experience she was her home , so I didn ' t have a good job , he was told .
+Why are less because the premium is back on on what it ' s true , but it ' s made about it .
+
+
+MLE pretraining epoch 35/80
+train/nll                                @ write 35 = 2.2830
+
+test/oracle_nll                          @ write 35 = 2.5358
+test/nll                                 @ write 35 = 2.2359
+
+samples generated after 35 epochs
+He added that land some improvements in Asia and schools just have been to provide photos to the exchange to land Cuba with whatever is a reasonable issue for people working hard and to correct their country for a long time .
+The Indian armed forces in Paris on Friday , sent over from a Kurdish store around a performance further by failing security that Russia is estimated Mr . 11 .
+It ' s a step of very over , but we have to look at our jobs on the international track , and sometimes I don ' t know anything .
+But I will tell the law that he can ' t make it so much like his photo , his said .
+We also realised that the deficit was still open than the top five , 000 March 1 , 500 U . S . women ' s entire stadium with their team .
+
+
+MLE pretraining epoch 36/80
+train/nll                                @ write 36 = 2.2781
+
+samples generated after 36 epochs
+The Scottish Government has come its free way to tackle data for alcohol programme .
+I ' m not convinced my parents is so sad for sure that has recently been put on me and I want people to continue to do it with my teammates , pushing their lifestyle having many years regardless of her own and you ' ve worked right together and we
+The we wanted to bring a better job running to speed on the next four games against the present Football League , Charlotte and the running for the focus , his guest Cup .
+Researchers are currently said that the law or not wounded occurred , or potentially other countries have on the largest crisis since their international scale .
+When she hit informed Republican 38 year old and friend asked her dreams , he has declared her bail .
+
+
+MLE pretraining epoch 37/80
+train/nll                                @ write 37 = 2.2732
+
+test/oracle_nll                          @ write 37 = 2.5680
+test/nll                                 @ write 37 = 2.2278
+
+samples generated after 37 epochs
+The body said the incident is little more urgent than the stock of violence but it ' s a fun way .
+The facilities play from 30 p . m per tickets at the B draft in 2011 , and thus put out the game mid in South Carolina .
+The government held the press ' s approval of international sanctions since the war began and the next as a child .
+We was not a charity or you just don ' t be able to influence because I don ' t see anyone and then .
+The second response to Los Angeles , I ' d hit a second inning when I saw at all start New Zealand , the worst New York Times said .
+
+
+MLE pretraining epoch 38/80
+train/nll                                @ write 38 = 2.2687
+
+samples generated after 38 epochs
+We have a lot of time to delay the country and we need to be education to our own problems , the Chinese lawyers who says fighting , the driver said .
+Our coverage is developing to do that they ask it , so don ' t get from European countries there are many BBC .
+The police judge said his identity that it was not privacy for our health and they were supposed to move the war , he said .
+If they see that you can have the rest of the parents and , then many units are truly in danger , only said one .
+Of course , the site me like everyone who wants me to get back to that modern women won ' t be good until he has been so much , says .
+
+
+MLE pretraining epoch 39/80
+train/nll                                @ write 39 = 2.2642
+
+test/oracle_nll                          @ write 39 = 2.5327
+test/nll                                 @ write 39 = 2.2193
+
+samples generated after 39 epochs
+The researchers heard changes on a new plant with the cold was rejected but was preventing influential action against me , the gift said .
+From issues the day is you come at the Olympic Leader hall and there is no way that there is some success .
+However , Ms May fell out of the crowd really for a standing from a successful plot , beating the incident to the government .
+Texas Sen . Mike Pence , who travelled one stops or 46 years ago , raised his injury as they have taken me not to tone his ability to leave the reported , which is the length of one .
+One to the presidential argument I didn ' t have done him again when the Isis heard the changes , I ' d be very pleased to chance to that patients .
+
+
+saved 1 models
+MLE pretraining epoch 40/80
+train/nll                                @ write 40 = 2.2598
+
+samples generated after 40 epochs
+So why someone else say they could change out and say if she ' s got something there are interesting it may try to report .
+That ' s referring , why , depending on this period , many of whom should prove it is seeing what the European Union is dismissed would have too much about deadly .
+We want 60 per cent of all form of charities , as a result of our community , that ' s in your greatest entry of them , he said .
+But if I had , there was a real shock and it would be hard to be winning again over , dining hole .
+It is a quick decline once , but not there is nothing to take away or nothing like there and it ' s not really different .
+
+
+MLE pretraining epoch 41/80
+train/nll                                @ write 41 = 2.2556
+
+test/oracle_nll                          @ write 41 = 2.5180
+test/nll                                 @ write 41 = 2.2112
+
+samples generated after 41 epochs
+The offence won on Friday to turn the front deal and will offer evidence in Scotland .
+That presidential election showed to those supporters blamed the economy and gender are worried about how they all advance to lower talking and tight at the Democratic National Convention , she said .
+You feel nervous about a campaign in somebody ' s politics , and remain there is no other way to lose to 10 , 000 their children during the office , he said .
+But despite the congressional losses , West voters who don ' t want the general election was lie and I can say prepared .
+But it is not getting on the wrong way and if you know these games is it ' s just being able to make it to you , live in the final game .
+
+
+MLE pretraining epoch 42/80
+train/nll                                @ write 42 = 2.2512
+
+samples generated after 42 epochs
+What we know it is no doubt that but we are flying in situations for us and what that hasn ' t happened to know , he added .
+The shock of our faces and horror , we see each of the lessons where we cannot harm the competition .
+Around four , 000 people were killed by the law in a row before having rescued on suspicion of the injured .
+We need a little bit of opportunity to get big , but we just have to find out where there is something of it ?
+You can ' t Toronto play or something like , but when you go in this preparation , you didn ' t well down the issue .
+
+
+MLE pretraining epoch 43/80
+train/nll                                @ write 43 = 2.2475
+
+test/oracle_nll                          @ write 43 = 2.5194
+test/nll                                 @ write 43 = 2.2051
+
+samples generated after 43 epochs
+I am just if I concluded a man and talk about the house , I ' d be looking forward , every day , if who had no symptoms .
+It ' s two different we needed to give a more normal deficit , and that there is one that has used to every second .
+Among your Americans have two candidates those who had a soft degree to say they are from a margin about voters , who hadn ' t seen Mr Trump .
+The report that Labour did not be concerned if the company took its final flight with the ongoing to lift tens of state ' s safe districts was disaster for the budget .
+It is the only way that gets out of win with all it can lead to you but for the first time , look of what sort of women do .
+
+
+MLE pretraining epoch 44/80
+train/nll                                @ write 44 = 2.2437
+
+samples generated after 44 epochs
+His warnings have long improved for his handling of these parliamentary attacks on the funeral industry , including the aftermath of Russian assault , their energy Ministry .
+She also have made visible problems to NATO on women , making in big , Governor and is going to turn around exist and represent the opposite direction .
+That proposed was not impossible to take a bigger picture position in the split of the party ' s finances , especially with the tape group .
+At least I have a good explaining playing like my body had , I , myself , that , hard or not , Jackson ' s still it and I don ' t think I ' ll be able to do it here .
+Some days such as failing to apply we should be looking for every time with the UK crowd to announce .
+
+
+MLE pretraining epoch 45/80
+train/nll                                @ write 45 = 2.2399
+
+test/oracle_nll                          @ write 45 = 2.5054
+test/nll                                 @ write 45 = 2.1989
+
+samples generated after 45 epochs
+As this the problem , where it wants to support photographs , I can ' t imagine how the authority it would , however , not that .
+It doesn ' t mean the soldiers can see what happened in the near this past quarter but the politics might use them and they can have a serious routine .
+prevented the judges , Labour ' s U . S . to say that crucial has been put towards on and military officials in the UK .
+That ' s why we try to get one of their best performance in the very question of the Champions League .
+Both sides believe we are our asking important to start communities , because the slow lost for the legislative club is ready to be involved in Europe ' s interests but the reason is that it is already free to help this government so we can ' t spend .
+
+
+MLE pretraining epoch 46/80
+train/nll                                @ write 46 = 2.2368
+
+samples generated after 46 epochs
+The former Virginia senator said Mrs Merkel said that the investigation would vote for the future of a second referendum .
+The case is changed on the most public ' s ever ending in which the suspect is infected from at least three counts of the city , authorities said .
+And rise to the government that may change that until success consumption , we need to see anything everyone on carbon counter , he says .
+Mr Jones said , an example didn ' t start until , that the United Kingdom started the coup , who lost all of us .
+All my life of older people in the country , and they didn ' t want me to be even though it was someone doubt the failure of the stuff that physical participants saw it .
+
+
+MLE pretraining epoch 47/80
+train/nll                                @ write 47 = 2.2328
+
+test/oracle_nll                          @ write 47 = 2.4810
+test/nll                                 @ write 47 = 2.1924
+
+samples generated after 47 epochs
+' We don ' t see how I ' ve got to make it as a man I know , she said .
+If you don ' t good going to be clear with you ' , I ' ll take them to a whole .
+It ' s not always true , but as long as we can build fully teaching than the same way we cannot join , it ' s all wrong .
+It was an appeal that Dan relations with the refugee crisis out of the bombing but the ceasefire remains a positive commitment for people to afford her .
+If I vote for her , only that ' s going to happen , but I think you ' re doing yourself or stay together to throw them back inside .
+
+
+MLE pretraining epoch 48/80
+train/nll                                @ write 48 = 2.2296
+
+samples generated after 48 epochs
+It was the first thing to sit out , and a few days ago it ' s nice to have an discussions .
+These things will happen , as I ' m there ' s going to be done , he said .
+It ' s estimated to be convinced , too late the media hold before the residence Nov , she said .
+So we are hoping to fuel to some other trains because it won ' t be reflected in and not clear audiences .
+If I was lucky and I was willing to prove I had been together , Smith said in the summer .
+
+
+MLE pretraining epoch 49/80
+train/nll                                @ write 49 = 2.2261
+
+test/oracle_nll                          @ write 49 = 2.4851
+test/nll                                 @ write 49 = 2.1859
+
+samples generated after 49 epochs
+For instance , people should live in the care of the love continue to report this seriously , and then use supply to prevent that view .
+These bills from 47 to older tourists across the European Union to football maintain the ninth level of 2017 , most of the previous range of their younger children and discrimination and deserve to go .
+We would expect this process to ensure that we should back Kerry Government to keep Turkey held and co create them into the fighting .
+I ' ve been so allegations I am , so not my parents our approach , now it ' s like , Jackson said .
+And New York , digital and digital with South Carolina , but Virginia and other states have been entirely behind for 45 percent .
+
+
+saved 1 models
+MLE pretraining epoch 50/80
+train/nll                                @ write 50 = 2.2232
+
+samples generated after 50 epochs
+In the next race , so I would be ready for the rest of the season , he explained after he was headed off him .
+When I spoke with his running mate , I had a good job to the male world and both things to choose to me , what Wells was doing that .
+He said John most young girls have gone for 42 to six hours and have two kids with 10 of children ' s , aged 11 and 2 25 .
+For you very , very young people moving out of getting under health weight than the local burden ' , she said .
+That is really we needed a lot of things I ' m now trying to race , he said , referring to the latest foundation .
+
+
+MLE pretraining epoch 51/80
+train/nll                                @ write 51 = 2.2200
+
+test/oracle_nll                          @ write 51 = 2.4849
+test/nll                                 @ write 51 = 2.1811
+
+samples generated after 51 epochs
+If we do having a conversation , that the court will be focused on whether there ' s an agreement with people allowed it out and any immigrant size could be a little bit too as far more .
+Now , was most important to preserve the company and only just over Christmas ; I can ' t take the way forward .
+So against us for a few years , it is about accepting what sort of the world might go and the better we can happen .
+Democratic candidate Hillary Clinton taken around by an adopted marks of New York ' s primary , as well as her for president .
+By the time , for a very long time ago , that followed by Facebook falling because someone hasn ' t resulted up support ' they may have paid later .
+
+
+MLE pretraining epoch 52/80
+train/nll                                @ write 52 = 2.2173
+
+samples generated after 52 epochs
+He was brought with his senior Conservative cabinet committee for Trump , instead of honour New York , Nevada , and how a small record wins .
+He knew he tried to leave the Asian but he would have a box , but didn ' t play the role he released on a daily basis .
+But it ' s obviously usually fun to get back and go after a good loss , he said .
+It ' s not , she said , adding that the band had been been involved in the flood of Tuesday .
+I care about these kinds of officers who are quick to go before because they are minority United off the and their defence .
+
+
+MLE pretraining epoch 53/80
+train/nll                                @ write 53 = 2.2139
+
+test/oracle_nll                          @ write 53 = 2.4272
+test/nll                                 @ write 53 = 2.1763
+
+samples generated after 53 epochs
+They are battling on the way to Australia , after a number of years and it will be the season being awarded in affected .
+That ' s why he expected that the debate was at all at the White House , which featured over the closing track .
+In Geneva , harassment has been a dramatic , feeling very high change compared to New York City , Virginia and Illinois .
+Potter newspaper have been great step in both understanding the raid and create last year where immigration is following , and the Fed will change its target .
+An private commercial role made them appeal to the former prime minister when asked how she called the UK ' s leadership contest or a politics between the two men and her alcohol .
+
+
+MLE pretraining epoch 54/80
+train/nll                                @ write 54 = 2.2113
+
+samples generated after 54 epochs
+According to 50 , 000 , and Saturday night , the length is more than an analysis of the country ' s disease celebrity has been in a critical decade the time .
+Toronto ' s own protesters had only finished under 35 when he eventually referred to voters , and he had two travel yards to Mexico in the area .
+Last week , the a two thirds currency were killed in the tournament , when the labor market repair was still secret , both in the U . S . Open .
+We ' re the people who want to stand up to a victory and put in turn it into a new expense .
+So the poor , but in the energy , are people believed to be here over year , so it ' s just about the world , so badly will be available .
+
+
+MLE pretraining epoch 55/80
+train/nll                                @ write 55 = 2.2082
+
+test/oracle_nll                          @ write 55 = 2.4205
+test/nll                                 @ write 55 = 2.1712
+
+samples generated after 55 epochs
+What ' s explained that if you ' ve done a guy in the nomination , please don ' t receive your name .
+The object , just five minutes away , only an one of the number of international resources to set up national financial crime in a new trial manufacturers .
+The White House and a wider South Korean team to head coach must Manchester City Hall or existing channels with a 17 horse meeting which is looking back at significant evidence starting .
+Other students had been affected by his holidays have had the best support in and the fossil strain of data , with a real market , according to a new report report .
+We use the immigration right to raise the amount of money we are set down , so that could achieve another way into new iPhone for audiences .
+
+
+MLE pretraining epoch 56/80
+train/nll                                @ write 56 = 2.2056
+
+samples generated after 56 epochs
+I had to do nothing messages to I am somebody , as well as getting driving and keep successful tough , and let ' s get out in a short pace , it ' s like I have .
+Donald Trump is home to GOP debate amid standing by allies and government groups , including a joint businessman in such Scottish protection .
+Trump said that Obama , in the United States , is respected about the barriers of the event but have become leader of the vote instead on the outside mind .
+The UN planned to expand the surge of the number of refugees and officers to draw at its biggest percent since 1996 , the recent poll .
+It ' s reasonable that he has come so many big challenges already in the field of more than a quarter of their community .
+
+
+MLE pretraining epoch 57/80
+train/nll                                @ write 57 = 2.2031
+
+test/oracle_nll                          @ write 57 = 2.4320
+test/nll                                 @ write 57 = 2.1673
+
+samples generated after 57 epochs
+The police celebrated the plane to hear the bomb and 13 people killed by people and activists networks and for the shooting , which began to delayed an ambulance trial .
+I felt like you knew that when you win , I pain no record having been allowed to tell your life suddenly commit to spread or travel chances .
+If you ' re not here tonight , to make the goals he ' s actually fantastic work , she says .
+Although the gap between the ages of 9 2 30 , 63 per cent at sea , charities and their 2020 , their highest education property , and they are more influence .
+The man was described as a result of knife ' s run drugs by armed police amid serious injuries and said he had been a great camp .
+
+
+MLE pretraining epoch 58/80
+train/nll                                @ write 58 = 2.2006
+
+samples generated after 58 epochs
+Scotland ' s single market are concerned but you ' re extremely concerned how hard he ' s going to somebody with to Mexico himself , how much he wants to go .
+The things confirmed that as many million more young people do , they cannot produce their own comfort while they haven ' t seen the gun .
+It may be the right thing to act here , but to Australia you are good reasons is absolutely a little bit a lot of physical .
+It is entirely clear that the reality of the body , which will involve Spain , Germany has become a critical advocate for those who think , given some of the parts of the UK , Mr Erdogan said .
+It is pointed to the busy as saying that closely monitoring concerns , despite the plan to do change in politics for plans to spread 1 , 000 high blood threat in the UK .
+
+
+MLE pretraining epoch 59/80
+train/nll                                @ write 59 = 2.1978
+
+test/oracle_nll                          @ write 59 = 2.4108
+test/nll                                 @ write 59 = 2.1622
+
+samples generated after 59 epochs
+In addition , none of the other rules will rise , but giving us to aim to take responsibility for granted .
+He has also developed the heritage read how to encourage companies to understand education and social problems and from the idea of the law and provide benefits of some success within the high end of the night .
+But the number of writers didn ' t deliver the market to implement the claim making the data that was proposed down .
+She added ' What we ' ve kind of has been at the top of the country and we can still hope that it was my possibility .
+A large number of time in the interests people are in the United States are looking for university to cross the next 30 years , said the study , with the prospect of Health and branch when Trump and his campaign has yet to pay out just to post an event
+
+
+saved 1 models
+MLE pretraining epoch 60/80
+train/nll                                @ write 60 = 2.1956
+
+samples generated after 60 epochs
+I have come before this app and I ' m watching it more , he said , to his camera for the competition .
+The Obama administration on Tuesday said its powers to find the formal rules would be checked and would clear the early election in the states , a year in July .
+Caribbean were filed by critics , U . S . officials said the study , and also rich thus about the virus , wide ranging from intelligence control .
+McDonald also told investigators that one additional nine would actually be arrested in May 2015 before the terror plot took place .
+Another police officer said that if we loved the location to welcome the surgery as we were not going to contact them , we haven ' t managed to take , along with their own .
+
+
+MLE pretraining epoch 61/80
+train/nll                                @ write 61 = 2.1932
+
+test/oracle_nll                          @ write 61 = 2.4204
+test/nll                                 @ write 61 = 2.1582
+
+samples generated after 61 epochs
+They met last week and Saturday that the next general election comes to the Federal Election Convention with a national committee , raising questions about whether Trump will get vulnerable , and not to stand here .
+I win England and Wales , I don ' t know what the history will be on my training , which includes my younger followers .
+Its two country Big model , 11 , the final feeling of the country ' s offensive business , has created previous weather , with the connections slightly more low .
+Police have suggested that their character were in a situation if they were complete for a third day on fire following the attack .
+With the toll early in June , we will now take the steps to hold the US in a 2016 election next year .
+
+
+MLE pretraining epoch 62/80
+train/nll                                @ write 62 = 2.1906
+
+samples generated after 62 epochs
+NATO usually entered the 12 month jail season , but a sophisticated counter investigation are not the during England named the club .
+It would be no sky for everyone to avoid being offered for a third party , but we decided to wear immediate progress like we and we know that these allegations was in armed , not interim .
+Several weeks later , Ms Jones had vowed to comment it on the matter , to address its thoughts in the strength .
+In the Oxford , the women , mainly in recognition of abuse , said the work of setting up with an ambulance is thought to be a blow to injury .
+After two hours before the presidential election , Israel officials still became investigating a statement a 9 offensive official request on site cuts .
+
+
+MLE pretraining epoch 63/80
+train/nll                                @ write 63 = 2.1885
+
+test/oracle_nll                          @ write 63 = 2.4144
+test/nll                                 @ write 63 = 2.1540
+
+samples generated after 63 epochs
+The committee said he had a role course for 35 years , which he has forced Ankara to leave her backs of the S salary .
+I was living by the Metropolitan police many years ago during or three years and then became aggressive and to take their preferred 90 months so then said it could go .
+' This is just not the right thing to do because I think that ' s maybe you can ' t always get him back from the other side .
+It loved us to be seen with young people in the area and we were looking forward to his Tuesday and the show is absolutely very good .
+May must be a very aggressive view of the EU , but they ' ll take little responsibility on the economy .
+
+
+MLE pretraining epoch 64/80
+train/nll                                @ write 64 = 2.1859
+
+samples generated after 64 epochs
+An estimated 7 , 000 people claim are migrants to pay the disease about 30 procedures in 2015 , accounting for 2 . 8 million times later in the UK .
+Of the innocent , 45 per cent of women who participate in this sexual claim many communities are in the condition facing the same and sex their children .
+This is the Conservative candidate from accepting Super Tuesday Chicago as well as his defeat , as well as the Democratic nominee , including a new commander in the race .
+The government will not be formally formally successful with the UK ' s High unemployment rate but the biggest decline in hopes .
+If I suspect the issues like their things , groups of how many other teachers would entered that point in concrete , South Carolina said .
+
+
+MLE pretraining epoch 65/80
+train/nll                                @ write 65 = 2.1842
+
+test/oracle_nll                          @ write 65 = 2.4332
+test/nll                                 @ write 65 = 2.1505
+
+samples generated after 65 epochs
+We ' re missing driving very hard and we ' ve never going just to find out a bit of ice .
+In June , the company signed an increase of funding to encourage hundreds of thousands of customers forced to leave and they hadn ' t addressed the facility .
+It had gotten worse and must have been better off for Louis because of the lack of housing cities and credit for professional information benefits to the floor of the agenda , the company said .
+Real Madrid , has cited that much of the current cancer , needs to return to consumers , the government and ability to invest with others .
+I don ' t think anyone ' s 28 percent of them were old enough , because I would not understand it .
+
+
+MLE pretraining epoch 66/80
+train/nll                                @ write 66 = 2.1820
+
+samples generated after 66 epochs
+That was because she was before , you was in the game because it was real public , he said .
+After the remarkable event , , though , challenging points at some point , he doesn ' t seem to have to be shocked in the event .
+At the same time , she won every single second of her 28 years because she is not feeling card .
+The letters would be improving by foreign models board arguing that suggested the threat of increased cuts as buyers rose by human rights troops .
+This guy showed Chicago and the baby were a really strong partner and now he ' ve got to get a bit nervous he .
+
+
+MLE pretraining epoch 67/80
+train/nll                                @ write 67 = 2.1795
+
+test/oracle_nll                          @ write 67 = 2.4308
+test/nll                                 @ write 67 = 2.1472
+
+samples generated after 67 epochs
+' We are looking to target it around and pretty much public difficulties so I don ' t want what she has to do and how we can get to them .
+But 3 percent of its value would be associated , but only 42 per cent of people attending the United States have always had one , millions of chronic jobs with no symptoms , ranging from Wednesday , and nearly 2 per cent of US born product it has been established
+Roberts said Thursday had been acknowledged about the measures between attacks on May , with Ukraine , , which were delivered by a group of aircraft , were blamed IS by Islamic State .
+You don ' t see it ' s this case , but does , that ' s your own , but I know what the hell wants to see .
+He insists he is expected to give power a cap TV plan , hoping in any case which will begin negotiations with the UK .
+
+
+MLE pretraining epoch 68/80
+train/nll                                @ write 68 = 2.1774
+
+samples generated after 68 epochs
+The emotional phase of the increases of a repeat in Louisiana should have been linked since November emerged she had no official secretary of state .
+A TV hopeful from the Atlantic select committee that ministers should not be forced to identify if they are so taken .
+It ' s not only about a mile to try and convince them that there ' s not many proceedings in the dark debate .
+By the time , care is looking for a while to develop the two way places ahead of those , to his side , and providing stage for more safety .
+In an ad , France , 100 , 000 of the population , are , 400 , 000 people and at 250 risk being less than two years old .
+
+
+MLE pretraining epoch 69/80
+train/nll                                @ write 69 = 2.1755
+
+test/oracle_nll                          @ write 69 = 2.4072
+test/nll                                 @ write 69 = 2.1438
+
+samples generated after 69 epochs
+After the humanitarian between opening , Clinton took his top on the spot , but the chairman of others ' s 35 percent were black .
+But if you were travelling at a hospital , a police officer was taking anti free , to . . . believed that they could get quite another family .
+I thought I went part to a real series consultant , but I fell in all looking to this and training after a day before the tournament , if it wasn ' t .
+He was it for the film that he had been in hospital , but he Young said he would once be even less to Roger with him .
+He also said the pair would have given his first six Test matches in the first half but five so far in his life .
+
+
+saved 1 models
+MLE pretraining epoch 70/80
+train/nll                                @ write 70 = 2.1734
+
+samples generated after 70 epochs
+But throughout the US , only 56 percent of I believe ' s when I get because I ' m not better as the United States to .
+It was a challenge for the League and still , in my family , the entire manager , just as well as I continued .
+A prison summit was initially released on Friday he said inmates from the start of the Uber family .
+We wanted to take more games in 2006 , and we ' ve won that in a stretch of the general game for all , in the four races but there are new types of all guys to change our lives and see .
+He can ' t remember the passport , but I hope to remember him and stand that we are going to be for the United States .
+
+
+MLE pretraining epoch 71/80
+train/nll                                @ write 71 = 2.1715
+
+test/oracle_nll                          @ write 71 = 2.4047
+test/nll                                 @ write 71 = 2.1406
+
+samples generated after 71 epochs
+Our results is high on the economy , and we are already doing that the company believes it brings the sugar ' s safety with other institutions .
+Hillary Clinton has asked her to keep up without compensation because more than 6 people went on to take her economic victory for them .
+At a Canadian government , the first minister will make plans to reform the world ' s population against its citizens with 1 . 1 million eligible to leave the European Union .
+' As a teacher I ' ve bars a lot of a lot of football , and I don ' t want to have seen some of politicians .
+It is ' very obvious that if the world ' s not economic goods should be , they we need to meet themselves , he added .
+
+
+MLE pretraining epoch 72/80
+train/nll                                @ write 72 = 2.1695
+
+samples generated after 72 epochs
+The budget deficit has already reached every 3 , 800 in the day and China won only 0 . 2 1 in excess 11 trillion .
+Of course , fully performed out the women ' s relationship in the past 10 or three years , and the men suffering them .
+I didn ' t know how his information were in high school , but it was wrong to have to wait to report this .
+He is also trying to attract so many children as a huge agent in the early days to come forward from being in best by the performance of the hiding .
+We ' re trying to get it , but we can turn the data , making sure you don ' t be anything you have to hide .
+
+
+MLE pretraining epoch 73/80
+train/nll                                @ write 73 = 2.1672
+
+test/oracle_nll                          @ write 73 = 2.3726
+test/nll                                 @ write 73 = 2.1382
+
+samples generated after 73 epochs
+Yet I still spend a few months away , some doing well , such as long as I ' ve played and I ' m not ready to sign the employment far .
+Great the Welsh fishing services means they ' re operated in London to do so but they are rejected to other employers .
+One of the company ' s most expensive economies said in the German twin application for it at a conference in Rio .
+We don ' t know what these games are going to happen , I ' m not sure the truth is but protect and good and we can do that to ask that .
+' People aren ' t about keeping talk or registered about rugby water and , and don ' t believe there is no love that you ' ll be at .
+
+
+MLE pretraining epoch 74/80
+train/nll                                @ write 74 = 2.1659
+
+samples generated after 74 epochs
+In terms of friendly , he also has not to explain whether he ' d want to host an executive Hall in New York .
+We want to talk to us by working closely with the children when I can get on to set up , as they re able to strike so many hundred kids .
+Channel and an extra 21 year old isn ' t offered for continuing next week to establish how to play the longer a forward match .
+More recently , a pro sentences British say to suggest it was in cases , dealing with Western Italian authorities .
+United , and some boys have been critical of pre summer for the past three years , it said that the weather caused him well over the next decade .
+
+
+MLE pretraining epoch 75/80
+train/nll                                @ write 75 = 2.1635
+
+test/oracle_nll                          @ write 75 = 2.3679
+test/nll                                 @ write 75 = 2.1348
+
+samples generated after 75 epochs
+I ' m for you to know that you have better use of cooking in the other than it wanted you , others says , ' Miller said .
+In addition to many other people supporting this crisis , the government should pay for more than 10 , 000 , he said .
+Well , you know , you know who have a lot of hours , and there would be a difference in that .
+Our goal is something fundamental and just for us an elderly best attempt to get the best out there , she said .
+I am going to be disappointed , but I ' ve only given that 78 . 2 percent there are one thing there ' s a huge wedding at stake .
+
+
+MLE pretraining epoch 76/80
+train/nll                                @ write 76 = 2.1622
+
+samples generated after 76 epochs
+Ukraine is expected to lay out the highest number in a number of French concerns and politicians , a narrow that left the world .
+A Home Office spokesman said There were linked over the current quarter , not 46 per cent am performing in the tens of thousands of people .
+Many of them online from both footage doesn ' t information a series of tweets and won yet in Brussels in July 2014 .
+Or should be reached in this room but can be amazing , the way you never do the opposite things where you want to .
+Our country and I really don ' t know what we ' ve seen and how to kick it that problem .
+
+
+MLE pretraining epoch 77/80
+train/nll                                @ write 77 = 2.1603
+
+test/oracle_nll                          @ write 77 = 2.3843
+test/nll                                 @ write 77 = 2.1320
+
+samples generated after 77 epochs
+We ' re 18 , 200 with Japan , far too , right we hadn ' t been in that situation at now so we ' re going to be .
+I were managing the ship to hire a big part of the project You can also buy on course and that ' s the day yet to go within this week .
+Our professional crew is what I want to do , I have to realize the conviction we ' re going to show and get into trouble so I move it night .
+That relationship is unprecedented , according to a report as the Today programme up to his combination , though it is not to understand whether a lack of interest , or the answer nature of the crash said in the game .
+We think I would be doing well as well as I can tell the Will help my son and working out I gave them a bit , he said .
+
+
+MLE pretraining epoch 78/80
+train/nll                                @ write 78 = 2.1584
+
+samples generated after 78 epochs
+I wonder when my point argument is not normally right for us but it ' s an experience for me in the past .
+I don ' t think people should want to buy anything to manage that specifically , but it ' s sad that the community can stay easy with the foundation , she wrote .
+It ' s some way down , and what knows we ' re seeing , not change or anyway , that ' s somewhat even a blow .
+I now learn from the sad saying I was able to help me with money in some ways , she said .
+For most of them , Clinton could be getting better off in the Indiana primary and the Democratic race has not been declared .
+
+
+MLE pretraining epoch 79/80
+train/nll                                @ write 79 = 2.1571
+
+test/oracle_nll                          @ write 79 = 2.3859
+test/nll                                 @ write 79 = 2.1283
+
+samples generated after 79 epochs
+With hundreds of millions of pounds saving the list to fund it all its own one , Tesla has all remained limited information in recent weeks .
+The British Foreign assistant will have to deal with the bill by legislative leaders and federal intervention to the U . K . and the United Kingdom .
+The single currency is why the demands will stay in Italy where such a big fall are the best to Latin America .
+It is too many sites , but that we ' d like to add the tickets for the team , which has been a second set best in the defensive team .
+By the beginning of the deal praised Trump , the star embrace no foreign policy voice to introduce the presidency .
+
+
+saved 1 models
+transfered weights from generator to discriminator
+ADV training epoch 0
+train/P(real)                            @ write 80 = 0.5119
+train/P(fake)                            @ write 80 = 0.4876
+train/Disc Loss                          @ write 80 = 0.6836
+train/Critic Loss                        @ write 80 = 49.2959
+
+samples generated after 0 epochs
+After two years of campaigning in the court , sure whether police officers will be addressed , they have warned that the victims have been taking back the investigation .
+I didn ' t want to get married for advice , and from my kids , I wouldn ' t really do it again because I didn ' t know how she can turn the treatment , she said .
+I know when you see it , take it hard to try to keep I ever in a very good weight room .
+You will say something comes going from ; you can ' t get there and take a bit of you smile , your executive community in the shoes behind me .
+They are on track to develop the level of Zika where they hang and drive them up because they know how to do online .
+
+
+ADV training epoch 1
+Traceback (most recent call last):
+  File "main.py", line 171, in <module>
+    apply_loss(optimizer_gen, gen_loss, clip_norm=args.grad_clip)
+  File "/home/optimass/OnExposureBias/utils.py", line 193, in apply_loss
+    loss.backward(retain_graph=retain_graph)
+  File "/home/optimass/torch/lib/python3.6/site-packages/torch/tensor.py", line 93, in backward
+    torch.autograd.backward(self, gradient, retain_graph, create_graph)
+  File "/home/optimass/torch/lib/python3.6/site-packages/torch/autograd/__init__.py", line 90, in backward
+    allow_unreachable=True)  # allow_unreachable flag
+RuntimeError: CUDA error: out of memory

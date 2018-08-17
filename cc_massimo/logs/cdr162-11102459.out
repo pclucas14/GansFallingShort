@@ -1,0 +1,484 @@
+creating new word dictionary
+Warning: new arg 'character_level' given value 'False'
+model successfully loaded
+switching the temperature to 1.01
+Warning: new arg 'character_level' given value 'False'
+model successfully loaded
+teacher forcing : True
+eval/train_entropy                       @ write 0 = 4.2739
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 1 = 4.2186
+eval/train_oracle_nll                    @ write 1 = 4.2771
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 2 = 3.2862
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 3 = 3.6009
+eval/train_oracle_nll                    @ write 3 = 3.2879
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 4 = 3.6882
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 5 = 3.6259
+eval/train_oracle_nll                    @ write 5 = 3.5306
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 6 = 3.6783
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 7 = 3.5955
+eval/train_oracle_nll                    @ write 7 = 3.6101
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 8 = 3.6108
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 9 = 3.4897
+eval/train_oracle_nll                    @ write 9 = 3.5520
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 10 = 3.5054
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 11 = 3.6518
+eval/train_oracle_nll                    @ write 11 = 3.3208
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 12 = 3.5038
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 13 = 3.5091
+eval/train_oracle_nll                    @ write 13 = 3.4445
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 14 = 3.5107
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 15 = 3.5386
+eval/train_oracle_nll                    @ write 15 = 3.4893
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 16 = 3.5559
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 17 = 3.5098
+eval/train_oracle_nll                    @ write 17 = 3.4182
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 18 = 3.5377
+batch contains 1000 / 1000 active sentences
+eval/train_entropy                       @ write 19 = 3.3865
+eval/train_oracle_nll                    @ write 19 = 3.3556
+batch contains 993 / 1000 active sentences
+eval/train_entropy                       @ write 20 = 3.2411
+batch contains 973 / 1000 active sentences
+eval/train_entropy                       @ write 21 = 2.8597
+eval/train_oracle_nll                    @ write 21 = 3.2686
+batch contains 884 / 1000 active sentences
+eval/train_entropy                       @ write 22 = 2.5502
+batch contains 800 / 1000 active sentences
+eval/train_entropy                       @ write 23 = 2.2210
+eval/train_oracle_nll                    @ write 23 = 3.0082
+batch contains 711 / 1000 active sentences
+eval/train_entropy                       @ write 24 = 1.9641
+batch contains 621 / 1000 active sentences
+eval/train_entropy                       @ write 25 = 1.6292
+eval/train_oracle_nll                    @ write 25 = 3.0915
+batch contains 518 / 1000 active sentences
+eval/train_entropy                       @ write 26 = 1.3440
+batch contains 440 / 1000 active sentences
+eval/train_entropy                       @ write 27 = 1.2140
+eval/train_oracle_nll                    @ write 27 = 3.0029
+batch contains 379 / 1000 active sentences
+eval/train_entropy                       @ write 28 = 0.9655
+batch contains 325 / 1000 active sentences
+eval/train_entropy                       @ write 29 = 0.8047
+eval/train_oracle_nll                    @ write 29 = 2.9871
+batch contains 272 / 1000 active sentences
+eval/train_entropy                       @ write 30 = 0.6693
+batch contains 222 / 1000 active sentences
+eval/train_entropy                       @ write 31 = 0.5658
+eval/train_oracle_nll                    @ write 31 = 3.2189
+batch contains 186 / 1000 active sentences
+eval/train_entropy                       @ write 32 = 0.4380
+batch contains 154 / 1000 active sentences
+eval/train_entropy                       @ write 33 = 0.3858
+eval/train_oracle_nll                    @ write 33 = 2.8147
+batch contains 129 / 1000 active sentences
+eval/train_entropy                       @ write 34 = 0.2937
+batch contains 103 / 1000 active sentences
+eval/train_entropy                       @ write 35 = 0.2959
+eval/train_oracle_nll                    @ write 35 = 2.8856
+batch contains 89 / 1000 active sentences
+eval/train_entropy                       @ write 36 = 0.2417
+batch contains 78 / 1000 active sentences
+eval/train_entropy                       @ write 37 = 0.1858
+eval/train_oracle_nll                    @ write 37 = 2.8574
+batch contains 64 / 1000 active sentences
+eval/train_entropy                       @ write 38 = 0.1559
+batch contains 55 / 1000 active sentences
+eval/train_entropy                       @ write 39 = 0.1006
+eval/train_oracle_nll                    @ write 39 = 2.5636
+batch contains 42 / 1000 active sentences
+eval/train_entropy                       @ write 40 = 0.1001
+batch contains 38 / 1000 active sentences
+eval/train_entropy                       @ write 41 = 0.0846
+eval/train_oracle_nll                    @ write 41 = 2.3903
+batch contains 27 / 1000 active sentences
+eval/train_entropy                       @ write 42 = 0.0647
+batch contains 22 / 1000 active sentences
+eval/train_entropy                       @ write 43 = 0.0326
+eval/train_oracle_nll                    @ write 43 = 3.0646
+batch contains 18 / 1000 active sentences
+eval/train_entropy                       @ write 44 = 0.0265
+most likely sentences under oracle:
+A 35 year old woman was trapped inside the vehicle and was taken to the Royal Brisbane and Women ' s Hospital .
+nll oracle: 1.8341344750445823
+The 24 year old , who cannot be named for legal reasons , was arrested on Wednesday morning along with a 32 year old man who was arrested in northern NSW .
+nll oracle: 1.916710615158081
+U . S . stocks rose on Thursday , led by gains in bank shares , a day after the Federal Reserve raised interest rates for the second time in nearly a decade .
+nll oracle: 1.9648709016687729
+least likely sentences under oracle:
+The show keeps its touch light by having political issues and the running of government take back seats to personality .
+nll oracle: 5.400076729910714
+Clinton would be an average president because in a majority vote between average and any other grade , it wins .
+nll oracle: 5.256111145019531
+By closing with contemporary Syrian works , the show suggests that , against all present evidence , there could be peace again .
+nll oracle: 5.210550059442935
+teacher forcing : True
+eval/test_entropy                        @ write 0 = 4.2739
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 1 = 4.2537
+eval/test_oracle_nll                     @ write 1 = 4.4210
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 2 = 3.4478
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 3 = 3.5476
+eval/test_oracle_nll                     @ write 3 = 3.6395
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 4 = 3.6476
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 5 = 3.6828
+eval/test_oracle_nll                     @ write 5 = 3.8427
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 6 = 3.6350
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 7 = 3.6001
+eval/test_oracle_nll                     @ write 7 = 3.7107
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 8 = 3.6309
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 9 = 3.5424
+eval/test_oracle_nll                     @ write 9 = 3.8746
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 10 = 3.5336
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 11 = 3.5249
+eval/test_oracle_nll                     @ write 11 = 3.6273
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 12 = 3.4798
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 13 = 3.6157
+eval/test_oracle_nll                     @ write 13 = 3.5376
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 14 = 3.5313
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 15 = 3.5636
+eval/test_oracle_nll                     @ write 15 = 3.8199
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 16 = 3.6211
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 17 = 3.4008
+eval/test_oracle_nll                     @ write 17 = 3.8439
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 18 = 3.5289
+batch contains 1000 / 1000 active sentences
+eval/test_entropy                        @ write 19 = 3.4349
+eval/test_oracle_nll                     @ write 19 = 3.7559
+batch contains 992 / 1000 active sentences
+eval/test_entropy                        @ write 20 = 3.2799
+batch contains 971 / 1000 active sentences
+eval/test_entropy                        @ write 21 = 2.9705
+eval/test_oracle_nll                     @ write 21 = 3.4544
+batch contains 900 / 1000 active sentences
+eval/test_entropy                        @ write 22 = 2.6432
+batch contains 817 / 1000 active sentences
+eval/test_entropy                        @ write 23 = 2.3053
+eval/test_oracle_nll                     @ write 23 = 3.3072
+batch contains 727 / 1000 active sentences
+eval/test_entropy                        @ write 24 = 2.0441
+batch contains 632 / 1000 active sentences
+eval/test_entropy                        @ write 25 = 1.7075
+eval/test_oracle_nll                     @ write 25 = 3.4499
+batch contains 558 / 1000 active sentences
+eval/test_entropy                        @ write 26 = 1.4336
+batch contains 472 / 1000 active sentences
+eval/test_entropy                        @ write 27 = 1.2386
+eval/test_oracle_nll                     @ write 27 = 3.2115
+batch contains 398 / 1000 active sentences
+eval/test_entropy                        @ write 28 = 1.0356
+batch contains 336 / 1000 active sentences
+eval/test_entropy                        @ write 29 = 0.8642
+eval/test_oracle_nll                     @ write 29 = 3.3732
+batch contains 293 / 1000 active sentences
+eval/test_entropy                        @ write 30 = 0.7671
+batch contains 245 / 1000 active sentences
+eval/test_entropy                        @ write 31 = 0.5779
+eval/test_oracle_nll                     @ write 31 = 3.0580
+batch contains 204 / 1000 active sentences
+eval/test_entropy                        @ write 32 = 0.4846
+batch contains 164 / 1000 active sentences
+eval/test_entropy                        @ write 33 = 0.4260
+eval/test_oracle_nll                     @ write 33 = 3.1772
+batch contains 144 / 1000 active sentences
+eval/test_entropy                        @ write 34 = 0.3531
+batch contains 123 / 1000 active sentences
+eval/test_entropy                        @ write 35 = 0.2998
+eval/test_oracle_nll                     @ write 35 = 3.1509
+batch contains 109 / 1000 active sentences
+eval/test_entropy                        @ write 36 = 0.2387
+batch contains 84 / 1000 active sentences
+eval/test_entropy                        @ write 37 = 0.2153
+eval/test_oracle_nll                     @ write 37 = 3.2043
+batch contains 73 / 1000 active sentences
+eval/test_entropy                        @ write 38 = 0.1624
+batch contains 57 / 1000 active sentences
+eval/test_entropy                        @ write 39 = 0.1218
+eval/test_oracle_nll                     @ write 39 = 2.9766
+batch contains 40 / 1000 active sentences
+eval/test_entropy                        @ write 40 = 0.1051
+batch contains 31 / 1000 active sentences
+eval/test_entropy                        @ write 41 = 0.0860
+eval/test_oracle_nll                     @ write 41 = 3.4867
+batch contains 26 / 1000 active sentences
+eval/test_entropy                        @ write 42 = 0.0642
+batch contains 23 / 1000 active sentences
+eval/test_entropy                        @ write 43 = 0.0512
+eval/test_oracle_nll                     @ write 43 = 3.3390
+batch contains 19 / 1000 active sentences
+eval/test_entropy                        @ write 44 = 0.0316
+most likely sentences under oracle:
+U . S . stocks rose slightly on Wednesday after the Federal Reserve raise rates for the second time in a decade .
+nll oracle: 1.9977884707243547
+We ' re going to work something out that ' s going to make people happy and proud , Trump said in a Time magazine interview .
+nll oracle: 2.119224689624928
+When you ' re trying to win six in a row at the end of the year and you don ' t have a post player , I ' m sorry , it ' s not going to happen .
+nll oracle: 2.242005729675293
+least likely sentences under oracle:
+Uber and the like describe themselves as ride sharing companies , but critics call that public relations spin .
+nll oracle: 6.082530373021176
+Unfortunately , it didn ' t quite winner over Craig who only scored the dance a 9 , unlike every other judge .
+nll oracle: 5.872513480808424
+However , one former top army lawyer claimed earlier in 2016 that the rhetoric around the Iraq abuse cases was missing basic facts .
+nll oracle: 5.804452260335286
+teacher forcing : False
+eval/free_running_entropy                @ write 0 = 4.2739
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 1 = 4.1541
+eval/free_running_oracle_nll             @ write 1 = 4.2707
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 2 = 3.3431
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 3 = 3.6515
+eval/free_running_oracle_nll             @ write 3 = 3.3053
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 4 = 3.7869
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 5 = 3.7174
+eval/free_running_oracle_nll             @ write 5 = 3.7833
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 6 = 3.8059
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 7 = 3.8129
+eval/free_running_oracle_nll             @ write 7 = 3.8320
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 8 = 3.7409
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 9 = 3.7385
+eval/free_running_oracle_nll             @ write 9 = 3.7658
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 10 = 3.7205
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 11 = 3.5813
+eval/free_running_oracle_nll             @ write 11 = 3.6984
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 12 = 3.6771
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 13 = 3.6732
+eval/free_running_oracle_nll             @ write 13 = 3.6221
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 14 = 3.6428
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 15 = 3.6963
+eval/free_running_oracle_nll             @ write 15 = 3.6885
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 16 = 3.7595
+batch contains 1000 / 1000 active sentences
+eval/free_running_entropy                @ write 17 = 3.6337
+eval/free_running_oracle_nll             @ write 17 = 3.7862
+batch contains 999 / 1000 active sentences
+eval/free_running_entropy                @ write 18 = 3.6767
+batch contains 998 / 1000 active sentences
+eval/free_running_entropy                @ write 19 = 3.5881
+eval/free_running_oracle_nll             @ write 19 = 3.7402
+batch contains 988 / 1000 active sentences
+eval/free_running_entropy                @ write 20 = 3.3663
+batch contains 955 / 1000 active sentences
+eval/free_running_entropy                @ write 21 = 3.1246
+eval/free_running_oracle_nll             @ write 21 = 3.4325
+batch contains 885 / 1000 active sentences
+eval/free_running_entropy                @ write 22 = 2.7798
+batch contains 803 / 1000 active sentences
+eval/free_running_entropy                @ write 23 = 2.4016
+eval/free_running_oracle_nll             @ write 23 = 3.4116
+batch contains 730 / 1000 active sentences
+eval/free_running_entropy                @ write 24 = 2.1784
+batch contains 658 / 1000 active sentences
+eval/free_running_entropy                @ write 25 = 1.9131
+eval/free_running_oracle_nll             @ write 25 = 3.3136
+batch contains 574 / 1000 active sentences
+eval/free_running_entropy                @ write 26 = 1.5977
+batch contains 476 / 1000 active sentences
+eval/free_running_entropy                @ write 27 = 1.3897
+eval/free_running_oracle_nll             @ write 27 = 3.2144
+batch contains 413 / 1000 active sentences
+eval/free_running_entropy                @ write 28 = 1.1815
+batch contains 371 / 1000 active sentences
+eval/free_running_entropy                @ write 29 = 1.0078
+eval/free_running_oracle_nll             @ write 29 = 3.1650
+batch contains 306 / 1000 active sentences
+eval/free_running_entropy                @ write 30 = 0.8853
+batch contains 265 / 1000 active sentences
+eval/free_running_entropy                @ write 31 = 0.7400
+eval/free_running_oracle_nll             @ write 31 = 3.4198
+batch contains 229 / 1000 active sentences
+eval/free_running_entropy                @ write 32 = 0.6044
+batch contains 190 / 1000 active sentences
+eval/free_running_entropy                @ write 33 = 0.4904
+eval/free_running_oracle_nll             @ write 33 = 3.1920
+batch contains 152 / 1000 active sentences
+eval/free_running_entropy                @ write 34 = 0.4334
+batch contains 132 / 1000 active sentences
+eval/free_running_entropy                @ write 35 = 0.3661
+eval/free_running_oracle_nll             @ write 35 = 2.9006
+batch contains 110 / 1000 active sentences
+eval/free_running_entropy                @ write 36 = 0.3118
+batch contains 96 / 1000 active sentences
+eval/free_running_entropy                @ write 37 = 0.2504
+eval/free_running_oracle_nll             @ write 37 = 3.4735
+batch contains 81 / 1000 active sentences
+eval/free_running_entropy                @ write 38 = 0.2151
+batch contains 68 / 1000 active sentences
+eval/free_running_entropy                @ write 39 = 0.1993
+eval/free_running_oracle_nll             @ write 39 = 3.6847
+batch contains 57 / 1000 active sentences
+eval/free_running_entropy                @ write 40 = 0.1555
+batch contains 49 / 1000 active sentences
+eval/free_running_entropy                @ write 41 = 0.1210
+eval/free_running_oracle_nll             @ write 41 = 2.5925
+batch contains 35 / 1000 active sentences
+eval/free_running_entropy                @ write 42 = 0.0927
+batch contains 28 / 1000 active sentences
+eval/free_running_entropy                @ write 43 = 0.0804
+eval/free_running_oracle_nll             @ write 43 = 2.9739
+batch contains 27 / 1000 active sentences
+eval/free_running_entropy                @ write 44 = 0.0496
+most likely sentences under oracle:
+I ' m so grateful for that , he said , adding that he couldn ' t get back to the remote area .
+nll oracle: 1.8890568415323894
+One of the things I ' ve been through , I didn ' t have any energy to do it .
+nll oracle: 2.0554320925758
+There are also a lot of very talented players who don ' t quite understand what happens , he said .
+nll oracle: 2.095930916922433
+least likely sentences under oracle:
+But then , event , homes at Republican behind the former office , and not just even multiple or higher office members , for an eighth .
+nll oracle: 5.395085087528935
+When a conversation stand meant centre Spanish women and writers have been taught about British children a lot of my body now .
+nll oracle: 5.35247802734375
+We already know low people have proposed based on free trade for exports and firms from sectors lost with business .
+nll oracle: 5.227387201218378
+eval/RNN_test_acc                        @ write 0 = 0.5134
+eval/RNN_train_acc                       @ write 0 = 0.5044
+eval/RNN_test_loss                       @ write 0 = 0.0154
+eval/RNN_train_loss                      @ write 0 = 0.0108
+eval/RNN_test_acc                        @ write 10 = 0.4866
+eval/RNN_train_acc                       @ write 10 = 0.5425
+eval/RNN_test_loss                       @ write 10 = 0.0159
+eval/RNN_train_loss                      @ write 10 = 0.0107
+eval/RNN_test_acc                        @ write 20 = 0.5580
+eval/RNN_train_acc                       @ write 20 = 0.7156
+eval/RNN_test_loss                       @ write 20 = 0.0155
+eval/RNN_train_loss                      @ write 20 = 0.0085
+eval/RNN_test_acc                        @ write 30 = 0.5268
+eval/RNN_train_acc                       @ write 30 = 0.8581
+eval/RNN_test_loss                       @ write 30 = 0.0220
+eval/RNN_train_loss                      @ write 30 = 0.0051
+eval/RNN_test_acc                        @ write 40 = 0.5424
+eval/RNN_train_acc                       @ write 40 = 0.9437
+eval/RNN_test_loss                       @ write 40 = 0.0345
+eval/RNN_train_loss                      @ write 40 = 0.0024
+eval/RNN_test_acc                        @ write 50 = 0.5223
+eval/RNN_train_acc                       @ write 50 = 0.9675
+eval/RNN_test_loss                       @ write 50 = 0.0449
+eval/RNN_train_loss                      @ write 50 = 0.0016
+eval/RNN_test_acc                        @ write 60 = 0.5156
+eval/RNN_train_acc                       @ write 60 = 0.9825
+eval/RNN_test_loss                       @ write 60 = 0.0588
+eval/RNN_train_loss                      @ write 60 = 0.0008
+eval/RNN_test_acc                        @ write 70 = 0.5536
+eval/RNN_train_acc                       @ write 70 = 0.9975
+eval/RNN_test_loss                       @ write 70 = 0.0684
+eval/RNN_train_loss                      @ write 70 = 0.0001
+eval/RNN_test_acc                        @ write 80 = 0.5312
+eval/RNN_train_acc                       @ write 80 = 1.0000
+eval/RNN_test_loss                       @ write 80 = 0.0969
+eval/RNN_train_loss                      @ write 80 = 0.0000
+eval/RNN_test_acc                        @ write 90 = 0.5112
+eval/RNN_train_acc                       @ write 90 = 1.0000
+eval/RNN_test_loss                       @ write 90 = 0.1129
+eval/RNN_train_loss                      @ write 90 = 0.0000
+eval/RNN_test_acc                        @ write 100 = 0.5312
+eval/RNN_train_acc                       @ write 100 = 1.0000
+eval/RNN_test_loss                       @ write 100 = 0.1031
+eval/RNN_train_loss                      @ write 100 = 0.0000
+eval/RNN_test_acc                        @ write 110 = 0.5357
+eval/RNN_train_acc                       @ write 110 = 1.0000
+eval/RNN_test_loss                       @ write 110 = 0.0996
+eval/RNN_train_loss                      @ write 110 = 0.0000
+eval/RNN_test_acc                        @ write 120 = 0.5156
+eval/RNN_train_acc                       @ write 120 = 1.0000
+eval/RNN_test_loss                       @ write 120 = 0.1115
+eval/RNN_train_loss                      @ write 120 = 0.0000
+eval/RNN_test_acc                        @ write 130 = 0.5268
+eval/RNN_train_acc                       @ write 130 = 1.0000
+eval/RNN_test_loss                       @ write 130 = 0.1087
+eval/RNN_train_loss                      @ write 130 = 0.0000
+eval/RNN_test_acc                        @ write 140 = 0.5223
+eval/RNN_train_acc                       @ write 140 = 1.0000
+eval/RNN_test_loss                       @ write 140 = 0.1170
+eval/RNN_train_loss                      @ write 140 = 0.0000
+eval/RNN_test_acc                        @ write 150 = 0.5290
+eval/RNN_train_acc                       @ write 150 = 1.0000
+eval/RNN_test_loss                       @ write 150 = 0.1170
+eval/RNN_train_loss                      @ write 150 = 0.0000
+eval/RNN_test_acc                        @ write 160 = 0.5179
+eval/RNN_train_acc                       @ write 160 = 1.0000
+eval/RNN_test_loss                       @ write 160 = 0.1347
+eval/RNN_train_loss                      @ write 160 = 0.0000
+eval/RNN_test_acc                        @ write 170 = 0.5335
+eval/RNN_train_acc                       @ write 170 = 1.0000
+eval/RNN_test_loss                       @ write 170 = 0.1109
+eval/RNN_train_loss                      @ write 170 = 0.0000
+eval/RNN_test_acc                        @ write 180 = 0.5268
+eval/RNN_train_acc                       @ write 180 = 1.0000
+eval/RNN_test_loss                       @ write 180 = 0.1323
+eval/RNN_train_loss                      @ write 180 = 0.0000
+eval/RNN_test_acc                        @ write 190 = 0.5201
+eval/RNN_train_acc                       @ write 190 = 1.0000
+eval/RNN_test_loss                       @ write 190 = 0.1318
+eval/RNN_train_loss                      @ write 190 = 0.0000
+eval/RNN_test_acc                        @ write 200 = 0.5379
+eval/RNN_train_acc                       @ write 200 = 1.0000
+eval/RNN_test_loss                       @ write 200 = 0.1128
+eval/RNN_train_loss                      @ write 200 = 0.0000
+eval/RNN_test_acc                        @ write 210 = 0.5446
+eval/RNN_train_acc                       @ write 210 = 1.0000
+eval/RNN_test_loss                       @ write 210 = 0.1090
+eval/RNN_train_loss                      @ write 210 = 0.0000
+eval/RNN_test_acc                        @ write 220 = 0.5357
+eval/RNN_train_acc                       @ write 220 = 1.0000
+eval/RNN_test_loss                       @ write 220 = 0.1183
+eval/RNN_train_loss                      @ write 220 = 0.0000
+eval/RNN_test_acc                        @ write 230 = 0.5446
+eval/RNN_train_acc                       @ write 230 = 1.0000
+eval/RNN_test_loss                       @ write 230 = 0.1191
+eval/RNN_train_loss                      @ write 230 = 0.0000
+eval/RNN_test_acc                        @ write 240 = 0.5513
+eval/RNN_train_acc                       @ write 240 = 1.0000
+eval/RNN_test_loss                       @ write 240 = 0.1104
+eval/RNN_train_loss                      @ write 240 = 0.0000

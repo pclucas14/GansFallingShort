@@ -6,31 +6,31 @@ import sys
 
 
 
-BASE_DIR='/home/optimass/scratch/OnExposureBias/word'
+BASE_DIR='/home/optimass/scratch/OnExposureBias/char/'
 
-runs = 50
+runs = 40
 
 for _ in range(runs):
 
     ## MLE or GAN
     # for now just MLE
     loss = ['mle','gan']
-    p = [.0, 1.0]
+    p = [1.0, 0.0]
     loss = np.random.choice(loss, 1, p=p)[0]
 
     ## layers
-    num_layers = [1,2]
-    p = [0.5]*2
+    num_layers = [1,2,3,4]
+    p = [0.25]*4
     num_layers = np.random.choice(num_layers, 1, p=p)[0]
 
     ## dim
-    hd = [128, 256, 512]
-    p = [0.2, 0.3, 0.5]
+    hd = [32, 64, 128, 256, 512]
+    p = [0.2]*5
     hd  = np.random.choice(hd, 1, p=p)[0]
     
     ## batch_size
-    bs = [64, 128, 256, 512, 1024]
-    p = [0.2]*5
+    bs = [256, 512, 1024]
+    p = [0.33, 0.33, 0.34]
     bs = np.random.choice(bs, 1, p=p)[0]
 
     ## glr
@@ -42,8 +42,8 @@ for _ in range(runs):
     #seq_len = [20, 25, 30, 35]
     #p = [0.25]*4
     #seq_len = np.random.choice(seq_len, 1, p=p)[0]
-    seq_len=51
-    #seq_len=250
+    #seq_len=51
+    seq_len=300
 
     ## dropout
     gen_vdp = [0.6, 0.5, 0.4, 0.3]
@@ -149,7 +149,8 @@ for _ in range(runs):
         --hidden_dim_disc %(hd)s \
         --max_seq_len %(seq_len)s \
         --alpha_test %(ats)s \
-        --beta %(beta)s " % locals()
+        --beta %(beta)s \
+        --character_level " % locals()
     print(command)
     
     command = "{} cc_launch_news.sh {}".format(sys.argv[1], command) 

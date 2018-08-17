@@ -8,4 +8,5 @@
 
 source ~/torch/bin/activate 
 cd ~/OnExposureBias/
+
 python "$@"

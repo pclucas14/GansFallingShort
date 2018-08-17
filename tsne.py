@@ -17,20 +17,22 @@ import pdb
 def preprocess(X, y, perplexity=30, metric='euclidean'):
     """ Compute pairiwse probabilities for MNIST pixels.
     """
+
     #digits = datasets.load_digits(n_class=6)
-    #pos = digits.data
+    #X = digits.data
     #y = digits.target
+    
     n_points = X.shape[0]
     distances2 = pairwise_distances(X, metric=metric, squared=True)
     # This return a n x (n-1) prob array
     pij = manifold.t_sne._joint_probabilities(distances2, perplexity, False)
     # Convert to n x n prob array
     pij = squareform(pij)
-    return n_points, pij
+    return n_points, pij, y
 
 
 def compute_tsne(X, y, t, args):
-    n_points, pij2d = preprocess(X, y, perplexity=args.tsne_perp)
+    n_points, pij2d, y = preprocess(X, y, perplexity=args.tsne_perp)
     i, j = np.indices(pij2d.shape)
     i = i.ravel()
     j = j.ravel()

@@ -1,0 +1,2 @@
+slurmstepd: error: Exceeded job memory limit
+slurmstepd: error: *** JOB 11101388 ON cdr297 CANCELLED AT 2018-08-16T22:25:58 ***

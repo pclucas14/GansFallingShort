@@ -50,7 +50,7 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--no_cuda', action='store_true')
     parser.add_argument('--transfer_weights_after_pretraining', type=int, default=1)
     parser.add_argument('--sample_size_fast', type=int, default=500)
-    parser.add_argument('--lm_path', type=str, default='oracles/news/word')
+    parser.add_argument('--lm_path', type=str, default='trained_models/news/word/best_mle')
     parser.add_argument('--lm_epoch', type=int, default=None)
     parser.add_argument('--debug', action='store_true')
 
