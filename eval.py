@@ -122,16 +122,18 @@ with torch.no_grad():
 
         sentences = id_to_words(seq.cpu().data.numpy(), word_dict)
         sorted_idx = np.argsort(avg_oracle_nll)
+    
+        if args.character_level: sentences = remove_sep_spaces(sentences)
         
         print("most likely sentences under oracle:")
         for i in range(3):
             print(sentences[sorted_idx[i]])
-            print("nll oracle: {}".format(avg_oracle_nll[sorted_idx[i]]))
+            print("nll oracle: {:.4f}".format(avg_oracle_nll[sorted_idx[i]]))
         
         print("least likely sentences under oracle:")
         for i in range(1,4):
             print(sentences[sorted_idx[-i]])
-            print("nll oracle: {}".format(avg_oracle_nll[sorted_idx[-i]]))
+            print("nll oracle: {:.4f}".format(avg_oracle_nll[sorted_idx[-i]]))
 
 
 # -------------------------------------------------------------------------------------
@@ -160,6 +162,7 @@ labels_test  = np.concatenate([np.ones_like(test_tf_states[0][:, 0]),\
 train_Xs = [np.concatenate([x,y]) for (x,y) in zip(train_tf_states, train_fr_states)]
 test_Xs  = [np.concatenate([x,y]) for (x,y) in zip(test_tf_states,  test_fr_states)]
 
+
 """ 1st model : Linear SVM """
 if args.run_svm:
     from sklearn.svm import SVC
@@ -168,6 +171,7 @@ if args.run_svm:
     accs = [clf.score(x, labels_test) for (clf, x) in zip(clfs, test_Xs)]
     for t, acc in zip(timesteps, accs):
         print_and_log_scalar(writer, 'eval/SVM_test_acc', acc, t)
+
 
 """ 2nd model : simple NN """
 if args.run_nn or args.run_rnn:
@@ -178,7 +182,7 @@ if args.run_nn or args.run_rnn:
         model.train() if train_model else model.eval()
         accs, losses = [], []
         data = [d for d in zip(X,Y)]
-        loader = torch.utils.data.DataLoader(data, shuffle=True, batch_size=64)
+        loader = torch.utils.data.DataLoader(data, shuffle=True, batch_size=128)
         
         for (x,y) in loader: 
             x, y = x.cuda(), y.long().cuda()
@@ -227,14 +231,31 @@ if args.run_nn or args.run_rnn:
 if args.run_rnn:
      assert args.tsne_log_every == 1, 'states are not from a continuous sequence!'
 
+     class LockedDropout(nn.Module):
+         def __init__(self):
+             super().__init__()
+
+         # assumes batch_first ordering
+         def forward(self, x, dropout=0.5):
+             if not self.training or not dropout:
+                 return x
+             m = x.data.new(x.size(0), 1, x.size(2)).bernoulli_(1 - dropout)
+             mask = Variable(m, requires_grad=False) / (1 - dropout)
+             mask = mask.expand_as(x)
+             return mask * x
+
      class RNN(nn.Module):
          def __init__(self):
              super(RNN, self).__init__()
-             self.lstm = nn.LSTM(hidden_state_size, hidden_state_size, num_layers=2, batch_first=True)
-             self.out = nn.Linear(hidden_state_size, 2)
+             self.lstm = nn.LSTM(hidden_state_size, hidden_state_size, num_layers=2, \
+                batch_first=True, bidirectional=True)
+             self.out = nn.Linear(hidden_state_size * 2, 2)
+             self.lockdrop = LockedDropout()
 
          def forward(self, x):
-             last_hs = self.lstm(x)[0][:, -1]
+             x = self.lockdrop(x)
+             hs = self.lstm(x)[0]
+             last_hs = self.lockdrop(hs)[:, -1]
              return self.out(last_hs)
 
      train_X, test_X = [np.stack(x, axis=1) for x in [train_Xs, test_Xs]]
@@ -245,7 +266,7 @@ if args.run_rnn:
          train_loss, train_acc = run_epoch(model, train_X, labels_train, opt=opt)
          test_loss,  test_acc  = run_epoch(model, test_X, labels_test)
 
-         if ep % 50 == 0 : 
+         if ep % 5 == 0 : 
              print_and_log_scalar(writer, 'eval/RNN_test_acc'  , test_acc, ep)
              print_and_log_scalar(writer, 'eval/RNN_train_acc' , train_acc, ep)
              print_and_log_scalar(writer, 'eval/RNN_test_loss' , test_loss, ep)
