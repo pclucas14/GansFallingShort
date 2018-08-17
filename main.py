@@ -70,6 +70,7 @@ for epoch in range(args.mle_epochs):
 
     # Training loop
     for i, minibatch in enumerate(train_loader):
+        print(i)
         input, target, lens = minibatch
         
         gen_logits, _ = gen(input)
@@ -109,7 +110,7 @@ for epoch in range(args.mle_epochs):
     # save samples
     gen.eval()
     fake_logits, fake_sentences = gen(input[:, [0]])
-    print_and_save_samples(fake_sentences, word_dict, args.base_dir, epoch)
+    print_and_save_samples(fake_sentences, word_dict, args.base_dir, epoch, char_level=args.character_level)
 
     if (epoch + 1) % args.save_every == 0: 
         save_models(MODELS[0:1], args.base_dir, writes)
@@ -253,7 +254,7 @@ for epoch in range(args.adv_epochs):
     # save samples
     gen.eval()
     fake_logits, fake_sentences = gen(input[:, [0]])
-    print_and_save_samples(fake_sentences, word_dict, args.base_dir, epoch)
+    print_and_save_samples(fake_sentences, word_dict, args.base_dir, epoch, char_level=args.character_level)
 
     # save models
     if (epoch + 1) % args.save_every == 0: 

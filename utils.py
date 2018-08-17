@@ -244,10 +244,20 @@ def generate_file(gen, first_token, name='output.txt'):
             f.write(xx + '\n')
 
 
-def print_and_save_samples(fake_sentences, word_dict, base_dir, epoch, max_print=5):
+# remove separating spaces
+def remove_sep_spaces(sentences):
+    sentences = [x.replace('  ', 'SPACE') for x in sentences]
+    sentences = [x.replace(' ', '') for x in sentences]
+    sentences = [x.replace('SPACE', ' ') for x in sentences]
+    return sentences
+
+
+def print_and_save_samples(fake_sentences, word_dict, base_dir, epoch, max_print=5, char_level=False):
     print('samples generated after %d epochs' % epoch)
     file_name = os.path.join(base_dir, 'samples/generated{}.txt'.format(epoch))
     sentences = id_to_words(fake_sentences.cpu().data.numpy(), word_dict)
+    if char_level: 
+        sentences = remove_sep_spaces(sentence)
     with open(file_name, 'w') as f:
         for i, sentence in enumerate(sentences): 
             xx = str(sentence) #[1:-1]
