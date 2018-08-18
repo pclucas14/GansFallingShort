@@ -62,8 +62,7 @@ def tokenize(path, train=False, word_dict=None, char_level=False):
                 elif words[-1] == '!':
                     words[-1]  ='<em>'
                 else:
-                    import pdb; pdb.set_trace()
-
+                    print("tokenizing a sentence with no ending ...")
                 
             # only add words if in training set
             if train:
@@ -104,7 +103,7 @@ def tokenize(path, train=False, word_dict=None, char_level=False):
                 elif words[-1] == '!':
                     words[-1]  ='<em>'
                 else:
-                    import pdb; pdb.set_trace()
+                    print("tokenizing a sentence with no ending ...")
 
             token = 0
             idx = list(range(len(words)))

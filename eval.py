@@ -100,7 +100,7 @@ with torch.no_grad():
                 dist = gen.output_layer(output)
                 dist *= gen.args.alpha_test
                 input_idx = Categorical(logits=dist.squeeze(1)).sample().unsqueeze(1)
-                seq = input_idx if t==0 else torch.cat((seq,input_idx), 1)
+                fake_sentences = input_idx if t==0 else torch.cat((fake_sentences,input_idx), 1)
 
 
             if (t+1) % args.tsne_log_every == 0: 
@@ -115,9 +115,7 @@ with torch.no_grad():
                 print_and_log_scalar(writer, 'eval/%s_oracle_nll' % mode, p_x_t, t) 
 
         # print most/less likely sequences
-        if teacher_force:
-            seq = input[:,1:]
-        
+        seq = input[:,1:] if teacher_force else fake_sentences
         seq_len = (seq != 0).sum(1)
         tot_oracle_nll = full_oracle_nll.sum(1)
         avg_oracle_nll = tot_oracle_nll.cpu().numpy() / seq_len.cpu().numpy()
@@ -128,15 +126,19 @@ with torch.no_grad():
         if args.character_level: sentences = remove_sep_spaces(sentences)
         
         print("most likely sentences under oracle:")
-        for i in range(3):
+        for i in range(10):
             print(sentences[sorted_idx[i]])
             print("nll oracle: {:.4f}".format(avg_oracle_nll[sorted_idx[i]]))
         
         print("least likely sentences under oracle:")
-        for i in range(1,4):
+        for i in range(1,11):
             print(sentences[sorted_idx[-i]])
             print("nll oracle: {:.4f}".format(avg_oracle_nll[sorted_idx[-i]]))
 
+        # store LM score
+        if mode=='free_running':
+            lm_score = np.mean(avg_oracle_nll)
+            print_and_log_scalar(writer, 'eval/lm_score', lm_score, gen.args.alpha_test)
 
 # -------------------------------------------------------------------------------------
 # Evaluating the similarity of hidden states
@@ -147,6 +149,7 @@ timesteps = list(MODE[0][2].keys())
 
 split = int(args.tsne_batch_size * 0.8)
 # let's do a train-test split and see if we can train a simple SVM on it
+#TODO(): make an arg for train or test hiddn states
 #tf_states    = [MODE[0][2][t] for t in timesteps]
 tf_states    = [MODE[1][2][t] for t in timesteps]
 fr_states    = [MODE[2][2][t] for t in timesteps]
@@ -291,5 +294,33 @@ if args.run_tsne:
         for i in range(distances.shape[0]):
             for j in range(i + 1, distances.shape[1]):
                 writer.add_scalar('eval/distance_centroids%d-%d' % (i, j), distances[i,j], t)
+
+
+
+#____________________________________________________________________________
+# Evaluate quality/diversity tradeoff in GAN and MLE w/ Temperature Control
+#____________________________________________________________________________
+
+
+"""" run the Reverse LM score """
+if args.run_rlm:
+
+    # save the generated sequences somewhere 
+    rlm_base_dir = os.path.join(args.model_path,"rlm_alpha{}".format(gen.args.alpha_test))
+    #print_and_save_samples(fake_sentences[:int(0.7*args.tsne_batch_size),:], 
+    #        word_dict, rlm_base_dir, for_rlm=True, split='train')
+    #print_and_save_samples(fake_sentences[int(0.7*args.tsne_batch_size):int(0.9*args.tsne_batch_size),:], 
+    #        word_dict, rlm_base_dir, for_rlm=True, split='valid')
+    #print_and_save_samples(fake_sentences[int(0.9*args.tsne_batch_size):,:], 
+    #        word_dict, rlm_base_dir, for_rlm=True, split='test')
+    print_and_save_samples(fake_sentences, 
+            word_dict, rlm_base_dir, for_rlm=True, split='train')
+
+    # run main.py on the generated dataset
+    command="python main.py --setup rlm  --base_dir {}".format(rlm_base_dir)
+
+    print(command)
+    os.system(command) 
+    
 
 

@@ -2,7 +2,7 @@ import argparse
 
 def get_train_args(allow_unmatched_args=False):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--setup', type=str, default='real', choices=['real', 'oracle'])
+    parser.add_argument('--setup', type=str, default='real', choices=['real', 'oracle','rlm'])
 
     # LOGGING args
     parser.add_argument('--base_dir', type=str, default='runs/test')
@@ -74,10 +74,10 @@ def get_train_args(allow_unmatched_args=False):
 # it that way
 def get_test_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, required=True, help='path to model')
+    parser.add_argument('--model_path', type=str, default="trained_models/news/word/best_mle", help='path to model')
     parser.add_argument('--model_epoch', type=int, default=None, help='epoch of saved model')
     parser.add_argument('--tsne_log_every', type=int, default=1, help='... every _ timestep')
-    parser.add_argument('--tsne_max_t', type=int, default=45, help='run tsne exp for _ steps')
+    parser.add_argument('--tsne_max_t', type=int, default=55, help='run tsne exp for _ steps')
     parser.add_argument('--tsne_batch_size', type=int, default=1000)
     parser.add_argument('--draw_ellipse', action='store_true', default=False)
     parser.add_argument('--n_topics', type=int, default=2, help="topics in VTSNE")
@@ -91,6 +91,8 @@ def get_test_args():
     parser.add_argument('--run_nn' ,  action='store_true', default=False)
     parser.add_argument('--run_rnn',  action='store_true', default=False)
     parser.add_argument('--run_tsne', action='store_true', default=False)
+    parser.add_argument('--run_rlm',  action='store_true', default=False)
+
 
     args, unmatched = parser.parse_known_args()
 
@@ -116,3 +118,44 @@ def get_test_args():
             raise ValueError('%s is not a valid argument' % arg_)
 
     return args
+
+
+
+# args for Reverse Language Modeling:
+def get_rlm_args():
+
+    args, _ = get_train_args(allow_unmatched_args=True)
+    
+    # LOGGING args
+    args.bleu_every=0
+    args.save_every=1e5
+    args.test_very=2
+
+    # MODEL args
+    args.rnn = 'LSTM'
+    args.hidden_dim_disc = args.hidden_dim_gen = 512
+    args.num_layers_disc = 2
+    args.num_layers_gen = 2
+    args.var_dropout_p_gen = 0.5
+
+
+    # TRAINING args
+    args.batch_size=128
+    args.mle_epohcs=100
+    args.adv_epochs=0
+    args.alpha_train=1.
+    args.alpha_test=1.
+    args.beta=0.
+    args.grad_clip=10.
+    args.gen_lr = 1e-3
+
+    # DATA args
+    args.stream_data = False
+    args.max_seq_len = 60
+    args.mask_padding = True
+
+    # OTHER args
+    args.lm_path = None
+
+    return args
+

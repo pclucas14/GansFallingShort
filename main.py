@@ -21,12 +21,20 @@ np.random.seed(1)
 if args.debug: # --> allows for faster iteration when coding 
     dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
         train=True, char_level=args.character_level)
-    dataset_test = dataset_train
+    dataset_valid = dataset_train
 else: 
     dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'train.txt'), \
         train=True, char_level=args.character_level)
-    dataset_test,  word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
+    dataset_valid,  word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
         train=False, word_dict=word_dict, char_level=args.character_level)
+
+if args.setup=='rlm':
+    args = get_rlm_args()
+    #TODO(not gonna work if we switch from the news dataset)
+    # overide training data:
+    dataset_train,  word_dict = tokenize(os.path.join(args.base_dir, 'train.txt'), \
+        train=False, word_dict=word_dict, char_level=args.character_level)
+
 
 # add extra args
 args.vocab_size = len(word_dict)
@@ -65,7 +73,7 @@ MLE pretraining
 for epoch in range(args.mle_epochs):
     print('MLE pretraining epoch {}/{}'.format(epoch, args.mle_epochs))
     train_loader = minibatch_generator(dataset_train, args, shuffle=True)
-    losses_train, losses_test, oracle_nlls = [], [], []
+    losses_train, losses_valid, oracle_nlls = [], [], []
     gen.train()
 
     # Training loop
@@ -81,17 +89,17 @@ for epoch in range(args.mle_epochs):
     print_and_log_scalar(writer, 'train/nll', losses_train, writes, end_token='\n')
 
     if (epoch + 1) % args.test_every == 0: 
-        test_loader  = minibatch_generator(dataset_test,  args, shuffle=False)
+        valid_loader  = minibatch_generator(dataset_valid,  args, shuffle=False)
         with torch.no_grad():
             gen.eval()
 
             # Test loop
-            for i, minibatch in enumerate(test_loader):
+            for i, minibatch in enumerate(valid_loader):
                 input, target, lens = minibatch
 
                 gen_logits, _ = gen(input)
                 loss = masked_cross_entropy(gen_logits, target, lens)
-                losses_test += [loss.data]
+                losses_valid += [loss.data]
 
                 if args.lm_path: 
                     # generate a sentence, a sentence, and feed to oracle lm
@@ -102,8 +110,8 @@ for epoch in range(args.mle_epochs):
                     nll = NLL(oracle_logits[:, :-1], gen_sample)
                     oracle_nlls += [nll.data] 
 
-            print_and_log_scalar(writer, 'test/oracle_nll', oracle_nlls, writes)
-            print_and_log_scalar(writer, 'test/nll', losses_test, writes, end_token='\n')
+            print_and_log_scalar(writer, 'valid/oracle_nll', oracle_nlls, writes)
+            print_and_log_scalar(writer, 'valid/nll', losses_valid, writes, end_token='\n')
             
     writes += 1
        
@@ -189,13 +197,13 @@ for epoch in range(args.adv_epochs):
 
 
     if (epoch + 1) % args.test_every == 0: 
-        test_loader  = minibatch_generator(dataset_test,  args, shuffle=False)
+        valid_loader  = minibatch_generator(dataset_valid,  args, shuffle=False)
         with torch.no_grad():
             gen_losses, disc_losses, critic_losses, ps_real, ps_fake, nlls, oracle_nlls = [[] for _ in range(7)]
             gen.eval(); disc.eval()
 
             # Test loop
-            for i, minibatch in enumerate(test_loader):
+            for i, minibatch in enumerate(valid_loader):
                 input, target, lens = minibatch
                 
                 # disc on real data
@@ -241,13 +249,13 @@ for epoch in range(args.adv_epochs):
                 nlls += [nll.data]
         
             # logging
-            print_and_log_scalar(writer, 'test/oracle_nll', oracle_nlls, writes)
-            print_and_log_scalar(writer, 'test/P(real)', ps_real, writes)      
-            print_and_log_scalar(writer, 'test/P(fake)', ps_fake, writes)      
-            print_and_log_scalar(writer, 'test/nll', nlls, writes)      
-            print_and_log_scalar(writer, 'test/Gen Loss', gen_losses, writes)      
-            print_and_log_scalar(writer, 'test/Disc Loss', disc_losses, writes)      
-            print_and_log_scalar(writer, 'test/Critic Loss', critic_losses, writes, end_token='\n')      
+            print_and_log_scalar(writer, 'valid/oracle_nll', oracle_nlls, writes)
+            print_and_log_scalar(writer, 'valid/P(real)', ps_real, writes)      
+            print_and_log_scalar(writer, 'valid/P(fake)', ps_fake, writes)      
+            print_and_log_scalar(writer, 'valid/nll', nlls, writes)      
+            print_and_log_scalar(writer, 'valid/Gen Loss', gen_losses, writes)      
+            print_and_log_scalar(writer, 'valid/Disc Loss', disc_losses, writes)      
+            print_and_log_scalar(writer, 'valid/Critic Loss', critic_losses, writes, end_token='\n')      
             
     writes += 1
 

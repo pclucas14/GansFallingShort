@@ -250,11 +250,16 @@ def remove_sep_spaces(sentences):
     sentences = [x.replace(' ', '') for x in sentences]
     sentences = [x.replace('SPACE', ' ') for x in sentences]
     return sentences
+        
 
 
-def print_and_save_samples(fake_sentences, word_dict, base_dir, epoch, max_print=5, char_level=False):
+def print_and_save_samples(fake_sentences, word_dict, base_dir, epoch=0, max_print=5, char_level=False, for_rlm=False, split='train'):
     print('samples generated after %d epochs' % epoch)
-    file_name = os.path.join(base_dir, 'samples/generated{}.txt'.format(epoch))
+    if not for_rlm:
+        file_name = os.path.join(base_dir, 'samples/generated{}.txt'.format(epoch))
+    else: 
+        maybe_create_dir(base_dir)
+        file_name = os.path.join(base_dir, '{}.txt'.format(split))
     sentences = id_to_words(fake_sentences.cpu().data.numpy(), word_dict)
     if char_level: 
         sentences = remove_sep_spaces(sentence)
