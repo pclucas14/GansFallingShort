@@ -18,15 +18,10 @@ torch.manual_seed(1)
 np.random.seed(1)
 
 # dataset creation
-if args.debug: # --> allows for faster iteration when coding 
-    dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
-        train=True, char_level=args.character_level)
-    dataset_valid = dataset_train
-else: 
-    dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'train.txt'), \
-        train=True, char_level=args.character_level)
-    dataset_valid,  word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
-        train=False, word_dict=word_dict, char_level=args.character_level)
+dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'train.txt'), \
+    train=True, char_level=args.character_level)
+dataset_valid,  word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
+    train=False, word_dict=word_dict, char_level=args.character_level)
 
 if args.setup=='rlm':
     args = get_rlm_args()

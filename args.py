@@ -52,7 +52,6 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--sample_size_fast', type=int, default=500)
     parser.add_argument('--lm_path', type=str, default='trained_models/news/word/best_mle')
     parser.add_argument('--lm_epoch', type=int, default=None)
-    parser.add_argument('--debug', action='store_true')
 
     if allow_unmatched_args: 
         args, unmatched = parser.parse_known_args()
@@ -105,7 +104,6 @@ def get_test_args():
 
     train_args, train_unmatched = get_train_args(allow_unmatched_args=True)
     args.data_dir = train_args.data_dir
-    args.debug = train_args.debug
     args.cuda = train_args.cuda
     args.lm_path = train_args.lm_path
     args.lm_epoch = train_args.lm_epoch
