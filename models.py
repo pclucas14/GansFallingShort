@@ -113,3 +113,77 @@ class Discriminator(Model):
         return disc_logits, baseline
     
 
+# ----------------------------------------------------------------------------------
+# Below are models used for evaluation (in eval.py)
+# ----------------------------------------------------------------------------------
+
+class LockedDropout(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    # assumes batch_first ordering
+    def forward(self, x, dropout=0.5):
+        if not self.training or not dropout:
+            return x
+        
+        m = x.data.new(x.size(0), 1, x.size(2)).bernoulli_(1 - dropout)
+        mask = Variable(m, requires_grad=False) / (1 - dropout)
+        mask = mask.expand_as(x)
+        return mask * x
+
+
+class RNNClassifier(nn.Module):
+    def __init__(self, hidden_state_size):
+        super(RNNClassifier, self).__init__()
+        self.lstm = nn.LSTM(hidden_state_size, hidden_state_size, num_layers=2, \
+           batch_first=True, bidirectional=True)
+        self.out = nn.Linear(hidden_state_size * 2, 2)
+        self.lockdrop = LockedDropout()
+
+    def forward(self, x):
+        x = self.lockdrop(x)
+        hs = self.lstm(x)[0]
+        last_hs = self.lockdrop(hs)[:, -1]
+        output = self.out(last_hs)
+        return output
+
+'''
+Let's try a convolutional discriminator --> maybe it can pickup a more global signal
+'''
+class ConvNet(nn.Module):
+    def __init__(self, hidden_state_size, max_seq_len):
+        super(ConvNet, self).__init__()
+        convs = []
+
+        dis_filter_sizes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20,32]
+        dis_num_filters = [100, 200, 200, 200, 200, 100, 100, 100, 100, 100, 160, 160,160] 
+        disc_conv_layers = zip(dis_filter_sizes, dis_num_filters)
+        output_size = sum(dis_num_filters)
+
+        for layer in disc_conv_layers: 
+            kernel_size, num_filters  = layer
+            convs += [nn.Sequential(
+                          nn.Conv1d(hidden_state_size, num_filters, kernel_size), 
+                          nn.ReLU(), 
+                          nn.MaxPool1d(max_seq_len - kernel_size + 1))]
+        
+        self.convs = nn.ModuleList(convs)
+        self.output_layer = nn.Linear(output_size, 2)
+        self.drop = nn.Dropout(0.6)
+        self.max_seq_len = max_seq_len
+
+    def forward(self, x):
+        x = x.transpose(2, 1).contiguous() # bs x seq_len x h_dim --> bs x h_dim x seq_len
+        x = F.pad(x, (0, self.max_seq_len - x.size(2)))
+        x = self.drop(x)
+        # assert x.size(1) == hidden_state_size and len(x.size()) == 3
+        outputs = []
+        for block in self.convs:
+            output = block(x)
+            outputs += [output]
+      
+        output = torch.cat(outputs, dim=1).squeeze(2)
+        output = self.output_layer(output)
+        return output 
+
+

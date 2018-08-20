@@ -24,15 +24,10 @@ torch.manual_seed(2)
 np.random.seed(2)
 
 # dataset creation
-if args.debug: # --> allows for faster iteration when coding 
-    dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
-        train=True, char_level=args.character_level)
-    dataset_test = dataset_train
-else: 
-    dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'train.txt'), \
-        train=True, char_level=args.character_level)
-    dataset_test,  word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
-        train=False, word_dict=word_dict, char_level=args.character_level)
+dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'train.txt'), \
+    train=True, char_level=args.character_level)
+dataset_test,  word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
+    train=False, word_dict=word_dict, char_level=args.character_level)
 
 # fetch one minibatch of data
 train_batch = next(minibatch_generator(dataset_train, args, shuffle=False))
@@ -235,49 +230,25 @@ if args.run_nn or args.run_rnn:
 
 """ 3rd model : RNN on the hidden state sequences """
 if args.run_rnn:
-     assert args.tsne_log_every == 1, 'states are not from a continuous sequence!'
+    assert args.tsne_log_every == 1, 'states are not from a continuous sequence!'
 
-     class LockedDropout(nn.Module):
-         def __init__(self):
-             super().__init__()
 
-         # assumes batch_first ordering
-         def forward(self, x, dropout=0.5):
-             if not self.training or not dropout:
-                 return x
-             m = x.data.new(x.size(0), 1, x.size(2)).bernoulli_(1 - dropout)
-             mask = Variable(m, requires_grad=False) / (1 - dropout)
-             mask = mask.expand_as(x)
-             return mask * x
+    train_X, test_X = [np.stack(x, axis=1) for x in [train_Xs, test_Xs]]
+    # model = ConvNet(hidden_state_size, args.tsne_max_t).cuda()
+    model = RNNClassifier(hidden_state_size).cuda()
+    opt = torch.optim.Adam(model.parameters(), lr=1e-4)
 
-     class RNN(nn.Module):
-         def __init__(self):
-             super(RNN, self).__init__()
-             self.lstm = nn.LSTM(hidden_state_size, hidden_state_size, num_layers=2, \
-                batch_first=True, bidirectional=True)
-             self.out = nn.Linear(hidden_state_size * 2, 2)
-             self.lockdrop = LockedDropout()
+    for ep in range(250):
+        train_loss, train_acc = run_epoch(model, train_X, labels_train, opt=opt)
+        test_loss,  test_acc  = run_epoch(model, test_X, labels_test)
 
-         def forward(self, x):
-             x = self.lockdrop(x)
-             hs = self.lstm(x)[0]
-             last_hs = self.lockdrop(hs)[:, -1]
-             return self.out(last_hs)
+        if ep % 5 == 0 : 
+            print_and_log_scalar(writer, 'eval/RNN_test_acc'  , test_acc, ep)
+            print_and_log_scalar(writer, 'eval/RNN_train_acc' , train_acc, ep)
+            print_and_log_scalar(writer, 'eval/RNN_test_loss' , test_loss, ep)
+            print_and_log_scalar(writer, 'eval/RNN_train_loss', train_loss, ep)
+    
 
-     train_X, test_X = [np.stack(x, axis=1) for x in [train_Xs, test_Xs]]
-     model = RNN().cuda()
-     opt = torch.optim.Adam(model.parameters(), lr=1e-4)
-
-     for ep in range(250):
-         train_loss, train_acc = run_epoch(model, train_X, labels_train, opt=opt)
-         test_loss,  test_acc  = run_epoch(model, test_X, labels_test)
-
-         if ep % 5 == 0 : 
-             print_and_log_scalar(writer, 'eval/RNN_test_acc'  , test_acc, ep)
-             print_and_log_scalar(writer, 'eval/RNN_train_acc' , train_acc, ep)
-             print_and_log_scalar(writer, 'eval/RNN_test_loss' , test_loss, ep)
-             print_and_log_scalar(writer, 'eval/RNN_train_loss', train_loss, ep)
-     
 
 """ finally, create T-SNE plots of hidden states """
 if args.run_tsne: 
