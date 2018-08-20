@@ -1,11 +1,10 @@
 import os
 import pdb
-# import h5py
 import numpy as np
 import re
 import torch
-import pickle as pkl
 from torch.autograd import Variable
+import _pickle as pickle
 
 class Dictionary(object):
     def __init__(self):
@@ -30,6 +29,23 @@ class Dictionary(object):
         return len(self.idx2word)
 
 def tokenize(path, train=False, word_dict=None, char_level=False):
+    # tokenizing process is somewhat lenghty. Let's try to avoid 
+    # it when possible
+    try: 
+        path_ = path.split('.')[0]
+        path_word_dict = path_ + '_word_dict.pickle'
+        path_ids = path_ + '_ids.pickle'
+        with open(path_ids, 'rb') as f: 
+            ids = pickle.load(f)
+        if train: 
+            with open(path_word_dict, 'rb') as f: 
+                word_dict = pickle.load(f)
+        
+        print('loaded preprocessed data from %s' % path_)
+        return ids, word_dict
+    except: 
+        pass
+
     """Tokenizes a text file."""
     if word_dict is None : 
         print('creating new word dictionary')
@@ -116,6 +132,16 @@ def tokenize(path, train=False, word_dict=None, char_level=False):
             # create list of lists for easier process later on
             ids.append(idx)
 
+    # save to file 
+    path_ = path.split('.')[0]
+    path_word_dict = path_ + '_word_dict.pickle'
+    path_ids = path_ + '_ids.pickle'
+    with open(path_ids, 'wb') as f: 
+        pickle.dump(ids, f)
+    if train: 
+        with open(path_word_dict, 'wb') as f: 
+            pickle.dump(word_dict, f)
+    
     return ids, word_dict
     
 
