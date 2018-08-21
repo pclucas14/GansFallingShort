@@ -138,7 +138,7 @@ with torch.no_grad():
         # store LM score
         if mode=='free_running':
             lm_score = np.mean(avg_oracle_nll)
-            print_and_log_scalar(writer, 'eval/lm_score', lm_score, gen.args.alpha_test)
+            print_and_log_scalar(writer, 'eval/lm_score', lm_score, 0)
 
 # -------------------------------------------------------------------------------------
 # Evaluating the similarity of hidden states
@@ -322,9 +322,13 @@ if args.run_rlm:
 
     # run main.py on the generated dataset
     command="python main.py --setup rlm  --base_dir {}".format(rlm_base_dir)
-
     print(command)
     os.system(command) 
-    
+   
+    # delete the dataset
+    command="rm {}".format(os.path.join(rlm_base_dir,'train.txt'))
+    print(command)
+    os.system(command) 
+            
 
 

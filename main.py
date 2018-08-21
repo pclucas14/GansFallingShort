@@ -22,6 +22,8 @@ dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'train.txt'), \
     train=True, char_level=args.character_level)
 dataset_valid,  word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
     train=False, word_dict=word_dict, char_level=args.character_level)
+dataset_test,  word_dict = tokenize(os.path.join(args.data_dir, 'test.txt'), \
+    train=False, word_dict=word_dict, char_level=args.character_level)
 
 if args.setup=='rlm':
     args = get_rlm_args()
@@ -29,7 +31,6 @@ if args.setup=='rlm':
     # overide training data:
     dataset_train,  word_dict = tokenize(os.path.join(args.base_dir, 'train.txt'), \
         train=False, word_dict=word_dict, char_level=args.character_level)
-
 
 # add extra args
 args.vocab_size = len(word_dict)
@@ -42,6 +43,8 @@ maybe_create_dir(os.path.join(args.base_dir, 'models'))
 print_and_save_args(args, args.base_dir)
 writer = tensorboardX.SummaryWriter(log_dir=os.path.join(args.base_dir, 'TB'))
 writes = 0
+best_valid=1e5
+best_test=1e5
 
 gen  = Generator(args)
 disc = Discriminator(args)
@@ -68,7 +71,7 @@ MLE pretraining
 for epoch in range(args.mle_epochs):
     print('MLE pretraining epoch {}/{}'.format(epoch, args.mle_epochs))
     train_loader = minibatch_generator(dataset_train, args, shuffle=True)
-    losses_train, losses_valid, oracle_nlls = [], [], []
+    losses_train, losses_dev, oracle_nlls = [], [], []
     gen.train()
 
     # Training loop
@@ -83,31 +86,40 @@ for epoch in range(args.mle_epochs):
     
     print_and_log_scalar(writer, 'train/nll', losses_train, writes, end_token='\n')
 
-    if (epoch + 1) % args.test_every == 0: 
-        valid_loader  = minibatch_generator(dataset_valid,  args, shuffle=False)
-        with torch.no_grad():
-            gen.eval()
+    if (epoch + 1) % args.test_every == 0:
+        for split in ['valid','test']:
+            dataset = dataset_valid if split=='valid' else dataset_test
+            loader_dev  = minibatch_generator(dataset,  args, shuffle=False)
+            with torch.no_grad():
+                gen.eval()
 
-            # Test loop
-            for i, minibatch in enumerate(valid_loader):
-                input, target, lens = minibatch
+                # Test loop
+                for i, minibatch in enumerate(loader_dev):
+                    input, target, lens = minibatch
 
-                gen_logits, _ = gen(input)
-                loss = masked_cross_entropy(gen_logits, target, lens)
-                losses_valid += [loss.data]
+                    gen_logits, _ = gen(input)
+                    loss = masked_cross_entropy(gen_logits, target, lens)
+                    losses_dev += [loss.data]
 
-                if args.lm_path: 
-                    # generate a sentence, a sentence, and feed to oracle lm
-                    gen_logits, gen_sample = gen(input[:, [0]])
-                    oracle_input = torch.cat([input[:, [0]], gen_sample], dim=1)
-                    oracle_logits, _ = oracle_lm(oracle_input.detach())
-                
-                    nll = NLL(oracle_logits[:, :-1], gen_sample)
-                    oracle_nlls += [nll.data] 
+                    if args.lm_path: 
+                        # generate a sentence, a sentence, and feed to oracle lm
+                        gen_logits, gen_sample = gen(input[:, [0]])
+                        oracle_input = torch.cat([input[:, [0]], gen_sample], dim=1)
+                        oracle_logits, _ = oracle_lm(oracle_input.detach())
+                    
+                        nll = NLL(oracle_logits[:, :-1], gen_sample)
+                        oracle_nlls += [nll.data] 
 
-            print_and_log_scalar(writer, 'valid/oracle_nll', oracle_nlls, writes)
-            print_and_log_scalar(writer, 'valid/nll', losses_valid, writes, end_token='\n')
-            
+                print_and_log_scalar(writer, '{}/oracle_nll'.format(split), oracle_nlls, writes)
+                print_and_log_scalar(writer, '{}/nll'.format(split), losses_dev, writes, end_token='\n')
+
+                # keep tab of best valid error in order to get legit test error:
+                if split=='valid':
+                    curr_valid_loss = np.mean(losses_dev)
+                    best_valid = min(best_valid,curr_valid_loss)
+                if split=='test':
+                    best_test = np.mean(losses_dev) if best_valid==curr_valid_loss else best_test
+                    
     writes += 1
        
     # save samples
@@ -117,6 +129,12 @@ for epoch in range(args.mle_epochs):
 
     if (epoch + 1) % args.save_every == 0: 
         save_models(MODELS[0:1], args.base_dir, writes)
+
+# if in rlm mode, store the rlm_score
+if args.setup=='rlm':
+    temp_log_dir=args.base_dir.replace('rlm','TB')
+    temp_writer = tensorboardX.SummaryWriter(log_dir=temp_log_dir)
+    print_and_log_scalar(temp_writer, 'eval/rlm_score', best_test, 0)
 
 if args.transfer_weights_after_pretraining and args.mle_epochs > 0:
     transfer_weights(gen, disc)

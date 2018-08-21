@@ -77,7 +77,7 @@ def get_test_args():
     parser.add_argument('--model_epoch', type=int, default=None, help='epoch of saved model')
     parser.add_argument('--tsne_log_every', type=int, default=1, help='... every _ timestep')
     parser.add_argument('--tsne_max_t', type=int, default=55, help='run tsne exp for _ steps')
-    parser.add_argument('--tsne_batch_size', type=int, default=1000)
+    parser.add_argument('--tsne_batch_size', type=int, default=50000)
     parser.add_argument('--draw_ellipse', action='store_true', default=False)
     parser.add_argument('--n_topics', type=int, default=2, help="topics in VTSNE")
     parser.add_argument('--n_iter', type=int, default=10, help="number of tsne iterations")
@@ -126,6 +126,8 @@ def get_rlm_args():
 
     args, _ = get_train_args(allow_unmatched_args=True)
     
+    args.setup = 'rlm'
+
     # LOGGING args
     args.bleu_every=0
     args.save_every=1e5
@@ -141,7 +143,7 @@ def get_rlm_args():
 
     # TRAINING args
     args.batch_size=128
-    args.mle_epohcs=100
+    args.mle_epochs=100
     args.adv_epochs=0
     args.alpha_train=1.
     args.alpha_test=1.
