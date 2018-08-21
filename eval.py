@@ -25,9 +25,9 @@ np.random.seed(2)
 
 # dataset creation
 dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'train.txt'), \
-    train=True, char_level=args.character_level)
+        train=True, char_level=args.character_level)
 dataset_test,  word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
-    train=False, word_dict=word_dict, char_level=args.character_level)
+        train=False, word_dict=word_dict, char_level=args.character_level)
 
 # fetch one minibatch of data
 train_batch = next(minibatch_generator(dataset_train, args, shuffle=False))
@@ -40,8 +40,8 @@ gen.eval()
 print('switching the temperature to {}'.format(gen.args.alpha_test))
 
 # Logging
-# maybe_create_dir(os.path.join(args.model_path, 'eval/%s_epoch' % loaded_epoch)) # TODO: maybe put in TB directly ?
-writer = tensorboardX.SummaryWriter(log_dir=os.path.join(args.model_path, 'TB_alpha{}'.format(gen.args.alpha_test)))
+writer = tensorboardX.SummaryWriter(log_dir=os.path.join(args.model_path, \
+        'TB_alpha{}'.format(gen.args.alpha_test)))
 writes = 0
 
 if args.lm_path: 
@@ -53,7 +53,9 @@ if args.cuda:
     if args.lm_path: oracle_lm = oracle_lm.cuda()
 
 # First experiment : log hidden states for T-SNE plots
-MODE = [('train', train_batch, OD(), []), ('test', test_batch, OD(), []), ('free_running', test_batch, OD(), [])]
+MODE = [('train', train_batch, OD(), []), 
+        ('test', test_batch, OD(), []), 
+        ('free_running', test_batch, OD(), [])]
 
 with torch.no_grad():
     for mode, data, hs_dict, oracle_nlls in MODE: 
@@ -77,7 +79,10 @@ with torch.no_grad():
                     # oracle_nlls += [-1. * oracle_dist.log_prob(input_idx.squeeze()).mean(dim=0).item()]
                     oracle_nll_t = -1. * oracle_dist.log_prob(input_idx.squeeze())
                     oracle_nlls += [remove_pad_tokens(oracle_nll_t, input_idx.squeeze()).item()]
-                    full_oracle_nll = oracle_nll_t.view(-1,1) if t==1 else torch.cat((full_oracle_nll,oracle_nll_t.view(-1,1)),1)
+                    if t == 1: 
+                        full_oracle_nll = oracle_nll_t.view(-1,1) 
+                    else: 
+                        torch.cat((full_oracle_nll,oracle_nll_t.view(-1,1)),1)
 
                 # feed the current word to the model. 
                 input_oracle = oracle_lm.embedding(input_idx)
@@ -197,7 +202,7 @@ if args.run_nn or args.run_rnn:
             pred_choice = pred.data.max(1)[1]
             correct = pred_choice.eq(y.data).cpu().sum()    
             acc = float(correct.item()) / int(x.shape[0])   
-        
+
             losses += [loss.item()]
             accs   += [acc]
 
@@ -207,8 +212,10 @@ if args.run_nn or args.run_rnn:
         for i in range(len(train_Xs)): 
             model = nn.Sequential(
                 nn.Linear(hidden_state_size, hidden_state_size // 2),
+                nn.Dropout(),
                 nn.ReLU(True),
                 nn.Linear(hidden_state_size // 2, hidden_state_size // 4),
+                nn.Dropout(),
                 nn.ReLU(True), 
                 nn.Linear(hidden_state_size // 4, 2)).cuda()
             opt = torch.optim.Adam(model.parameters())
@@ -225,7 +232,7 @@ if args.run_nn or args.run_rnn:
                     print_and_log_scalar(writer, 'eval/NN_test_loss_t=%d'  \
                         % timesteps[i], test_loss, ep)
                     print_and_log_scalar(writer, 'eval/NN_train_loss_t=%d' \
-                        % timesteps[i], train_loss, ep)
+                        % timesteps[i], train_loss, ep, end_token='\n')
         
 
 """ 3rd model : RNN on the hidden state sequences """
@@ -234,21 +241,47 @@ if args.run_rnn:
 
 
     train_X, test_X = [np.stack(x, axis=1) for x in [train_Xs, test_Xs]]
-    # model = ConvNet(hidden_state_size, args.tsne_max_t).cuda()
-    model = RNNClassifier(hidden_state_size).cuda()
+    model = ConvNet(hidden_state_size, args.tsne_max_t).cuda()
+    # model = RNNClassifier(hidden_state_size).cuda()
+    # model = ConvNetSelfAttn(hidden_state_size, channels=[100] * 10).cuda()
     opt = torch.optim.Adam(model.parameters(), lr=1e-4)
 
-    for ep in range(250):
+    if args.rnn_n_gram == -1: 
+        n_gram = args.tsne_max_t
+    else:
+        def rhsp(tensor, n_gram):
+            a, b, c = tensor.shape
+            tensor = tensor.reshape(a, -1, n_gram, c)
+            a, b, c, d = tensor.shape
+            tensor = tensor.reshape(a * b, c, d)
+            return tensor
+
+        def get_labels(tensor):
+            size = tensor.shape[0] // 2
+            return np.concatenate([np.zeros(size,), 
+                                   np.ones(size,)], axis=0)
+
+        n_gram = args.rnn_n_gram
+        extra = args.tsne_max_t % n_gram
+        train_X = rhsp(train_X[:, extra:], n_gram)
+        test_X  = rhsp(test_X[:, extra:], n_gram)
+        labels_train = get_labels(train_X)
+        labels_test = get_labels(test_X)
+
+    for ep in range(250): 
         train_loss, train_acc = run_epoch(model, train_X, labels_train, opt=opt)
         test_loss,  test_acc  = run_epoch(model, test_X, labels_test)
 
         if ep % 5 == 0 : 
-            print_and_log_scalar(writer, 'eval/RNN_test_acc'  , test_acc, ep)
-            print_and_log_scalar(writer, 'eval/RNN_train_acc' , train_acc, ep)
-            print_and_log_scalar(writer, 'eval/RNN_test_loss' , test_loss, ep)
-            print_and_log_scalar(writer, 'eval/RNN_train_loss', train_loss, ep)
+            print_and_log_scalar(writer, 'eval/RNN_test_acc_n-gram_%d' \
+                    % n_gram , test_acc, ep)
+            print_and_log_scalar(writer, 'eval/RNN_train_acc_n-gram%d' \
+                    % n_gram,  train_acc, ep)
+            print_and_log_scalar(writer, 'eval/RNN_test_loss_n-gram%d' \
+                    % n_gram, test_loss, ep)
+            print_and_log_scalar(writer, 'eval/RNN_train_loss_n-gram%d' \
+                    % n_gram, train_loss, ep, end_token='\n')
     
-
 
 """ finally, create T-SNE plots of hidden states """
 if args.run_tsne: 
