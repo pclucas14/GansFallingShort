@@ -84,6 +84,7 @@ def get_test_args():
     parser.add_argument('--tsne_perp', type=int, default=30, help="perplexity in TSNE")
     parser.add_argument('--oracle_nll_log_every', type=int, default=2)
     parser.add_argument('--alpha_test', type=float, default=1.0)
+    parser.add_argument('--rnn_n_gram', type=int, default=-1)
     
     # classifer exps
     parser.add_argument('--run_svm',  action='store_true', default=False)
@@ -91,6 +92,7 @@ def get_test_args():
     parser.add_argument('--run_rnn',  action='store_true', default=False)
     parser.add_argument('--run_tsne', action='store_true', default=False)
     parser.add_argument('--run_rlm',  action='store_true', default=False)
+
 
 
     args, unmatched = parser.parse_known_args()
