@@ -91,7 +91,7 @@ with torch.no_grad():
                 oracle_dist = oracle_lm.output_layer(output_oracle)
                 oracle_dist = Categorical(logits=oracle_dist.squeeze(1))
            
-            # compute entropy (! does not take car of <pad>)
+            # compute entropy (! does not take care of <pad>)
             dist = gen.output_layer(output)
             entropy = Categorical(logits=dist.squeeze(1)).entropy().cpu().numpy().mean()
             print_and_log_scalar(writer, 'eval/%s_entropy' % mode, entropy, t) 
@@ -102,7 +102,6 @@ with torch.no_grad():
                 input_idx = Categorical(logits=dist.squeeze(1)).sample().unsqueeze(1)
                 fake_sentences = input_idx if t==0 else torch.cat((fake_sentences,input_idx), 1)
 
-
             if (t+1) % args.tsne_log_every == 0: 
                 # for lstm we take the hidden state (i.e. h_t of (h_t, c_t))
                 hs = hidden_state[0] if isinstance(hidden_state, tuple) else hidden_state
@@ -111,7 +110,6 @@ with torch.no_grad():
             if (t+1) % args.oracle_nll_log_every == 0 and args.lm_path and t > 0: 
                 p_x_1t = sum(oracle_nlls)
                 p_x_t = oracle_nlls[-1]
-                #writer.add_scalar('eval/%s_oracle_nll' % mode , p_x_t, t)
                 print_and_log_scalar(writer, 'eval/%s_oracle_nll' % mode, p_x_t, t) 
 
         # print most/less likely sequences
@@ -147,25 +145,30 @@ with torch.no_grad():
 """ processing the data """
 timesteps = list(MODE[0][2].keys())
 
-split = int(args.tsne_batch_size * 0.8)
+split_a = int(args.tsne_batch_size * 0.8)
+split_b = int(args.tsne_batch_size * 0.9)
 # let's do a train-test split and see if we can train a simple SVM on it
-#TODO(): make an arg for train or test hiddn states
-#tf_states    = [MODE[0][2][t] for t in timesteps]
-tf_states    = [MODE[1][2][t] for t in timesteps]
-fr_states    = [MODE[2][2][t] for t in timesteps]
+tf_states    = [MODE[1][2][t] for t in timesteps] # --> hidden states on test set
+fr_states    = [MODE[2][2][t] for t in timesteps] # --> hidden states in free running
 
-train_tf_states = [x[:, :split].squeeze() for x in tf_states]
-train_fr_states = [x[:, :split].squeeze() for x in fr_states]
-test_tf_states  = [x[:, split:].squeeze() for x in tf_states]
-test_fr_states  = [x[:, split:].squeeze() for x in fr_states]
+train_tf_states = [x[:, :split_a].squeeze() for x in tf_states]
+train_fr_states = [x[:, :split_a].squeeze() for x in fr_states]
+valid_tf_states = [x[:, split_a:split_b].squeeze() for x in tf_states]
+valid_fr_states = [x[:, split_a:split_b].squeeze() for x in fr_states]
+test_tf_states  = [x[:, split_b:].squeeze() for x in tf_states]
+test_fr_states  = [x[:, split_b:].squeeze() for x in fr_states]
 
 labels_train = np.concatenate([np.ones_like(train_tf_states[0][:, 0]),\
                          np.zeros_like(train_fr_states[0][:, 0])])
+
+labels_valid = np.concatenate([np.ones_like(valid_tf_states[0][:, 0]),\
+                         np.zeros_like(valid_fr_states[0][:, 0])])
 
 labels_test  = np.concatenate([np.ones_like(test_tf_states[0][:, 0]),\
                          np.zeros_like(test_fr_states[0][:, 0])])
 
 train_Xs = [np.concatenate([x,y]) for (x,y) in zip(train_tf_states, train_fr_states)]
+valid_Xs = [np.concatenate([x,y]) for (x,y) in zip(valid_tf_states, valid_fr_states)]
 test_Xs  = [np.concatenate([x,y]) for (x,y) in zip(test_tf_states,  test_fr_states)]
 
 
@@ -183,14 +186,19 @@ if args.run_svm:
 if args.run_nn or args.run_rnn:
     hidden_state_size = train_Xs[0].shape[1]
 
-    def run_epoch(model, X, Y, opt=None):
+    def run_epoch(model, X, Y, opt=None, n_gram=None):
         train_model = opt is not None
         model.train() if train_model else model.eval()
         accs, losses = [], []
         data = [d for d in zip(X,Y)]
         loader = torch.utils.data.DataLoader(data, shuffle=True, batch_size=128)
         
-        for (x,y) in loader: 
+        for (x,y) in loader:
+            if n_gram is not None:
+                # subsample batch
+                start_index = np.random.randint(x.shape[1] - n_gram)
+                x = x[:, start_index:start_index + n_gram]
+
             x, y = x.cuda(), y.long().cuda()
             pred = model(x)
             loss = F.cross_entropy(pred, y)
@@ -209,7 +217,8 @@ if args.run_nn or args.run_rnn:
         return np.mean(losses), np.mean(accs)
     
     if args.run_nn:
-        for i in range(len(train_Xs)): 
+        best_valid, best_test = 1e5, 1e5
+        for t in range(len(train_Xs)): 
             model = nn.Sequential(
                 nn.Linear(hidden_state_size, hidden_state_size // 2),
                 nn.Dropout(),
@@ -221,67 +230,78 @@ if args.run_nn or args.run_rnn:
             opt = torch.optim.Adam(model.parameters())
 
             for ep in range(100):
-                train_loss, train_acc = run_epoch(model, train_Xs[0], labels_train, opt=opt)
-                test_loss,  test_acc  = run_epoch(model, test_Xs[0], labels_test)
-
-                if ep % 5 == 0 : 
-                    print_and_log_scalar(writer, 'eval/NN_test_acc_t=%d'   \
-                        % timesteps[i], test_acc, ep)
-                    print_and_log_scalar(writer, 'eval/NN_train_acc_t=%d'  \
-                        % timesteps[i], train_acc, ep)
-                    print_and_log_scalar(writer, 'eval/NN_test_loss_t=%d'  \
-                        % timesteps[i], test_loss, ep)
-                    print_and_log_scalar(writer, 'eval/NN_train_loss_t=%d' \
-                        % timesteps[i], train_loss, ep, end_token='\n')
-        
+                train_loss, train_acc = run_epoch(model, train_Xs[t], labels_train, opt=opt)
+                valid_loss, valid_acc = run_epoch(model, valid_Xs[t], labels_test)
+                test_loss,  test_acc  = run_epoch(model, test_Xs[t], labels_test)
+                
+                best_valid = min(best_valid, valid_loss)
+                if best_valid == valid_loss: 
+                    best_test = test_loss 
+                    # print('epoch {} has new best valid loss {:.4f} with best \
+                    #        test loss {:.4f}'.format(ep, best_valid, best_test))
+    
+            print_and_log_scalar(writer, 'eval/NN_test_acc', best_test, t)
+            print_and_log_scalar(writer, 'eval/NN_valid_acc', best_valid, t)
+         
+       
 
 """ 3rd model : RNN on the hidden state sequences """
 if args.run_rnn:
     assert args.tsne_log_every == 1, 'states are not from a continuous sequence!'
 
+    train_X, valid_X, test_X = [np.stack(x, axis=1) for x in [train_Xs, valid_Xs, test_Xs]]
 
-    train_X, test_X = [np.stack(x, axis=1) for x in [train_Xs, test_Xs]]
-    model = ConvNet(hidden_state_size, args.tsne_max_t).cuda()
-    # model = RNNClassifier(hidden_state_size).cuda()
+    if args.use_conv_net: 
+        model = ConvNet(hidden_state_size, args.tsne_max_t).cuda()
+        model_name = 'CONV'
+    else: 
+        model = RNNClassifier(hidden_state_size).cuda()
+        model_name = 'RNN'
+    
     # model = ConvNetSelfAttn(hidden_state_size, channels=[100] * 10).cuda()
     opt = torch.optim.Adam(model.parameters(), lr=1e-4)
 
-    if args.rnn_n_gram == -1: 
-        n_gram = args.tsne_max_t
-    else:
-        def rhsp(tensor, n_gram):
-            a, b, c = tensor.shape
-            tensor = tensor.reshape(a, -1, n_gram, c)
-            a, b, c, d = tensor.shape
-            tensor = tensor.reshape(a * b, c, d)
-            return tensor
+    n_grams = [None] if not args.n_grams else [int(x) for x in args.n_grams]
+    for n_gram in n_grams: 
+        best_valid, best_test = 1e5, 1e5
+        for ep in range(250): 
+            train_loss, train_acc = run_epoch(model, train_X, labels_train, \
+                    n_gram=n_gram, opt=opt)
+            valid_loss, valid_acc = run_epoch(model, valid_X, labels_valid, \
+                    n_gram=n_gram)
+            test_loss,  test_acc  = run_epoch(model, test_X, labels_test, \
+                    n_gram=n_gram)
 
-        def get_labels(tensor):
-            size = tensor.shape[0] // 2
-            return np.concatenate([np.zeros(size,), 
-                                   np.ones(size,)], axis=0)
+            best_valid = min(best_valid, valid_loss)
+            if best_valid == valid_loss: 
+                best_test = test_loss
+                print('epoch {} has new best valid loss {:.4f} with best \
+                       test loss {:.4f}'.format(ep, best_valid, best_test))
+                
+        n_gram = n_gram or -1
+        print_and_log_scalar(writer, 'eval/%s_test_acc_shuffle' % model_name \
+                , test_acc, n_gram)
 
-        n_gram = args.rnn_n_gram
-        extra = args.tsne_max_t % n_gram
-        train_X = rhsp(train_X[:, extra:], n_gram)
-        test_X  = rhsp(test_X[:, extra:], n_gram)
-        labels_train = get_labels(train_X)
-        labels_test = get_labels(test_X)
+        if n_gram != -1:
+            best_valid, best_test = 1e5, 1e5
+            for ep in range(250): 
+                train_loss, train_acc = run_epoch(model, train_X[:, :n_gram], \
+                        labels_train, opt=opt)
+                valid_loss, valid_acc = run_epoch(model, valid_X[:, :n_gram], \
+                        labels_valid)
+                test_loss,  test_acc  = run_epoch(model, test_X[:, :n_gram], \
+                        labels_test)
 
-    for ep in range(250): 
-        train_loss, train_acc = run_epoch(model, train_X, labels_train, opt=opt)
-        test_loss,  test_acc  = run_epoch(model, test_X, labels_test)
+                best_valid = min(best_valid, valid_loss)
+                if best_valid == valid_loss: 
+                    best_test = test_loss 
+                    print('epoch {} has new best valid loss {:.4f} with best \
+                           test loss {:.4f}'.format(ep, best_valid, best_test))
 
-        if ep % 5 == 0 : 
-            print_and_log_scalar(writer, 'eval/RNN_test_acc_n-gram_%d' \
-                    % n_gram , test_acc, ep)
-            print_and_log_scalar(writer, 'eval/RNN_train_acc_n-gram%d' \
-                    % n_gram,  train_acc, ep)
-            print_and_log_scalar(writer, 'eval/RNN_test_loss_n-gram%d' \
-                    % n_gram, test_loss, ep)
-            print_and_log_scalar(writer, 'eval/RNN_train_loss_n-gram%d' \
-                    % n_gram, train_loss, ep, end_token='\n')
-    
+            n_gram = n_gram or -1
+            print_and_log_scalar(writer, 'eval/%s_test_acc_start' % model_name \
+                    , test_acc, n_gram)
+            
 
 """ finally, create T-SNE plots of hidden states """
 if args.run_tsne: 
@@ -300,10 +320,9 @@ if args.run_tsne:
                 writer.add_scalar('eval/distance_centroids%d-%d' % (i, j), distances[i,j], t)
 
 
-
-#____________________________________________________________________________
+# ----------------------------------------------------------------------------
 # Evaluate quality/diversity tradeoff in GAN and MLE w/ Temperature Control
-#____________________________________________________________________________
+# ----------------------------------------------------------------------------
 
 
 """" run the Reverse LM score """
@@ -321,7 +340,9 @@ if args.run_rlm:
             word_dict, rlm_base_dir, for_rlm=True, split='train')
 
     # run main.py on the generated dataset
-    command="python main.py --setup rlm  --base_dir {}".format(rlm_base_dir)
+    command="python main.py --setup rlm   \
+                            --base_dir %s \
+                            --data_dir %s" % (rlm_base_dir, args.data_dir)
     print(command)
     os.system(command) 
    
