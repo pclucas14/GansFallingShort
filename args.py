@@ -77,7 +77,7 @@ def get_test_args():
     parser.add_argument('--model_epoch', type=int, default=None, help='epoch of saved model')
     parser.add_argument('--tsne_log_every', type=int, default=1, help='... every _ timestep')
     parser.add_argument('--tsne_max_t', type=int, default=55, help='run tsne exp for _ steps')
-    parser.add_argument('--tsne_batch_size', type=int, default=50000)
+    parser.add_argument('--tsne_batch_size', type=int, default=1000)
     parser.add_argument('--draw_ellipse', action='store_true', default=False)
     parser.add_argument('--n_topics', type=int, default=2, help="topics in VTSNE")
     parser.add_argument('--n_iter', type=int, default=10, help="number of tsne iterations")
