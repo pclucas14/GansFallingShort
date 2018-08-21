@@ -337,7 +337,7 @@ if args.run_rlm:
     #print_and_save_samples(fake_sentences[int(0.9*args.tsne_batch_size):,:], 
     #        word_dict, rlm_base_dir, for_rlm=True, split='test')
     print_and_save_samples(fake_sentences, 
-            word_dict, rlm_base_dir, for_rlm=True, split='train')
+            word_dict, rlm_base_dir, for_rlm=True, split='train', breakdown=10)
 
     # run main.py on the generated dataset
     command="python main.py --setup rlm   \

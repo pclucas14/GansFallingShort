@@ -253,14 +253,23 @@ def remove_sep_spaces(sentences):
         
 
 
-def print_and_save_samples(fake_sentences, word_dict, base_dir, epoch=0, max_print=5, char_level=False, for_rlm=False, split='train'):
+def print_and_save_samples(fake_sentences, word_dict, base_dir, epoch=0, max_print=5, char_level=False, for_rlm=False, split='train', breakdown=0):
     print('samples generated after %d epochs' % epoch)
     if not for_rlm:
         file_name = os.path.join(base_dir, 'samples/generated{}.txt'.format(epoch))
     else: 
         maybe_create_dir(base_dir)
         file_name = os.path.join(base_dir, '{}.txt'.format(split))
-    sentences = id_to_words(fake_sentences.cpu().data.numpy(), word_dict)
+    
+    if not breakdown:
+        sentences = id_to_words(fake_sentences.cpu().data.numpy(), word_dict)
+    else:
+        sentences = []
+        sub_len = int(fake_sentences.shape[0] / breakdown)
+        for i in range(breakdown):
+            sentences_ = id_to_words(fake_sentences[i*sub_len:(i+1)*sub_len].cpu().data.numpy(), word_dict)
+            sentences += sentences_
+
     if char_level: 
         sentences = remove_sep_spaces(sentence)
     with open(file_name, 'w') as f:
@@ -270,7 +279,6 @@ def print_and_save_samples(fake_sentences, word_dict, base_dir, epoch=0, max_pri
             if i == max_print: print('\n')
             xx = xx.replace('\n', '')
             f.write(xx + '\n')
-
 
 def save_models(models, base_dir, epoch):
     for model_ in models:
