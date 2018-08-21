@@ -264,8 +264,11 @@ def print_and_save_samples(fake_sentences, word_dict, base_dir, epoch=0, max_pri
     if not breakdown:
         sentences = id_to_words(fake_sentences.cpu().data.numpy(), word_dict)
     else:
-        pdb.set_trace()
         sentences = []
+        sub_len = int(fake_sentences.shape[0] / breakdown)
+        for i in range(breakdown):
+            sentences_ = id_to_words(fake_sentences[i*sub_len:(i+1)*sub_len].cpu().data.numpy(), word_dict)
+            sentences += sentences_
 
     if char_level: 
         sentences = remove_sep_spaces(sentence)
