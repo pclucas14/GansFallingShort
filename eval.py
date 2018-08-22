@@ -80,10 +80,8 @@ with torch.no_grad():
                     # oracle_nlls += [-1. * oracle_dist.log_prob(input_idx.squeeze()).mean(dim=0).item()]
                     oracle_nll_t = -1. * oracle_dist.log_prob(input_idx.squeeze())
                     oracle_nlls += [remove_pad_tokens(oracle_nll_t, input_idx.squeeze()).item()]
-                    if t == 1: 
-                        full_oracle_nll = oracle_nll_t.view(-1,1) 
-                    else: 
-                        torch.cat((full_oracle_nll,oracle_nll_t.view(-1,1)),1)
+                    full_oracle_nll = oracle_nll_t.view(-1,1) if t==1 \
+                        else torch.cat((full_oracle_nll,oracle_nll_t.view(-1,1)),1)
 
                 # feed the current word to the model. 
                 input_oracle = oracle_lm.embedding(input_idx)
@@ -333,12 +331,6 @@ if args.run_rlm:
 
     # save the generated sequences somewhere 
     rlm_base_dir = os.path.join(args.model_path,"rlm_alpha{}".format(gen.args.alpha_test))
-    #print_and_save_samples(fake_sentences[:int(0.7*args.tsne_batch_size),:], 
-    #        word_dict, rlm_base_dir, for_rlm=True, split='train')
-    #print_and_save_samples(fake_sentences[int(0.7*args.tsne_batch_size):int(0.9*args.tsne_batch_size),:], 
-    #        word_dict, rlm_base_dir, for_rlm=True, split='valid')
-    #print_and_save_samples(fake_sentences[int(0.9*args.tsne_batch_size):,:], 
-    #        word_dict, rlm_base_dir, for_rlm=True, split='test')
     print_and_save_samples(fake_sentences, 
             word_dict, rlm_base_dir, for_rlm=True, split='train', breakdown=10)
 
@@ -354,5 +346,76 @@ if args.run_rlm:
     print(command)
     os.system(command) 
             
+
+""" run LM score on sentences completion """
+if args.run_sc:
+
+    with torch.no_grad():
+        input, _, _ = test_batch
+
+        for t in range(args.tsne_max_t):
+
+            teacher_force = True if t<args.breakpoint else False
+
+            if teacher_force or t == 0: 
+                input_idx = input[:, [t]]
+
+            input_t = gen.embedding(input_idx)
+            output, hidden_state = gen.step(input_t, hidden_state, t)
+            
+            if t >= args.breakpoint: 
+                # query the oracle for NLL of the next word (i.e. use x_t to index p(x_t | x_{i<t})
+                # oracle_nlls += [-1. * oracle_dist.log_prob(input_idx.squeeze()).mean(dim=0).item()]
+                oracle_nll_t = -1. * oracle_dist.log_prob(input_idx.squeeze())
+                oracle_nlls += [remove_pad_tokens(oracle_nll_t, input_idx.squeeze()).item()]
+                full_oracle_nll = oracle_nll_t.view(-1,1) if t==1 \
+                        else torch.cat((full_oracle_nll,oracle_nll_t.view(-1,1)),1)
+
+            # feed the current word to the model. 
+            input_oracle = oracle_lm.embedding(input_idx)
+            output_oracle, hidden_state_oracle = oracle_lm.step(input_oracle, \
+                    hidden_state_oracle, t)
+            oracle_dist = oracle_lm.output_layer(output_oracle)
+            oracle_dist = Categorical(logits=oracle_dist.squeeze(1))
+           
+
+            if not teacher_force: 
+                dist = gen.output_layer(output)
+                dist *= gen.args.alpha_test
+                input_idx = Categorical(logits=dist.squeeze(1)).sample().unsqueeze(1)
+            
+            # this should work but make sure it does:
+            fake_sentences = input_idx if t==0 else torch.cat((fake_sentences,input_idx), 1)
+
+
+        p_x_bt = sum(oracle_nlls)
+
+        # print most/less likely sequences
+        seq = fake_sentences
+        seq_len = (seq != 0).sum(1)
+        tot_oracle_nll = full_oracle_nll.sum(1)
+        avg_oracle_nll = tot_oracle_nll.cpu().numpy() / seq_len.cpu().numpy()
+
+        sentences = id_to_words(seq.cpu().data.numpy(), word_dict)
+        sorted_idx = np.argsort(avg_oracle_nll)
+
+        if args.character_level: sentences = remove_sep_spaces(sentences)
+        
+        print("most likely sentences under oracle:")
+        for i in range(10):
+            print(sentences[sorted_idx[i]])
+            print("nll oracle: {:.4f}".format(avg_oracle_nll[sorted_idx[i]]))
+        
+        print("least likely sentences under oracle:")
+        for i in range(1,11):
+            print(sentences[sorted_idx[-i]])
+            print("nll oracle: {:.4f}".format(avg_oracle_nll[sorted_idx[-i]]))
+
+        # store LM score
+        lm_score = np.mean(avg_oracle_nll)
+        print_and_log_scalar(writer, 'eval/completion_lm_score_b{}'.format(args.breakpoint), lm_score, 0)
+
+
+
 
 
