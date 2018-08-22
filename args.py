@@ -77,7 +77,7 @@ def get_test_args():
     parser.add_argument('--model_epoch', type=int, default=None, help='epoch of saved model')
     parser.add_argument('--tsne_log_every', type=int, default=1, help='... every _ timestep')
     parser.add_argument('--tsne_max_t', type=int, default=55, help='run tsne exp for _ steps')
-    parser.add_argument('--tsne_batch_size', type=int, default=50000)
+    parser.add_argument('--tsne_batch_size', type=int, default=10000)
     parser.add_argument('--draw_ellipse', action='store_true', default=False)
     parser.add_argument('--n_topics', type=int, default=2, help="topics in VTSNE")
     parser.add_argument('--n_iter', type=int, default=10, help="number of tsne iterations")
@@ -85,6 +85,7 @@ def get_test_args():
     parser.add_argument('--oracle_nll_log_every', type=int, default=2)
     parser.add_argument('--alpha_test', type=float, default=1.0)
     parser.add_argument('--rnn_n_gram', type=int, default=-1)
+    parser.add_argument('--breakpoint', type=int, default=8, help="sentence completion breakpoint")
     
     # classifer exps
     parser.add_argument('--run_svm',  action='store_true', default=False)
@@ -92,7 +93,7 @@ def get_test_args():
     parser.add_argument('--run_rnn',  action='store_true', default=False)
     parser.add_argument('--run_tsne', action='store_true', default=False)
     parser.add_argument('--run_rlm',  action='store_true', default=False)
-
+    parser.add_argument('--run_sc',  action='store_true', default=False)
 
 
     args, unmatched = parser.parse_known_args()
