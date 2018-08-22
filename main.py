@@ -19,18 +19,16 @@ np.random.seed(1)
 
 # dataset creation
 dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'train.txt'), \
-    train=True, char_level=args.character_level)
+        train=True, char_level=args.character_level)
 dataset_valid,  word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
-    train=False, word_dict=word_dict, char_level=args.character_level)
+        train=False, word_dict=word_dict, char_level=args.character_level)
 dataset_test,  word_dict = tokenize(os.path.join(args.data_dir, 'test.txt'), \
-    train=False, word_dict=word_dict, char_level=args.character_level)
+        train=False, word_dict=word_dict, char_level=args.character_level)
 
 if args.setup=='rlm':
     args = get_rlm_args()
-    #TODO(not gonna work if we switch from the news dataset)
-    # overide training data:
     dataset_train,  word_dict = tokenize(os.path.join(args.base_dir, 'train.txt'), \
-        train=False, word_dict=word_dict, char_level=args.character_level)
+            train=False, word_dict=word_dict, char_level=args.character_level)
 
 # add extra args
 args.vocab_size = len(word_dict)
@@ -43,8 +41,7 @@ maybe_create_dir(os.path.join(args.base_dir, 'models'))
 print_and_save_args(args, args.base_dir)
 writer = tensorboardX.SummaryWriter(log_dir=os.path.join(args.base_dir, 'TB'))
 writes = 0
-best_valid=1e5
-best_test=1e5
+best_valid, best_test = 1e5, 1e5
 
 gen  = Generator(args)
 disc = Discriminator(args)
@@ -76,7 +73,6 @@ for epoch in range(args.mle_epochs):
 
     # Training loop
     for i, minibatch in enumerate(train_loader):
-        print(i)
         input, target, lens = minibatch
         
         gen_logits, _ = gen(input)
@@ -114,10 +110,10 @@ for epoch in range(args.mle_epochs):
                 print_and_log_scalar(writer, '{}/nll'.format(split), losses_dev, writes, end_token='\n')
 
                 # keep tab of best valid error in order to get legit test error:
-                if split=='valid':
+                if split == 'valid':
                     curr_valid_loss = np.mean(losses_dev)
                     best_valid = min(best_valid,curr_valid_loss)
-                if split=='test':
+                if split == 'test':
                     best_test = np.mean(losses_dev) if best_valid==curr_valid_loss else best_test
                     
     writes += 1
