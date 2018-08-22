@@ -53,12 +53,12 @@ if args.cuda:
     if args.lm_path: oracle_lm = oracle_lm.cuda()
 
 # First experiment : log hidden states for T-SNE plots
-MODE = [('train', train_batch, OD(), []), 
-        ('test', test_batch, OD(), []), 
-        ('free_running', test_batch, OD(), [])]
+MODE = [('train', train_batch, OD(), [], []), 
+        ('test', test_batch, OD(), [], []), 
+        ('free_running', test_batch, OD(), [], [])]
 
 with torch.no_grad():
-    for mode, data, hs_dict, oracle_nlls in MODE: 
+    for mode, data, hs_dict, oracle_nlls, embeddings in MODE: 
         input, _, _ = data
 
         # here we basically expose the model's forward pass to fetch the hidden states efficiently
@@ -72,6 +72,7 @@ with torch.no_grad():
 
             input_t = gen.embedding(input_idx)
             output, hidden_state = gen.step(input_t, hidden_state, t)
+            embeddings += [input_t.cpu().data.numpy()]
             
             if args.lm_path: 
                 if t > 0: 
@@ -148,8 +149,10 @@ timesteps = list(MODE[0][2].keys())
 split_a = int(args.tsne_batch_size * 0.8)
 split_b = int(args.tsne_batch_size * 0.9)
 # let's do a train-test split and see if we can train a simple SVM on it
-tf_states    = [MODE[1][2][t] for t in timesteps] # --> hidden states on test set
-fr_states    = [MODE[2][2][t] for t in timesteps] # --> hidden states in free running
+ind = 3 if args.classify_embeddings else 2
+print('classifying embeddings : {}'.format(args.classify_embeddings))
+tf_states    = [MODE[1][ind][t] for t in timesteps] # --> hidden states on test set
+fr_states    = [MODE[2][ind][t] for t in timesteps] # --> hidden states in free running
 
 train_tf_states = [x[:, :split_a].squeeze() for x in tf_states]
 train_fr_states = [x[:, :split_a].squeeze() for x in fr_states]

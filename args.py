@@ -86,6 +86,7 @@ def get_test_args():
     parser.add_argument('--alpha_test', type=float, default=1.0)
     parser.add_argument('--n_grams', nargs="+", type=int)
     parser.add_argument('--use_conv_net', action='store_true')
+    parser.add_argument('--classify_embeddings', action='store_true')
     
     # classifer exps
     parser.add_argument('--run_svm',  action='store_true', default=False)
