@@ -221,7 +221,8 @@ for epoch in range(args.adv_epochs):
     if (epoch + 1) % args.test_every == 0: 
         valid_loader  = minibatch_generator(dataset_valid,  args, shuffle=False)
         with torch.no_grad():
-            gen_losses, disc_losses, critic_losses, ps_real, ps_fake, real_accs, fake_accs, nlls, oracle_nlls = [[] for _ in range(9)]
+            gen_losses, disc_losses, critic_losses, ps_real, ps_fake, real_accs, \
+                fake_accs, nlls, oracle_nlls, mixed_nlls = [[] for _ in range(10)]
             gen.eval(); disc.eval()
 
             # Test loop
@@ -264,18 +265,22 @@ for epoch in range(args.adv_epochs):
                                               fake_baseline, args)
                 gen_losses += [gen_loss.data]
 
+                # generator in teacher forcing mode
+                fake_logits, _  = gen(input)
+                nll = masked_cross_entropy(fake_logits, target, lens)
+                nlls += [nll.data]
+                
                 if args.lm_path: 
                     # generate a sentence, a sentence, and feed to oracle lm
                     oracle_input = torch.cat([input[:, [0]], fake_sentence], dim=1)
                     oracle_logits, _ = oracle_lm(oracle_input.detach())
                 
-                    nll = NLL(oracle_logits[:, :-1], fake_sentence)
-                    oracle_nlls += [nll.data] 
+                    oracle_nll = NLL(oracle_logits[:, :-1], fake_sentence)
+                    oracle_nlls += [oracle_nll.data] 
+                    
+                    pdb.set_trace()
+                    mixed_nlls += [(nll.data+oracle_nll.data)/2]
                 
-                # generator in teacher forcing mode
-                fake_logits, _  = gen(input)
-                nll = masked_cross_entropy(fake_logits, target, lens)
-                nlls += [nll.data]
         
             # logging
             print_and_log_scalar(writer, 'valid/oracle_nll', oracle_nlls, writes)
@@ -283,7 +288,8 @@ for epoch in range(args.adv_epochs):
             print_and_log_scalar(writer, 'valid/real Accuracy', real_accs, writes)
             print_and_log_scalar(writer, 'valid/P(fake)', ps_fake, writes)
             print_and_log_scalar(writer, 'valid/fake Accuracy', fake_accs, writes)
-            print_and_log_scalar(writer, 'valid/nll', nlls, writes)      
+            print_and_log_scalar(writer, 'valid/nll', nlls, writes)
+            print_and_log_scalar(writer, 'valid/mixed nll', mixed_nlls, writes)
             print_and_log_scalar(writer, 'valid/Gen Loss', gen_losses, writes)      
             print_and_log_scalar(writer, 'valid/Disc Loss', disc_losses, writes)      
             print_and_log_scalar(writer, 'valid/Critic Loss', critic_losses, writes, end_token='\n')      
