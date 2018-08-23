@@ -19,6 +19,8 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--var_dropout_p_gen', type=float, default=0.5)
     parser.add_argument('--var_dropout_p_disc', type=float, default=0.5)
     parser.add_argument('--gamma', type=float, default=0.95)
+    parser.add_argument('--load_gen_path', type=str, default=None)
+    parser.add_argument('--load_disc_path', type=str, default=None)
 
     # TRAINING args
     parser.add_argument('--batch_size', type=int, default=128)

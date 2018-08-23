@@ -46,6 +46,11 @@ best_valid, best_test = 1e5, 1e5
 gen  = Generator(args)
 disc = Discriminator(args)
 
+if args.load_gen_path:
+    gen  = load_model_from_file(args.load_gen_path)[0]
+if args.load_disc_path:
+    disc = load_model_from_file(args.load_disc_path, model='disc')[0]
+
 # load a pretrained lm as Oracle to evaluate quality of samples from our model
 if args.lm_path: 
     oracle_lm = load_model_from_file(args.lm_path, epoch=args.lm_epoch)[0]
@@ -142,7 +147,8 @@ Adversarial training
 for epoch in range(args.adv_epochs):
     print('ADV training epoch {}'.format(epoch))
     train_loader = minibatch_generator(dataset_train, args, shuffle=True)
-    gen_losses, disc_losses, critic_losses, ps_real, ps_fake, nlls = [], [], [], [], [], []
+    gen_losses, disc_losses, critic_losses, ps_real, ps_fake, real_accs, fake_accs, nlls = \
+            [[] for _ in range(8)]
     gen.train(); disc.train()
 
     # Training loop
@@ -154,15 +160,21 @@ for epoch in range(args.adv_epochs):
             # train disc on real data
             real_out, _  = disc(target)
             real_loss = F.binary_cross_entropy_with_logits(real_out, torch.ones_like(real_out))
-            p_real = F.sigmoid(real_out).mean().data
+            p_real = F.sigmoid(real_out)
+            real_acc = (p_real[:, -1] > 0.5).type(torch.float).mean().data
+            p_real = p_real.mean().data
             ps_real += [p_real]
+            real_accs += [real_acc]
                            
             # train disc on fake data
             _, fake_sentences = gen(input[:, [0]])
             fake_out, fake_baseline = disc(fake_sentences.detach())
             fake_loss = F.binary_cross_entropy_with_logits(fake_out, torch.zeros_like(fake_out))
-            p_fake = F.sigmoid(fake_out).mean().data
+            p_fake = F.sigmoid(fake_out)
+            fake_acc = (p_fake[:, -1] < 0.5).type(torch.float).mean().data
+            p_fake = p_fake.mean().data
             ps_fake += [p_fake]
+            fake_accs += [fake_acc]
             disc_loss = (fake_loss + real_loss) / 2
             disc_losses += [disc_loss.data]
 
@@ -197,7 +209,9 @@ for epoch in range(args.adv_epochs):
 
     # logging
     print_and_log_scalar(writer, 'train/P(real)', ps_real, writes)      
+    print_and_log_scalar(writer, 'train/real Accuracy', real_accs, writes)
     print_and_log_scalar(writer, 'train/P(fake)', ps_fake, writes)      
+    print_and_log_scalar(writer, 'train/fake Accuracy', fake_accs, writes)
     print_and_log_scalar(writer, 'train/nll', nlls, writes)      
     print_and_log_scalar(writer, 'train/Gen Loss', gen_losses, writes)      
     print_and_log_scalar(writer, 'train/Disc Loss', disc_losses, writes)      
@@ -218,7 +232,7 @@ for epoch in range(args.adv_epochs):
                 real_out, _  = disc(target)
                 real_loss = F.binary_cross_entropy_with_logits(real_out, torch.ones_like(real_out))
                 p_real = F.sigmoid(real_out)
-                real_acc = (p_real>0.5).type(torch.float).mean().data
+                real_acc = (p_real[:, -1] >0.5).type(torch.float).mean().data
                 p_real = p_real.mean().data
                 ps_real += [p_real]
                 real_accs += [real_acc]
@@ -229,7 +243,7 @@ for epoch in range(args.adv_epochs):
                 fake_out, fake_baseline = disc(fake_sentences.detach())
                 fake_loss = F.binary_cross_entropy_with_logits(fake_out, torch.zeros_like(fake_out))
                 p_fake = F.sigmoid(fake_out)
-                fake_acc = (p_fake<0.5).type(torch.float).mean().data
+                fake_acc = (p_fake[:, -1] <0.5).type(torch.float).mean().data
                 p_fake = p_fake.mean().data
                 ps_fake += [p_fake]
                 fake_accs += [fake_acc]

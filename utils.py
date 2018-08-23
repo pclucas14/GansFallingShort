@@ -338,7 +338,7 @@ def get_oracle(args):
     return oracle
 
 
-def load_model_from_file(path, args=None, epoch=None):
+def load_model_from_file(path, args=None, epoch=None, model='gen'):
     import json
     with open(os.path.join(path, 'args.json'), 'r') as f: 
         old_args = json.load(f)
@@ -352,7 +352,12 @@ def load_model_from_file(path, args=None, epoch=None):
             old_args[key] = args_dict[key]
 
     old_args = to_attr(old_args)
-    gen = Generator(old_args)
+    if 'gen' in model.lower():
+        model_ = Generator(old_args)
+    elif 'dis' in model.lower():
+        model_ = Discriminator(old_args)
+    else: 
+        raise ValueError('%s is not a valid model name' % model)
 
     if epoch is None: # get last model
         all_ = os.listdir(os.path.join(path, 'models'))
@@ -363,10 +368,10 @@ def load_model_from_file(path, args=None, epoch=None):
         
         epoch = epochs[-1]
        
-    gen.load_state_dict(torch.load(os.path.join(path, 'models/gen%d.pth' % epoch)))
+    model_.load_state_dict(torch.load(os.path.join(path, 'models/%s%d.pth' % (model, epoch))))
     print('model successfully loaded')
 
-    return gen, epoch
+    return model_, epoch
 
 def transfer_weights(gen, disc):
     # 1) transfer embedding
