@@ -87,6 +87,7 @@ for epoch in range(args.mle_epochs):
     
     print_and_log_scalar(writer, 'train/nll', losses_train, writes, end_token='\n')
 
+
     if (epoch + 1) % args.test_every == 0:
         for split in ['valid','test']:
             dataset = dataset_valid if split=='valid' else dataset_test
@@ -278,7 +279,6 @@ for epoch in range(args.adv_epochs):
                     oracle_nll = NLL(oracle_logits[:, :-1], fake_sentence)
                     oracle_nlls += [oracle_nll.data] 
                     
-                    pdb.set_trace()
                     mixed_nlls += [(nll.data+oracle_nll.data)/2]
                 
         
