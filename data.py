@@ -28,7 +28,7 @@ class Dictionary(object):
     def __len__(self):
         return len(self.idx2word)
 
-def tokenize(path, train=False, word_dict=None, char_level=False):
+def tokenize(path, train=False, word_dict=None, char_level=False, dataset=None):
     # tokenizing process is somewhat lenghty. Let's try to avoid 
     # it when possible
     try: 
@@ -77,8 +77,10 @@ def tokenize(path, train=False, word_dict=None, char_level=False):
                     words[-1] =  '<qm>'
                 elif words[-1] == '!':
                     words[-1]  ='<em>'
-                else:
-                    print("tokenizing a sentence with no ending ...")
+            
+            if dataset=='ptb':
+                words += ['<eos>']
+
                 
             # only add words if in training set
             if train:
@@ -118,8 +120,9 @@ def tokenize(path, train=False, word_dict=None, char_level=False):
                     words[-1] =  '<qm>'
                 elif words[-1] == '!':
                     words[-1]  ='<em>'
-                else:
-                    print("tokenizing a sentence with no ending ...")
+
+            if dataset=='ptb':
+                words += ['<eos>']
 
             token = 0
             idx = list(range(len(words)))

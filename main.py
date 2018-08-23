@@ -19,11 +19,11 @@ np.random.seed(1)
 
 # dataset creation
 dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'train.txt'), \
-        train=True, char_level=args.character_level)
-dataset_valid,  word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), \
-        train=False, word_dict=word_dict, char_level=args.character_level)
-dataset_test,  word_dict = tokenize(os.path.join(args.data_dir, 'test.txt'), \
-        train=False, word_dict=word_dict, char_level=args.character_level)
+        train=True, char_level=args.character_level, dataset=args.dataset)
+dataset_valid,  word_dict = tokenize(os.path.join(args.data_dir, 'valid.txt'), train=False, \
+        word_dict=word_dict, char_level=args.character_level, dataset=args.dataset)
+dataset_test,  word_dict = tokenize(os.path.join(args.data_dir, 'test.txt'), train=False, \
+        word_dict=word_dict, char_level=args.character_level, dataset=args.dataset)
 
 if args.setup=='rlm':
     args = get_rlm_args()

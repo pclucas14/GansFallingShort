@@ -43,6 +43,7 @@ def get_train_args(allow_unmatched_args=False):
 
     # DATA args
     parser.add_argument('--data_dir', type=str, default='data/news')
+    parser.add_argument('--dataset', type=str, default=None)
     parser.add_argument('--stream_data', action='store_true', default=False)
     parser.add_argument('--max_seq_len', type=int, default=51)
     parser.add_argument('--mask_padding', action='store_true', default=False)
