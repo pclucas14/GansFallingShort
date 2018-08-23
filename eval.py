@@ -345,6 +345,7 @@ if args.run_rlm:
             
 
 """ run LM score on sentences completion """
+### TODO() make 100% sure there is no bug
 if args.run_sc:
 
     with torch.no_grad():
@@ -413,6 +414,27 @@ if args.run_sc:
         print_and_log_scalar(writer, 'eval/completion_lm_score_b{}'.format(args.breakpoint), lm_score, 0)
 
 
+    """ run reverse LM score on the sentence completed dataset """
+    # save the generated sequences somewhere 
+    rlm_base_dir = os.path.join(args.model_path,"scrlm_alpha{}".format(gen.args.alpha_test))
+    print_and_save_samples(fake_sentences, 
+            word_dict, rlm_base_dir, for_rlm=True, split='train', breakdown=10)
+
+    pdb.set_trace()
+    # run main.py on the generated dataset
+    command="python main.py --setup rlm   \
+                            --base_dir %s \
+                            --data_dir %s \
+                            --rlm_log_dir %s \
+                            --rlm_tb %s" % (rlm_base_dir, args.data_dir, rlm_log_dir, rlm_tb)
+
+    print(command)
+    os.system(command) 
+   
+    # delete the dataset
+    command="rm {}".format(os.path.join(rlm_base_dir,'train.txt'))
+    print(command)
+    os.system(command) 
 
 
 
