@@ -6,23 +6,23 @@ def get_train_args(allow_unmatched_args=False):
 
     # LOGGING args
     parser.add_argument('--base_dir', type=str, default='runs/test')
-    parser.add_argument('--bleu_every', type=int, default=15)
+    parser.add_argument('--bleu_every', type=int, default=0)
     parser.add_argument('--save_every', type=int, default=10)
     parser.add_argument('--test_every', type=int, default=2)
 
     # MODEL args
     parser.add_argument('--rnn', type=str, default='LSTM', choices=['LSTM', 'GRU'])
-    parser.add_argument('--hidden_dim_disc', type=int, default=256)
-    parser.add_argument('--hidden_dim_gen', type=int, default=256)
-    parser.add_argument('--num_layers_disc', type=int, default=1)
-    parser.add_argument('--num_layers_gen', type=int, default=1)
+    parser.add_argument('--hidden_dim_disc', type=int, default=512)
+    parser.add_argument('--hidden_dim_gen', type=int, default=512)
+    parser.add_argument('--num_layers_disc', type=int, default=2)
+    parser.add_argument('--num_layers_gen', type=int, default=2)
     parser.add_argument('--var_dropout_p_gen', type=float, default=0.5)
     parser.add_argument('--var_dropout_p_disc', type=float, default=0.5)
     parser.add_argument('--gamma', type=float, default=0.95)
 
     # TRAINING args
-    parser.add_argument('--batch_size', type=int, default=32)
-    parser.add_argument('--mle_epochs', type=int, default=100)
+    parser.add_argument('--batch_size', type=int, default=128)
+    parser.add_argument('--mle_epochs', type=int, default=80)
     parser.add_argument('--adv_epochs', type=int, default=100)
     parser.add_argument('--alpha_train', type=float, default=1.)
     parser.add_argument('--alpha_test', type=float, default=1.)
@@ -41,8 +41,8 @@ def get_train_args(allow_unmatched_args=False):
 
     # DATA args
     parser.add_argument('--data_dir', type=str, default='data/news')
-    parser.add_argument('--stream_data', action='store_true')
-    parser.add_argument('--max_seq_len', type=int, default=20)
+    parser.add_argument('--stream_data', action='store_true', default=False)
+    parser.add_argument('--max_seq_len', type=int, default=51)
     parser.add_argument('--mask_padding', action='store_true', default=False)
     parser.add_argument('--character_level', action='store_true', default=False)
 
@@ -52,6 +52,10 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--sample_size_fast', type=int, default=500)
     parser.add_argument('--lm_path', type=str, default='trained_models/news/word/best_mle')
     parser.add_argument('--lm_epoch', type=int, default=None)
+
+    # for RLM:
+    parser.add_argument('--rlm_log_dir', type=str, default="")
+    parser.add_argument('--rlm_tb', type=str, default="")
 
     if allow_unmatched_args: 
         args, unmatched = parser.parse_known_args()
@@ -146,7 +150,7 @@ def get_rlm_args():
 
     # TRAINING args
     args.batch_size=128
-    args.mle_epochs=100
+    args.mle_epochs=1
     args.adv_epochs=0
     args.alpha_train=1.
     args.alpha_test=1.

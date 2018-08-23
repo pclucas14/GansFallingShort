@@ -128,9 +128,8 @@ for epoch in range(args.mle_epochs):
 
 # if in rlm mode, store the rlm_score
 if args.setup=='rlm':
-    temp_log_dir=args.base_dir.replace('rlm','TB')
-    temp_writer = tensorboardX.SummaryWriter(log_dir=temp_log_dir)
-    print_and_log_scalar(temp_writer, 'eval/rlm_score', best_test, 0)
+    rlm_writer = tensorboardX.SummaryWriter(log_dir=args.rlm_log_dir)
+    print_and_log_scalar(temp_writer, args.rlm_tb, best_test, 0)
 
 if args.transfer_weights_after_pretraining and args.mle_epochs > 0:
     transfer_weights(gen, disc)
@@ -208,7 +207,7 @@ for epoch in range(args.adv_epochs):
     if (epoch + 1) % args.test_every == 0: 
         valid_loader  = minibatch_generator(dataset_valid,  args, shuffle=False)
         with torch.no_grad():
-            gen_losses, disc_losses, critic_losses, ps_real, ps_fake, nlls, oracle_nlls = [[] for _ in range(7)]
+            gen_losses, disc_losses, critic_losses, ps_real, ps_fake, real_accs, fake_accs, nlls, oracle_nlls = [[] for _ in range(9)]
             gen.eval(); disc.eval()
 
             # Test loop
@@ -218,15 +217,22 @@ for epoch in range(args.adv_epochs):
                 # disc on real data
                 real_out, _  = disc(target)
                 real_loss = F.binary_cross_entropy_with_logits(real_out, torch.ones_like(real_out))
-                p_real = F.sigmoid(real_out).mean().data
+                p_real = F.sigmoid(real_out)
+                real_acc = (p_real>0.5).type(torch.float).mean().data
+                p_real = p_real.mean().data
                 ps_real += [p_real]
+                real_accs += [real_acc]
+                
                                
                 # disc on fake data
                 _, fake_sentences = gen(input[:, [0]])
                 fake_out, fake_baseline = disc(fake_sentences.detach())
                 fake_loss = F.binary_cross_entropy_with_logits(fake_out, torch.zeros_like(fake_out))
-                p_fake = F.sigmoid(fake_out).mean().data
+                p_fake = F.sigmoid(fake_out)
+                fake_acc = (p_fake<0.5).type(torch.float).mean().data
+                p_fake = p_fake.mean().data
                 ps_fake += [p_fake]
+                fake_accs += [fake_acc]
                 disc_loss = (fake_loss + real_loss) / 2
                 disc_losses += [disc_loss.data]
                 
@@ -259,8 +265,10 @@ for epoch in range(args.adv_epochs):
         
             # logging
             print_and_log_scalar(writer, 'valid/oracle_nll', oracle_nlls, writes)
-            print_and_log_scalar(writer, 'valid/P(real)', ps_real, writes)      
-            print_and_log_scalar(writer, 'valid/P(fake)', ps_fake, writes)      
+            print_and_log_scalar(writer, 'valid/P(real)', ps_real, writes)
+            print_and_log_scalar(writer, 'valid/real Accuracy', real_accs, writes)
+            print_and_log_scalar(writer, 'valid/P(fake)', ps_fake, writes)
+            print_and_log_scalar(writer, 'valid/fake Accuracy', fake_accs, writes)
             print_and_log_scalar(writer, 'valid/nll', nlls, writes)      
             print_and_log_scalar(writer, 'valid/Gen Loss', gen_losses, writes)      
             print_and_log_scalar(writer, 'valid/Disc Loss', disc_losses, writes)      
