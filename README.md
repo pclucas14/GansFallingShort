@@ -9,9 +9,11 @@
 
 3) repeat 1) & 2) on a new dataset (ptb or coco)
 
-4) repeat 1) & 2) in the conditional setting i.e. Sentence Completion task
+4) redo a Figure similar to 1) but in the synthetic data case (NLL_oracle vs NLL_test) 
 
-5) repeat 1) & 2) w.r.t Adversarial Epochs
+5) repeat 1) & 2) in the conditional setting i.e. Sentence Completion task
+
+6) repeat 1) & 2) w.r.t Adversarial Epochs
 
 #### Bonus
 
