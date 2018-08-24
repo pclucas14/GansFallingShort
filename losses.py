@@ -50,7 +50,8 @@ def reinforce_gen_loss(cumulative_rewards, fake_logits, fake_sentence, baseline,
     for t in range(seq_len):
         dist = Categorical(logits=fake_logits[:, t])
         log_prob = dist.log_prob(fake_sentence[:, t])
-        ment_reg = -args.beta * dist.entropy()
+        ment_reg = args.beta * dist.entropy()
+        print(dist.entropy().mean())
         loss += log_prob * advantages[:, t] + ment_reg
     return -loss.sum() / bs # average loss over batches
             
