@@ -19,6 +19,7 @@
 
 Find an experiment that could shine light on why Adv training achieves a worse tradeoff than MLE
 e.g. Use synthetic data were you can control the (optimal) Discriminator and the use of REINFORCE
+hypothesis is that, nothing in the adv training pushes the Generator to be diverse
 
 
 ## Life after AAAI
