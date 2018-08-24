@@ -153,7 +153,7 @@ def get_rlm_args():
 
     # TRAINING args
     args.batch_size=128
-    args.mle_epochs=1
+    args.mle_epochs=100
     args.adv_epochs=0
     args.alpha_train=1.
     args.alpha_test=1.

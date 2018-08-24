@@ -135,7 +135,7 @@ for epoch in range(args.mle_epochs):
 # if in rlm mode, store the rlm_score
 if args.setup=='rlm':
     rlm_writer = tensorboardX.SummaryWriter(log_dir=args.rlm_log_dir)
-    print_and_log_scalar(temp_writer, args.rlm_tb, best_test, 0)
+    print_and_log_scalar(rlm_writer, args.rlm_tb, best_test, 0)
 
 if args.transfer_weights_after_pretraining and args.mle_epochs > 0:
     transfer_weights(gen, disc)

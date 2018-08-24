@@ -334,10 +334,16 @@ if args.run_rlm:
     print_and_save_samples(fake_sentences, 
             word_dict, rlm_base_dir, for_rlm=True, split='train', breakdown=10)
 
+    rlm_log_dir = os.path.join(args.model_path,"TB_alpha{}".format(gen.args.alpha_test))
+    rlm_tb = 'eval/rlm_score'
+
     # run main.py on the generated dataset
     command="python main.py --setup rlm   \
                             --base_dir %s \
-                            --data_dir %s" % (rlm_base_dir, args.data_dir)
+                            --data_dir %s \
+                            --rlm_log_dir %s \
+                            --rlm_tb %s" % (rlm_base_dir, args.data_dir,
+                                            rlm_log_dir, rlm_tb)
     print(command)
     os.system(command) 
    
