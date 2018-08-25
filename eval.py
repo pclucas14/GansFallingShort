@@ -123,14 +123,20 @@ with torch.no_grad():
         if args.character_level: sentences = remove_sep_spaces(sentences)
         
         print("most likely sentences under oracle:")
-        for i in range(10):
+        for i in range(30):
             print(sentences[sorted_idx[i]])
             print("nll oracle: {:.4f}".format(avg_oracle_nll[sorted_idx[i]]))
         
         print("least likely sentences under oracle:")
-        for i in range(1,11):
+        for i in range(1,1):
             print(sentences[sorted_idx[-i]])
             print("nll oracle: {:.4f}".format(avg_oracle_nll[sorted_idx[-i]]))
+
+        print('some samples')
+        for i in range(1,41):
+            print(sentences[-i])
+            print("nll oracle: {:.4f}".format(avg_oracle_nll[-i]))
+
 
         # store LM score
         if mode=='free_running':

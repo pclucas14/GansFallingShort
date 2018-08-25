@@ -32,8 +32,8 @@ def tokenize(path, train=False, word_dict=None, char_level=False, dataset=None):
     # tokenizing process is somewhat lenghty. Let's try to avoid 
     # it when possible
     try:
-        path_word_dict = path_ + '_word_dict.pickle'
-        path_ids = path_ + '_ids.pickle'
+        path_word_dict = path + '_word_dict.pickle'
+        path_ids = path + '_ids.pickle'
         with open(path_ids, 'rb') as f: 
             ids = pickle.load(f)
         if train: 
@@ -135,9 +135,8 @@ def tokenize(path, train=False, word_dict=None, char_level=False, dataset=None):
             ids.append(idx)
 
     # save to file 
-    path_ = path.split('.')[0]
-    path_word_dict = path_ + '_word_dict.pickle'
-    path_ids = path_ + '_ids.pickle'
+    path_word_dict = path + '_word_dict.pickle'
+    path_ids = path + '_ids.pickle'
     with open(path_ids, 'wb') as f: 
         pickle.dump(ids, f)
     if train: 

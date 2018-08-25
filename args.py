@@ -141,7 +141,7 @@ def get_rlm_args():
     # LOGGING args
     args.bleu_every=0
     args.save_every=1e5
-    args.test_very=2
+    args.test_every=1
 
     # MODEL args
     args.rnn = 'LSTM'
@@ -154,6 +154,9 @@ def get_rlm_args():
     # TRAINING args
     args.batch_size=128
     args.mle_epochs=100
+    ###!!!!
+    args.mle_epochs=1
+
     args.adv_epochs=0
     args.alpha_train=1.
     args.alpha_test=1.

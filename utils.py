@@ -342,9 +342,7 @@ def load_model_from_file(path, args=None, epoch=None, model='gen'):
     import json
     with open(os.path.join(path, 'args.json'), 'r') as f: 
         old_args = json.load(f)
-    
     if args is None: args = get_train_args(allow_unmatched_args=True)[0]
-
     args_dict = vars(args)
     for key in args_dict.keys():
         if key not in old_args:
