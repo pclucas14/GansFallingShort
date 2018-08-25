@@ -28,22 +28,23 @@ class Dictionary(object):
     def __len__(self):
         return len(self.idx2word)
 
-def tokenize(path, train=False, word_dict=None, char_level=False, dataset=None):
+def tokenize(path, train=False, word_dict=None, char_level=False, dataset=None, skip=False):
     # tokenizing process is somewhat lenghty. Let's try to avoid 
     # it when possible
-    try:
-        path_word_dict = path + '_word_dict.pickle'
-        path_ids = path + '_ids.pickle'
-        with open(path_ids, 'rb') as f: 
-            ids = pickle.load(f)
-        if train: 
-            with open(path_word_dict, 'rb') as f: 
-                word_dict = pickle.load(f)
-        
-        print('loaded preprocessed data from %s' % path)
-        return ids, word_dict
-    except: 
-        pass
+    if not skip:
+        try:
+            path_word_dict = path + '_word_dict.pickle'
+            path_ids = path + '_ids.pickle'
+            with open(path_ids, 'rb') as f: 
+                ids = pickle.load(f)
+            if train: 
+                with open(path_word_dict, 'rb') as f: 
+                    word_dict = pickle.load(f)
+            
+            print('loaded preprocessed data from %s' % path)
+            return ids, word_dict
+        except: 
+            pass
 
     """Tokenizes a text file."""
     if word_dict is None : 

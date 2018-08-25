@@ -31,7 +31,7 @@ def main(rlm=False, rlm_dir=None):
     if rlm:
         args = get_rlm_args()
         dataset_train,  word_dict = tokenize(os.path.join(rlm_dir, 'train.txt'), \
-                train=False, word_dict=word_dict, char_level=args.character_level)
+                train=False, word_dict=word_dict, char_level=args.character_level, skip=True)
         
 
     # add extra args
@@ -72,7 +72,6 @@ def main(rlm=False, rlm_dir=None):
     MODELS = [ ('gen', gen, optimizer_gen), ('disc', disc, optimizer_disc), ('critic', None, optimizer_critic)]
 
 
-
     '''
     MLE pretraining
     '''
@@ -92,7 +91,6 @@ def main(rlm=False, rlm_dir=None):
             apply_loss(optimizer_gen, loss, clip_norm=args.grad_clip)
         
         print_and_log_scalar(writer, 'train/nll', losses_train, writes, end_token='\n')
-
 
         if (epoch + 1) % args.test_every == 0:
             for split in ['valid','test']:
@@ -127,7 +125,6 @@ def main(rlm=False, rlm_dir=None):
                         best_valid = min(best_valid,curr_valid_loss)
                     if split == 'test':
                         best_test = np.mean(losses_dev) if best_valid==curr_valid_loss else best_test
-
                         
         writes += 1
            

@@ -61,7 +61,6 @@ TEMPERATURES = [0.9, 0.95, 1.0, 1.03, 1.06, 1.09, 1.12, 1.15, 1.20,
 
 for alpha in TEMPERATURES:
 
-
     with torch.no_grad():
         for mode, data, hs_dict, oracle_nlls, embeddings in MODE: 
             input, _, _ = data
@@ -136,27 +135,26 @@ for alpha in TEMPERATURES:
                 print(sentences[-i])
                 print("nll oracle: {:.4f}".format(avg_oracle_nll[-i]))
 
-            ######  LM score   ######
-            lm_score = np.mean(avg_oracle_nll)
-            print_and_log_scalar(writer, 'eval/lm_score', lm_score, int(alpha*100))
+    ######  LM score   ######
+    lm_score = np.mean(avg_oracle_nll)
+    print_and_log_scalar(writer, 'eval/lm_score', lm_score, int(alpha*100))
 
-            ##### RLM SCORE ######
+    ##### RLM SCORE ######
 
-            # save the generated sequences somewhere 
-            rlm_dir = os.path.join(args.model_path,"rlm_alpha{}".format(gen.args.alpha_test))
-            print_and_save_samples(fake_sentences, 
-                    word_dict, rlm_dir, for_rlm=True, split='train', breakdown=10)
-
-            pdb.set_trace()
-            
-            rlm_score = main(rlm=True, rlm_dir=rlm_dir)
-
-            
-            # delete the dataset
-            command="rm {}".format(os.path.join(rlm_dir,'train.txt'))
-            print(command)
-            os.system(command) 
-     
+    # save the generated sequences somewhere 
+    rlm_dir = os.path.join(args.model_path,"rlm_alpha{}".format(alpha))
+    print_and_save_samples(fake_sentences, 
+            word_dict, rlm_dir, for_rlm=True, split='train', breakdown=10)
+    
+    rlm_score = main(rlm=True, rlm_dir=rlm_dir)
+    
+    print_and_log_scalar(writer, 'eval/rlm_score', rlm_score, int(alpha*100))
+    
+    # delete the dataset
+    command="rm {}".format(os.path.join(rlm_dir,'train.txt'))
+    print(command)
+    os.system(command) 
+ 
 
 # ----------------------------------------------------------------------------
 # Evaluate quality/diversity tradeoff in GAN and MLE w/ Temperature Control
