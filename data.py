@@ -31,8 +31,7 @@ class Dictionary(object):
 def tokenize(path, train=False, word_dict=None, char_level=False, dataset=None):
     # tokenizing process is somewhat lenghty. Let's try to avoid 
     # it when possible
-    try: 
-        path_ = path.split('.')[0]
+    try:
         path_word_dict = path_ + '_word_dict.pickle'
         path_ids = path_ + '_ids.pickle'
         with open(path_ids, 'rb') as f: 
