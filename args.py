@@ -59,6 +59,9 @@ def get_train_args(allow_unmatched_args=False):
     # for RLM:
     parser.add_argument('--rlm_log_dir', type=str, default="")
     parser.add_argument('--rlm_tb', type=str, default="")
+    parser.add_argument('--model_path', type=str, default="")
+
+
 
     if allow_unmatched_args: 
         args, unmatched = parser.parse_known_args()
@@ -153,7 +156,7 @@ def get_rlm_args():
 
     # TRAINING args
     args.batch_size=128
-    args.mle_epochs=40
+    args.mle_epochs=30
 
     args.adv_epochs=0
     args.alpha_train=1.

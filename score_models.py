@@ -36,9 +36,7 @@ test_batch  = next(minibatch_generator(dataset_test,  args, shuffle=False))
 
 # load model that will be evaluated
 gen, loaded_epoch = load_model_from_file(args.model_path, epoch=args.model_epoch)
-gen.args.alpha_test = args.alpha_test
 gen.eval()
-print('switching the temperature to {}'.format(gen.args.alpha_test))
 
 # Logging
 writer = tensorboardX.SummaryWriter(log_dir=os.path.join(args.model_path, \
@@ -96,7 +94,7 @@ for alpha in TEMPERATURES:
                
                 if not teacher_force: 
                     dist = gen.output_layer(output)
-                    dist *= gen.args.alpha_test
+                    dist *= alpha
                     input_idx = Categorical(logits=dist.squeeze(1)).sample().unsqueeze(1)
                     fake_sentences = input_idx if t==0 else torch.cat((fake_sentences,input_idx), 1)
 
