@@ -40,7 +40,7 @@ def tokenize(path, train=False, word_dict=None, char_level=False, dataset=None):
             with open(path_word_dict, 'rb') as f: 
                 word_dict = pickle.load(f)
         
-        print('loaded preprocessed data from %s' % path_)
+        print('loaded preprocessed data from %s' % path)
         return ids, word_dict
     except: 
         pass
