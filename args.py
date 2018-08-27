@@ -32,6 +32,7 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--grad_clip', type=float, default=10.)
     parser.add_argument('--adv_clip',  type=float, default=5.)
     parser.add_argument('--seqgan_reward', type=int, default=0, help='reward is only at the final timestep')
+    parser.add_argument('--leak_info', action='store_true', help='give the generator access to disc. state')
     parser.add_argument('--use_baseline', type=int, default=1)
     parser.add_argument('--disc_train_iterations', '-dti', type=int, default=5) 
     parser.add_argument('--gen_train_iterations',  '-gti', type=int, default=1) 
@@ -61,8 +62,6 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--rlm_tb', type=str, default="")
     parser.add_argument('--model_path', type=str, default="")
 
-
-
     if allow_unmatched_args: 
         args, unmatched = parser.parse_known_args()
     else: 
@@ -74,6 +73,7 @@ def get_train_args(allow_unmatched_args=False):
         assert args.hidden_dim_gen == args.hidden_dim_disc and \
             args.num_layers_gen == args.num_layers_disc, \
                 'GEN and DISC architectures must be identical to enable weight sharing'
+        assert not args.leak_info, 'not compatible with LeakGAN setup'
 
     return (args, unmatched) if allow_unmatched_args else args
 

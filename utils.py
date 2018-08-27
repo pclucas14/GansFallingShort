@@ -333,15 +333,45 @@ def get_oracle(args):
     args_copy.hidden_dim_gen = 32
     args_copy.rnn = 'LSTM'
     args_copy.var_dropout_p_gen = 0.
+    args_copy.leak_info = False
     oracle =  Generator(args_copy, is_oracle=True)
-    '''
-    for rnn in oracle.rnns: 
-        for p in rnn.parameters(): 
-            p.data.normal_(0, 1)
-    '''
-    for p in oracle.parameters():
-        p.data.normal_(0,1)
     oracle = oracle.eval()
+    
+
+    # load weights
+    emb_w = np.load('oracle_params/embedding.npz') 
+    wi    = np.load('oracle_params/wi.npz')
+    ui    = np.load('oracle_params/ui.npz') 
+    bi    = np.load('oracle_params/bi.npz') 
+    wf    = np.load('oracle_params/wf.npz') 
+    uf    = np.load('oracle_params/uf.npz') 
+    bf    = np.load('oracle_params/bf.npz') 
+    wog   = np.load('oracle_params/wog.npz') 
+    uog   = np.load('oracle_params/uog.npz') 
+    bog   = np.load('oracle_params/bog.npz') 
+    wc    = np.load('oracle_params/wc.npz')
+    uc    = np.load('oracle_params/uc.npz') 
+    bc    = np.load('oracle_params/bc.npz')
+    wo    = np.load('oracle_params/wo.npz') 
+    bo    = np.load('oracle_params/bo.npz') 
+    
+    # build lstm weight
+    w_ih = np.concatenate([wi, wf, wc, wog], axis=0)
+    b_ih = np.concatenate([bi, bf, bc, bog], axis=0)
+
+    w_hh = np.concatenate([ui, uf, uc, uog], axis=0)
+    b_hh = np.zeros_like(b_ih) 
+
+    pp = lambda x : nn.Parameter(torch.Tensor(x).float())
+    oracle.rnns[0].weight_ih_l0 = pp(w_ih)
+    oracle.rnns[0].weight_hh_l0 = pp(w_hh)
+    oracle.rnns[0].bias_ih_l0 = pp(b_ih)
+    oracle.rnns[0].bias_hh_l0 = pp(b_hh)
+
+    oracle.embedding.weight = pp(emb_w)
+    oracle.output_layer.weight = pp(wo.T)
+    oracle.output_layer.bias = pp(bo)
+
     return oracle
 
 
