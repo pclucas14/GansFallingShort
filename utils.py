@@ -334,10 +334,13 @@ def get_oracle(args):
     args_copy.rnn = 'LSTM'
     args_copy.var_dropout_p_gen = 0.
     oracle =  Generator(args_copy, is_oracle=True)
+    '''
     for rnn in oracle.rnns: 
         for p in rnn.parameters(): 
             p.data.normal_(0, 1)
-
+    '''
+    for p in oracle.parameters():
+        p.data.normal_(0,1)
     oracle = oracle.eval()
     return oracle
 

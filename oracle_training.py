@@ -39,6 +39,7 @@ def main(rlm=False, rlm_dir=None):
     gen  = Generator(args)
     disc = Discriminator(args)
     oracle = get_oracle(args)
+    import pdb; pdb.set_trace()
 
     if args.cuda: 
         gen  = gen.cuda()
@@ -72,7 +73,7 @@ def main(rlm=False, rlm_dir=None):
     '''
     for epoch in range(args.mle_epochs):
         print('MLE pretraining epoch {}/{}'.format(epoch, args.mle_epochs))
-        losses_train, losses_dev, oracle_nlls = [], [], []
+        losses_train, losses_test, oracle_nlls = [], [], []
         gen.train()
 
         # Training loop
@@ -80,6 +81,7 @@ def main(rlm=False, rlm_dir=None):
             if args.cuda: 
                 minibatch = minibatch.cuda()
 
+            start_token = torch.zeros_like(minibatch[:, [0]])
             input  = torch.cat([start_token, minibatch[:, :-1]], dim=1)
             target = minibatch
  
@@ -90,41 +92,34 @@ def main(rlm=False, rlm_dir=None):
         
         print_and_log_scalar(writer, 'train/nll', losses_train, writes, end_token='\n')
 
-        if (epoch + 1) % args.test_every == 0 and False:
-            for split in ['valid','test']:
-                dataset = dataset_valid if split=='valid' else dataset_test
-                loader_dev  = minibatch_generator(dataset,  args, shuffle=False)
-                with torch.no_grad():
-                    gen.eval()
+        if (epoch + 1) % args.test_every == 0 :
+            with torch.no_grad():
+                for i, minibatch in enumerate(test_loader):
+                    if args.cuda: 
+                        minibatch = minibatch.cuda()
 
-                    # Test loop
-                    for i, minibatch in enumerate(loader_dev):
-                        input, target, lens = minibatch
+                    start_token = torch.zeros_like(minibatch[:, [0]])
+                    input  = torch.cat([start_token, minibatch[:, :-1]], dim=1)
+                    target = minibatch
+             
+                    gen_logits, _ = gen(input)
+                    loss = F.cross_entropy(gen_logits.view(-1, gen_logits.size(-1)), target.flatten()) 
+                    losses_test += [loss.data]
 
-                        gen_logits, _ = gen(input)
-                        loss = masked_cross_entropy(gen_logits, target, lens)
-                        losses_dev += [loss.data]
-
-                        if args.lm_path: 
-                            # generate a sentence, a sentence, and feed to oracle lm
-                            gen_logits, gen_sample = gen(input[:, [0]])
-                            oracle_input = torch.cat([input[:, [0]], gen_sample], dim=1)
-                            oracle_logits, _ = oracle_lm(oracle_input.detach())
+                start_token = start_token[[0]].expand(1000, -1)
+                # generate a sentence, a sentence, and feed to oracle lm
+                gen_logits, gen_sample = gen(start_token)
+                oracle_input = torch.cat([start_token, gen_sample], dim=1)
+                oracle_logits, _ = oracle(oracle_input.detach())
                         
-                            nll = NLL(oracle_logits[:, :-1], gen_sample)
-                            oracle_nlls += [nll.data] 
+                nll = NLL(oracle_logits[:, :-1], gen_sample)
+                oracle_nlls += [nll.data] 
 
-                    print_and_log_scalar(writer, '{}/oracle_nll'.format(split), oracle_nlls, writes)
-                    print_and_log_scalar(writer, '{}/nll'.format(split), losses_dev, writes, end_token='\n')
+                print_and_log_scalar(writer, 'test/oracle_nll', oracle_nlls, writes)
+                print_and_log_scalar(writer, 'test/nll', losses_test, writes, end_token='\n')
 
-                    # keep tab of best valid error in order to get legit test error:
-                    if split == 'valid':
-                        curr_valid_loss = np.mean(losses_dev)
-                        best_valid = min(best_valid,curr_valid_loss)
-                    if split == 'test':
-                        best_test = np.mean(losses_dev) if best_valid==curr_valid_loss else best_test
-                        
         writes += 1
+        '''
            
         # save samples
         gen.eval()
@@ -133,10 +128,7 @@ def main(rlm=False, rlm_dir=None):
 
         if (epoch + 1) % args.save_every == 0: 
             save_models(MODELS[0:1], args.base_dir, writes)
-
-    # if in rlm mode, store the rlm_score
-    if rlm:
-        return best_test
+        '''
 
     if args.transfer_weights_after_pretraining and args.mle_epochs > 0:
         transfer_weights(gen, disc)
