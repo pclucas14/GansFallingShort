@@ -77,6 +77,9 @@ def main(rlm=False, rlm_dir=None):
 
         # Training loop
         for i, minibatch in enumerate(train_loader):
+            if args.cuda: 
+                minibatch = minibatch.cuda()
+
             input  = torch.cat([start_token, minibatch[:, :-1]], dim=1)
             target = minibatch
  
