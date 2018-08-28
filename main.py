@@ -3,6 +3,7 @@ import pdb
 import numpy as np
 import torch
 import torch.optim as optim
+import torch.utils.data
 import tensorboardX
 
 from utils  import * 
@@ -12,7 +13,111 @@ from losses import *
 from args   import * 
 
 
+
 def main(rlm=False, rlm_dir=None):
+    
+    # Wrappers for running 1 pretraining epoch
+    # --------------------------------------------------------------------------------------------
+
+    # small wrapper to sample from model
+    def sample_from(model, sample_size, disc=None, size=2048):
+        with torch.no_grad():
+            num_iters = sample_size // size + 1
+            start_token = torch.zeros(size, 1).long() + 2
+            if args.cuda: 
+                start_token = start_token.cuda()
+
+            samples = []
+            for _ in range(num_iters):
+                if disc is not None:
+                    samples += [model(start_token, disc=disc)[1]]
+                else: 
+                    samples += [model(start_token)[1]]
+            
+            samples = torch.cat(samples, dim=0)
+            samples = samples[:sample_size]
+            return samples
+
+    def disc_pretrain_epoch(fake_dataset=None):
+        # if in Leak(ish) Gan setup, perform disc pretraining prior to MLE
+        if fake_dataset is None:
+            fake_dataset = sample_from(gen, len(dataset_train), disc=disc)
+       
+        dl = lambda ds, bs, sh: torch.utils.data.DataLoader(ds, batch_size=bs, shuffle=sh)
+        
+        if gen.training: 
+            real_loader = minibatch_generator(dataset_train, args, shuffle=True)
+            fake_loader = dl(fake_dataset, args.batch_size, True)
+        else: 
+            real_loader = minibatch_generator(dataset_test, args, shuffle=False)
+            fake_loader = dl(fake_dataset, args.batch_size, False)
+        
+        metrics = [[] for _ in range(6)]
+        ps_real, real_accs, ps_fake, fake_accs, disc_losses, critic_losses = metrics
+
+        for i, (real, fake) in enumerate(zip(real_loader, fake_loader)):
+            _, real, _  = real
+            if args.cuda: 
+                fake = fake.cuda()
+
+            # train disc on real data
+            real_out, _  = disc(real)
+            real_loss = F.binary_cross_entropy_with_logits(real_out, torch.ones_like(real_out))
+            p_real = F.sigmoid(real_out)
+            real_acc = (p_real[:, -1] > 0.5).type(torch.float).mean().data
+            p_real = p_real.mean().data
+            ps_real += [p_real]
+            real_accs += [real_acc]
+                           
+            # train disc on fake data
+            fake_out, fake_baseline = disc(fake)
+            fake_loss = F.binary_cross_entropy_with_logits(fake_out, torch.zeros_like(fake_out))
+            p_fake = F.sigmoid(fake_out)
+            fake_acc = (p_fake[:, -1] < 0.5).type(torch.float).mean().data
+            p_fake = p_fake.mean().data
+            ps_fake += [p_fake]
+            fake_accs += [fake_acc]
+            disc_loss = (fake_loss + real_loss) / 2
+            disc_losses += [disc_loss.data]
+
+            if disc.training: 
+                apply_loss(optimizer_disc, disc_loss, clip_norm=args.grad_clip)
+            
+            # train critic
+            if args.use_baseline: 
+                cumulative_rewards = get_cumulative_rewards(fake_out, args)
+                critic_loss = reinforce_critic_loss(cumulative_rewards, fake_baseline)
+                critic_losses += [critic_loss.data]            
+
+                if disc.training: 
+                    apply_loss(optimizer_critic, critic_loss, clip_norm=args.grad_clip)
+
+        return metrics
+
+
+    def gen_pretrain_epoch(dataset):
+        if gen.training: 
+            loader = minibatch_generator(dataset, args, shuffle=True)
+        else: 
+            loader = minibatch_generator(dataset, args, shuffle=False)
+
+        losses = []
+        for i, minibatch in enumerate(loader):
+            input, target, len = minibatch
+
+            # provide discriminator for leak signal (if args.leak_info is True)
+            gen_logits, _ = gen(input, disc=disc)
+            loss = masked_cross_entropy(gen_logits, target, len)
+            losses += [loss.data]
+            
+            if gen.training: 
+                apply_loss(optimizer_gen, loss, clip_norm=args.grad_clip)
+
+        return losses
+
+    
+    # main
+    # --------------------------------------------------------------------------------------------
 
     args = get_train_args()
 
@@ -27,6 +132,11 @@ def main(rlm=False, rlm_dir=None):
             word_dict=word_dict, char_level=args.character_level, dataset=args.dataset)
     dataset_test,  word_dict = tokenize(os.path.join(args.data_dir, 'test.txt'), train=False, \
             word_dict=word_dict, char_level=args.character_level, dataset=args.dataset)
+
+    # TODO: remove this
+    dataset_train = dataset_train[:2000]
+    dataset_test  = dataset_test[:500]
+    dataset_valid = dataset_valid[:500]
 
     if rlm:
         args = get_rlm_args()
@@ -71,66 +181,90 @@ def main(rlm=False, rlm_dir=None):
     # makes logging easier
     MODELS = [ ('gen', gen, optimizer_gen), ('disc', disc, optimizer_disc), ('critic', None, optimizer_critic)]
 
+    
+    # ------------------------------------------------------------------------------------------------
+    # MLE Pretraining Phase
+    # ------------------------------------------------------------------------------------------------
+    
+    # start with discriminator if its hidden state is leaked to generator
+    if args.leak_info:
+        for epoch in range(1): #args.disc_pretrain_epochs):
+            disc.train()
+            print('Disc Pretrain Epoch {}/{}'.format(epoch, args.disc_pretrain_epochs))
+            train_metrics = disc_pretrain_epoch()
+            disc_metric_names = ['P(real)', 'real accuracy', 'P(fake)', 
+                                 'fake accuracy', 'Disc Loss', 'Critic Loss']
+            
+            for value, name in zip(train_metrics, disc_metric_names):
+                print_and_log_scalar(writer, 'train/%s' % name, value, writes)
+            
+            if (epoch + 1) % args.test_every == 0 :
+                with torch.no_grad():
+                    disc.eval()
+                    test_metrics = disc_pretrain_epoch()
 
-    '''
-    MLE pretraining
-    '''
+                    for value, name in zip(test_metrics, disc_metric_names):
+                        print_and_log_scalar(writer, 'test/%s' % name, value, writes)
+                    
+            print('')
+            writes += 1
+    
+    
+    # carry on with normal pretraining
     for epoch in range(args.mle_epochs):
         print('MLE pretraining epoch {}/{}'.format(epoch, args.mle_epochs))
-        train_loader = minibatch_generator(dataset_train, args, shuffle=True)
-        losses_train, losses_dev, oracle_nlls = [], [], []
-        gen.train()
-
-        # Training loop
-        for i, minibatch in enumerate(train_loader):
-            input, target, lens = minibatch
-            
-            gen_logits, _ = gen(input)
-            loss = masked_cross_entropy(gen_logits, target, lens)
-            losses_train += [loss.data]
-            apply_loss(optimizer_gen, loss, clip_norm=args.grad_clip)
+        best_valid = best_test = 1e5
         
-        print_and_log_scalar(writer, 'train/nll', losses_train, writes, end_token='\n')
+        gen.train(), disc.train()
+        nll_train = gen_pretrain_epoch(dataset_train)
+        print_and_log_scalar(writer, 'train/nll', nll_train, writes)
+        
+        # train disc if needed
+        if args.leak_info:
+            disc_train_metrics = disc_pretrain_epoch()
 
-        if (epoch + 1) % args.test_every == 0:
+            for value, name in zip(disc_train_metrics, disc_metric_names):
+                print_and_log_scalar(writer, 'train/%s' % name, value, writes)
+
+        if (epoch + 1) % args.test_every == 0 :
+            gen.eval()
+            
+            if args.leak_info:
+                disc.eval()
+                disc_test_metrics = disc_pretrain_epoch()
+
+                for value, name in zip(disc_test_metrics, disc_metric_names):
+                    print_and_log_scalar(writer, 'test/%s' % name, value, writes)
+
             for split in ['valid','test']:
                 dataset = dataset_valid if split=='valid' else dataset_test
-                loader_dev  = minibatch_generator(dataset,  args, shuffle=False)
                 with torch.no_grad():
                     gen.eval()
+                    nll_test = gen_pretrain_epoch(dataset)
 
-                    # Test loop
-                    for i, minibatch in enumerate(loader_dev):
-                        input, target, lens = minibatch
-
-                        gen_logits, _ = gen(input)
-                        loss = masked_cross_entropy(gen_logits, target, lens)
-                        losses_dev += [loss.data]
-
-                        if args.lm_path: 
-                            # generate a sentence, a sentence, and feed to oracle lm
-                            gen_logits, gen_sample = gen(input[:, [0]])
-                            oracle_input = torch.cat([input[:, [0]], gen_sample], dim=1)
-                            oracle_logits, _ = oracle_lm(oracle_input.detach())
-                        
-                            nll = NLL(oracle_logits[:, :-1], gen_sample)
-                            oracle_nlls += [nll.data] 
-
-                    print_and_log_scalar(writer, '{}/oracle_nll'.format(split), oracle_nlls, writes)
-                    print_and_log_scalar(writer, '{}/nll'.format(split), losses_dev, writes, end_token='\n')
+                    # calculate nll_oracle
+                    gen_sample = sample_from(gen, 1000, disc=disc)
+                    start_token = torch.zeros_like(gen_sample[:, [0]]) + 2
+                    oracle_input = torch.cat([start_token, gen_sample], dim=1)
+                    oracle_logits, _ = oracle_lm(oracle_input.detach())
+                    nll_oracle = NLL(oracle_logits[:, :-1], gen_sample)
+                
+                    print_and_log_scalar(writer, '%s/nll' % split, nll_test, writes)
+                    print_and_log_scalar(writer, '%s/nll_oracle' % split, nll_oracle, writes)
 
                     # keep tab of best valid error in order to get legit test error:
                     if split == 'valid':
-                        curr_valid_loss = np.mean(losses_dev)
+                        curr_valid_loss = np.mean(nll_test)
                         best_valid = min(best_valid,curr_valid_loss)
                     if split == 'test':
-                        best_test = np.mean(losses_dev) if best_valid==curr_valid_loss else best_test
-                        
+                        best_test = np.mean(nll_test) if best_valid==curr_valid_loss else best_test
+        
+        print('')
         writes += 1
-           
+    
         # save samples
         gen.eval()
-        fake_logits, fake_sentences = gen(input[:, [0]])
+        fake_sentences = sample_from(gen, args.batch_size, disc=disc)
         print_and_save_samples(fake_sentences, word_dict, args.base_dir, epoch, char_level=args.character_level)
 
         if (epoch + 1) % args.save_every == 0: 
@@ -145,9 +279,10 @@ def main(rlm=False, rlm_dir=None):
         print('transfered weights from generator to discriminator')
 
 
-    '''
-    Adversarial training
-    '''
+    # ------------------------------------------------------------------------------------------------
+    # Adversarial training: TODO: refactor the following code
+    # ------------------------------------------------------------------------------------------------
+    
     for epoch in range(args.adv_epochs):
         print('ADV training epoch {}'.format(epoch))
         train_loader = minibatch_generator(dataset_train, args, shuffle=True)
@@ -171,7 +306,7 @@ def main(rlm=False, rlm_dir=None):
                 real_accs += [real_acc]
                                
                 # train disc on fake data
-                _, fake_sentences = gen(input[:, [0]])
+                _, fake_sentences = gen(input[:, [0]], disc=disc)
                 fake_out, fake_baseline = disc(fake_sentences.detach())
                 fake_loss = F.binary_cross_entropy_with_logits(fake_out, torch.zeros_like(fake_out))
                 p_fake = F.sigmoid(fake_out)
@@ -194,7 +329,7 @@ def main(rlm=False, rlm_dir=None):
             
             if should_train_gen:
                 # train generator
-                fake_logits, fake_sentence = gen(input[:, [0]])
+                fake_logits, fake_sentence = gen(input[:, [0]], disc=disc)
                 fake_out, fake_baseline = disc(fake_sentence.detach())
                 cumulative_rewards = get_cumulative_rewards(fake_out, args)
                 gen_loss = reinforce_gen_loss(cumulative_rewards, fake_logits, fake_sentence, 
@@ -244,7 +379,7 @@ def main(rlm=False, rlm_dir=None):
                     
                                    
                     # disc on fake data
-                    _, fake_sentences = gen(input[:, [0]])
+                    _, fake_sentences = gen(input[:, [0]], disc=disc)
                     fake_out, fake_baseline = disc(fake_sentences.detach())
                     fake_loss = F.binary_cross_entropy_with_logits(fake_out, torch.zeros_like(fake_out))
                     p_fake = F.sigmoid(fake_out)
@@ -262,7 +397,7 @@ def main(rlm=False, rlm_dir=None):
                         critic_losses += [critic_loss.data]            
                       
                     # generator in free sampling mode
-                    fake_logits, fake_sentence = gen(input[:, [0]])
+                    fake_logits, fake_sentence = gen(input[:, [0]], disc=disc)
                     fake_out, fake_baseline = disc(fake_sentence.detach())
                     cumulative_rewards = get_cumulative_rewards(fake_out, args)
                     gen_loss = reinforce_gen_loss(cumulative_rewards, fake_logits, fake_sentence, 
@@ -270,7 +405,7 @@ def main(rlm=False, rlm_dir=None):
                     gen_losses += [gen_loss.data]
 
                     # generator in teacher forcing mode
-                    fake_logits, _  = gen(input)
+                    fake_logits, _  = gen(input, disc=disc)
                     nll = masked_cross_entropy(fake_logits, target, lens)
                     nlls += [nll.data]
                     
@@ -301,7 +436,7 @@ def main(rlm=False, rlm_dir=None):
 
         # save samples
         gen.eval()
-        fake_logits, fake_sentences = gen(input[:, [0]])
+        fake_logits, fake_sentences = gen(input[:, [0]], disc=disc)
         print_and_save_samples(fake_sentences, word_dict, args.base_dir, epoch, char_level=args.character_level)
 
         # save models

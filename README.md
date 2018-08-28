@@ -22,6 +22,10 @@ e.g. Use synthetic data were you can control the (optimal) Discriminator and the
 hypothesis is that, nothing in the adv training pushes the Generator to be diverse
 
 
+#### TODO: from Lucas to Mass
+1) How do we want to handle discrminator pretraining for the leak-GAN case ? Right now, I'm doing 1 discriminator epoch at the very beginning, and then running args.disc_pretrain_epochs between MLE and Adversarial training (as currently done)
+
+
 ## Life after AAAI
 
 

@@ -210,7 +210,7 @@ def print_and_log_scalar(writer, name, value, write_no, end_token=''):
 
 def assign_training(iteration, epoch, args):
     # returns should_train_gen, should_train_disc, should_train_mle
-    if epoch < args.disc_pretrain_epochs:
+    if epoch < args.disc_pretrain_epochs: # and not args.leak_info:
         return False, True, False
 
     gti = args.gen_train_iterations
@@ -252,7 +252,6 @@ def remove_sep_spaces(sentences):
     return sentences
         
 
-
 def print_and_save_samples(fake_sentences, word_dict, base_dir, epoch=0, max_print=5, char_level=False, for_rlm=False, split='train', breakdown=0):
     print('samples generated after %d epochs' % epoch)
     if not for_rlm:
@@ -280,6 +279,7 @@ def print_and_save_samples(fake_sentences, word_dict, base_dir, epoch=0, max_pri
             xx = xx.replace('\n', '')
             f.write(xx + '\n')
 
+
 def save_models(models, base_dir, epoch):
     for model_ in models:
         name, model, opt = model_
@@ -299,9 +299,11 @@ def print_and_save_args(args, path):
     with open(os.path.join(path, 'args.json'), 'w') as f: 
         json.dump(vars(args), f)
 
+
 def maybe_create_dir(path):
     if not os.path.exists(path):
         os.makedirs(path)
+
 
 def to_attr(args_dict):
     class AttrDict(dict):
@@ -310,6 +312,7 @@ def to_attr(args_dict):
             self.__dict__ = self
 
     return AttrDict(args_dict)
+
 
 def remove_pad_tokens(tensor, index):
     assert len(tensor.shape) == 1 and len(index.shape) == 1
@@ -325,7 +328,6 @@ def remove_pad_tokens(tensor, index):
     return summ / is_not_pad
     
        
-
 def get_oracle(args):
     args_dict = vars(args).copy()
     args_copy = to_attr(args_dict)
@@ -337,7 +339,6 @@ def get_oracle(args):
     oracle =  Generator(args_copy, is_oracle=True)
     oracle = oracle.eval()
     
-
     # load weights
     emb_w = np.load('oracle_params/embedding.npz') 
     wi    = np.load('oracle_params/wi.npz')
@@ -383,8 +384,11 @@ def load_model_from_file(path, args=None, epoch=None, model='gen'):
     args_dict = vars(args)
     for key in args_dict.keys():
         if key not in old_args:
-            print('Warning: new arg \'{}\' given value \'{}\''.format(key, args_dict[key]))
-            old_args[key] = args_dict[key]
+            if key == 'leak_info':
+                old_args[key] = False
+            else: 
+                print('Warning: new arg \'{}\' given value \'{}\''.format(key, args_dict[key]))
+                old_args[key] = args_dict[key]
 
     old_args = to_attr(old_args)
     if 'gen' in model.lower():
@@ -402,17 +406,17 @@ def load_model_from_file(path, args=None, epoch=None, model='gen'):
             raise FileNotFoundError('no model files were found in %s' % path)
         
         epoch = epochs[-1]
-       
+    
     model_.load_state_dict(torch.load(os.path.join(path, 'models/%s%d.pth' % (model, epoch))))
     print('model successfully loaded')
 
     return model_, epoch
 
+
 def transfer_weights(gen, disc):
     # 1) transfer embedding
     disc.embedding.weight.data.copy_(gen.embedding.weight.data)
-    # disc.embedding.requires_grad = False
+    
     # 2) transfer RNN weights
     for rnn_disc, rnn_gen in zip(disc.rnns, gen.rnns):
         rnn_disc.load_state_dict(rnn_gen.state_dict())
-        # rnn_disc.requires_grad = False
