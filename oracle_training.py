@@ -205,9 +205,11 @@ for epoch in range(args.mle_epochs):
             oracle_input = torch.cat([torch.zeros_like(gen_sample[:, [0]]), gen_sample], dim=1)
             oracle_logits, _ = oracle(oracle_input.detach())
             nll_oracle = NLL(oracle_logits[:, :-1], gen_sample)
+            nll_oracle_plus_test = nll_oracle + torch.stack(nll_test).mean()
             
             print_and_log_scalar(writer, 'test/nll', nll_test, writes)
             print_and_log_scalar(writer, 'test/nll_oracle', nll_oracle, writes)
+            print_and_log_scalar(writer, 'test/nll_oracle+test', nll_oracle_plus_test, writes)
 
             if args.leak_info:
                 disc.eval()
@@ -366,10 +368,13 @@ for epoch in range(args.adv_epochs):
                 oracle_input = torch.cat([start_token, fake_sentence], dim=1)
                 oracle_logits, _ = oracle(oracle_input)
                 oracle_nll = NLL(oracle_logits[:, :-1], fake_sentence)
-                oracle_nlls += [nll.data] 
+                oracle_nlls += [oracle_nll.data] 
+                
 
 
             # logging
+            nll_oracle_plus_test = torch.stack([x + y for (x,y) in zip(oracle_nlls, nlls)]).mean()
+            print_and_log_scalar(writer, 'test/nll_oracle+test', nll_oracle_plus_test, writes)
             print_and_log_scalar(writer, 'test/oracle_nll', oracle_nlls, writes)
             print_and_log_scalar(writer, 'test/P(real)', ps_real, writes)
             print_and_log_scalar(writer, 'test/real Accuracy', real_accs, writes)

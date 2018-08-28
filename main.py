@@ -134,9 +134,9 @@ def main(rlm=False, rlm_dir=None):
             word_dict=word_dict, char_level=args.character_level, dataset=args.dataset)
 
     # TODO: remove this
-    dataset_train = dataset_train[:2000]
-    dataset_test  = dataset_test[:500]
-    dataset_valid = dataset_valid[:500]
+    # dataset_train = dataset_train[:2000]
+    # dataset_test  = dataset_test[:500]
+    # dataset_valid = dataset_valid[:500]
 
     if rlm:
         args = get_rlm_args()
