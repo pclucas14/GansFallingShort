@@ -210,7 +210,7 @@ def print_and_log_scalar(writer, name, value, write_no, end_token=''):
 
 def assign_training(iteration, epoch, args):
     # returns should_train_gen, should_train_disc, should_train_mle
-    if epoch < args.disc_pretrain_epochs:
+    if epoch < args.disc_pretrain_epochs: # and not args.leak_info:
         return False, True, False
 
     gti = args.gen_train_iterations
@@ -252,15 +252,23 @@ def remove_sep_spaces(sentences):
     return sentences
         
 
-
-def print_and_save_samples(fake_sentences, word_dict, base_dir, epoch=0, max_print=5, char_level=False, for_rlm=False, split='train'):
+def print_and_save_samples(fake_sentences, word_dict, base_dir, epoch=0, max_print=5, char_level=False, for_rlm=False, split='train', breakdown=0):
     print('samples generated after %d epochs' % epoch)
     if not for_rlm:
         file_name = os.path.join(base_dir, 'samples/generated{}.txt'.format(epoch))
     else: 
         maybe_create_dir(base_dir)
         file_name = os.path.join(base_dir, '{}.txt'.format(split))
-    sentences = id_to_words(fake_sentences.cpu().data.numpy(), word_dict)
+    
+    if not breakdown:
+        sentences = id_to_words(fake_sentences.cpu().data.numpy(), word_dict)
+    else:
+        sentences = []
+        sub_len = int(fake_sentences.shape[0] / breakdown)
+        for i in range(breakdown):
+            sentences_ = id_to_words(fake_sentences[i*sub_len:(i+1)*sub_len].cpu().data.numpy(), word_dict)
+            sentences += sentences_
+
     if char_level: 
         sentences = remove_sep_spaces(sentence)
     with open(file_name, 'w') as f:
@@ -291,9 +299,11 @@ def print_and_save_args(args, path):
     with open(os.path.join(path, 'args.json'), 'w') as f: 
         json.dump(vars(args), f)
 
+
 def maybe_create_dir(path):
     if not os.path.exists(path):
         os.makedirs(path)
+
 
 def to_attr(args_dict):
     class AttrDict(dict):
@@ -302,6 +312,7 @@ def to_attr(args_dict):
             self.__dict__ = self
 
     return AttrDict(args_dict)
+
 
 def remove_pad_tokens(tensor, index):
     assert len(tensor.shape) == 1 and len(index.shape) == 1
@@ -317,34 +328,75 @@ def remove_pad_tokens(tensor, index):
     return summ / is_not_pad
     
        
-
 def get_oracle(args):
     args_dict = vars(args).copy()
     args_copy = to_attr(args_dict)
     args_copy.num_layers_gen = 1
     args_copy.hidden_dim_gen = 32
     args_copy.rnn = 'LSTM'
+    args_copy.var_dropout_p_gen = 0.
+    args_copy.leak_info = False
     oracle =  Generator(args_copy, is_oracle=True)
-    for p in oracle.parameters(): p.data.normal_(0, 1000000)
     oracle = oracle.eval()
+    
+    # load weights
+    emb_w = np.load('oracle_params/embedding.npz') 
+    wi    = np.load('oracle_params/wi.npz')
+    ui    = np.load('oracle_params/ui.npz') 
+    bi    = np.load('oracle_params/bi.npz') 
+    wf    = np.load('oracle_params/wf.npz') 
+    uf    = np.load('oracle_params/uf.npz') 
+    bf    = np.load('oracle_params/bf.npz') 
+    wog   = np.load('oracle_params/wog.npz') 
+    uog   = np.load('oracle_params/uog.npz') 
+    bog   = np.load('oracle_params/bog.npz') 
+    wc    = np.load('oracle_params/wc.npz')
+    uc    = np.load('oracle_params/uc.npz') 
+    bc    = np.load('oracle_params/bc.npz')
+    wo    = np.load('oracle_params/wo.npz') 
+    bo    = np.load('oracle_params/bo.npz') 
+    
+    # build lstm weight
+    w_ih = np.concatenate([wi, wf, wc, wog], axis=0)
+    b_ih = np.concatenate([bi, bf, bc, bog], axis=0)
+
+    w_hh = np.concatenate([ui, uf, uc, uog], axis=0)
+    b_hh = np.zeros_like(b_ih) 
+
+    pp = lambda x : nn.Parameter(torch.Tensor(x).float())
+    oracle.rnns[0].weight_ih_l0 = pp(w_ih)
+    oracle.rnns[0].weight_hh_l0 = pp(w_hh)
+    oracle.rnns[0].bias_ih_l0 = pp(b_ih)
+    oracle.rnns[0].bias_hh_l0 = pp(b_hh)
+
+    oracle.embedding.weight = pp(emb_w)
+    oracle.output_layer.weight = pp(wo.T)
+    oracle.output_layer.bias = pp(bo)
+
     return oracle
 
 
-def load_model_from_file(path, args=None, epoch=None):
+def load_model_from_file(path, args=None, epoch=None, model='gen'):
     import json
     with open(os.path.join(path, 'args.json'), 'r') as f: 
         old_args = json.load(f)
-    
     if args is None: args = get_train_args(allow_unmatched_args=True)[0]
-
     args_dict = vars(args)
     for key in args_dict.keys():
         if key not in old_args:
-            print('Warning: new arg \'{}\' given value \'{}\''.format(key, args_dict[key]))
-            old_args[key] = args_dict[key]
+            if key == 'leak_info':
+                old_args[key] = False
+            else: 
+                print('Warning: new arg \'{}\' given value \'{}\''.format(key, args_dict[key]))
+                old_args[key] = args_dict[key]
 
     old_args = to_attr(old_args)
-    gen = Generator(old_args)
+    if 'gen' in model.lower():
+        model_ = Generator(old_args)
+    elif 'dis' in model.lower():
+        model_ = Discriminator(old_args)
+    else: 
+        raise ValueError('%s is not a valid model name' % model)
 
     if epoch is None: # get last model
         all_ = os.listdir(os.path.join(path, 'models'))
@@ -354,17 +406,17 @@ def load_model_from_file(path, args=None, epoch=None):
             raise FileNotFoundError('no model files were found in %s' % path)
         
         epoch = epochs[-1]
-       
-    gen.load_state_dict(torch.load(os.path.join(path, 'models/gen%d.pth' % epoch)))
+    
+    model_.load_state_dict(torch.load(os.path.join(path, 'models/%s%d.pth' % (model, epoch))))
     print('model successfully loaded')
 
-    return gen, epoch
+    return model_, epoch
+
 
 def transfer_weights(gen, disc):
     # 1) transfer embedding
     disc.embedding.weight.data.copy_(gen.embedding.weight.data)
-    # disc.embedding.requires_grad = False
+    
     # 2) transfer RNN weights
     for rnn_disc, rnn_gen in zip(disc.rnns, gen.rnns):
         rnn_disc.load_state_dict(rnn_gen.state_dict())
-        # rnn_disc.requires_grad = False

@@ -28,23 +28,23 @@ class Dictionary(object):
     def __len__(self):
         return len(self.idx2word)
 
-def tokenize(path, train=False, word_dict=None, char_level=False):
+def tokenize(path, train=False, word_dict=None, char_level=False, dataset=None, skip=False):
     # tokenizing process is somewhat lenghty. Let's try to avoid 
     # it when possible
-    try: 
-        path_ = path.split('.')[0]
-        path_word_dict = path_ + '_word_dict.pickle'
-        path_ids = path_ + '_ids.pickle'
-        with open(path_ids, 'rb') as f: 
-            ids = pickle.load(f)
-        if train: 
-            with open(path_word_dict, 'rb') as f: 
-                word_dict = pickle.load(f)
-        
-        print('loaded preprocessed data from %s' % path_)
-        return ids, word_dict
-    except: 
-        pass
+    if not skip:
+        try:
+            path_word_dict = path + '_word_dict.pickle'
+            path_ids = path + '_ids.pickle'
+            with open(path_ids, 'rb') as f: 
+                ids = pickle.load(f)
+            if train: 
+                with open(path_word_dict, 'rb') as f: 
+                    word_dict = pickle.load(f)
+            
+            print('loaded preprocessed data from %s' % path)
+            return ids, word_dict
+        except: 
+            pass
 
     """Tokenizes a text file."""
     if word_dict is None : 
@@ -77,8 +77,10 @@ def tokenize(path, train=False, word_dict=None, char_level=False):
                     words[-1] =  '<qm>'
                 elif words[-1] == '!':
                     words[-1]  ='<em>'
-                else:
-                    print("tokenizing a sentence with no ending ...")
+            
+            if dataset=='ptb':
+                words += ['<eos>']
+
                 
             # only add words if in training set
             if train:
@@ -118,8 +120,9 @@ def tokenize(path, train=False, word_dict=None, char_level=False):
                     words[-1] =  '<qm>'
                 elif words[-1] == '!':
                     words[-1]  ='<em>'
-                else:
-                    print("tokenizing a sentence with no ending ...")
+
+            if dataset=='ptb':
+                words += ['<eos>']
 
             token = 0
             idx = list(range(len(words)))
@@ -133,9 +136,8 @@ def tokenize(path, train=False, word_dict=None, char_level=False):
             ids.append(idx)
 
     # save to file 
-    path_ = path.split('.')[0]
-    path_word_dict = path_ + '_word_dict.pickle'
-    path_ids = path_ + '_ids.pickle'
+    path_word_dict = path + '_word_dict.pickle'
+    path_ids = path + '_ids.pickle'
     with open(path_ids, 'wb') as f: 
         pickle.dump(ids, f)
     if train: 

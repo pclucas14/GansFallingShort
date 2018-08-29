@@ -46,10 +46,15 @@ class Model(nn.Module):
 class Generator(Model):
     def __init__(self, args, is_oracle=False):
         super(Generator, self).__init__(args.num_layers_gen, args.hidden_dim_gen, args)
-        self.output_layer = nn.Linear(args.hidden_dim_gen, args.vocab_size)
+        
+        in_size = args.hidden_dim_gen
+        if args.leak_info: 
+            in_size += args.hidden_dim_disc
+
+        self.output_layer = nn.Linear(in_size, args.vocab_size)
         self.is_oracle = is_oracle
 
-    def forward(self, x, hidden_state=None):
+    def forward(self, x, hidden_state=None, disc=None):
         assert len(x.size()) == 2 # bs x seq_len
         ''' note that x[:, 0] is always SOS token'''
 
@@ -59,13 +64,24 @@ class Generator(Model):
         input_idx      = x[:, [0]]
         outputs, words = [], []
 
+        if self.args.leak_info:
+            assert disc is not None
+            hidden_state_disc = None
+
         for t in range(seq_len):
             # choose first token, or overwrite sampled one
             if teacher_force or t == 0: 
                 input_idx = x[:, [t]]
 
             input = self.embedding(input_idx)
-            output, hidden_state = self.step(input, hidden_state, t, var_drop_p=self.args.var_dropout_p_gen)
+            output, hidden_state = self.step(input, hidden_state, t, \
+                    var_drop_p=self.args.var_dropout_p_gen)
+    
+            if self.args.leak_info:
+                output_disc, hidden_state_disc = disc.step(input, hidden_state_disc, t, \
+                        var_drop_p=self.args.var_dropout_p_disc)
+                output = torch.cat([output, output_disc], dim=-1)
+
             dist = self.output_layer(output)
             alpha = self.args.alpha_train if self.training  else self.args.alpha_test
             if not self.is_oracle: 
@@ -186,4 +202,62 @@ class ConvNet(nn.Module):
         output = self.output_layer(output)
         return output 
 
+# inspired from https://github.com/heykeetae/Self-Attention-GAN/blob/master/sagan_models.py
+class SelfAttn(nn.Module):
+    def __init__(self, in_dim):
+        super(SelfAttn,self).__init__()
+        self.chanel_in = in_dim
+        
+        self.query_conv = nn.Conv1d(in_channels = in_dim , out_channels = in_dim//8 , kernel_size= 1)
+        self.key_conv = nn.Conv1d(in_channels = in_dim , out_channels = in_dim//8 , kernel_size= 1)
+        self.value_conv = nn.Conv1d(in_channels = in_dim , out_channels = in_dim , kernel_size= 1)
+        self.register_parameter('gamma', nn.Parameter(torch.zeros(1)))
 
+        self.softmax = nn.Softmax(dim=-1)
+
+    def forward(self, x):
+        """
+            inputs :
+                x : input feature maps( B X C X N )
+            returns :
+                out : self attention value + input feature 
+                attention: B X N X N 
+        """
+        m_batchsize, C, N = x.size()
+        # proj_query  = self.query_conv(x).view(m_batchsize,-1,width*height).permute(0,2,1) # B X CX(N)
+        proj_query  = self.query_conv(x).permute(0,2,1) # B X N X C_
+        proj_key =  self.key_conv(x)  # B X C_ x N
+        energy =  torch.bmm(proj_query, proj_key) # B X N X N
+        attention = self.softmax(energy) # B X N X N 
+        proj_value = self.value_conv(x)  # B X C X N
+
+        out = torch.bmm(proj_value, attention.permute(0,2,1))
+        # out = out.view(m_batchsize, C, width,height)
+        
+        out = self.gamma * out + x
+        return out # , attention 
+ 
+
+class ConvNetSelfAttn(nn.Module):
+    def __init__(self, hidden_state_size, channels=[100, 100, 200, 200, 300, 300]):
+        super(ConvNetSelfAttn, self).__init__()
+        channels = [hidden_state_size] + channels
+        layers = []
+
+        for i in range(len(channels) - 1):
+            layers += [nn.Conv1d(channels[i], channels[i+1], 1),
+                       nn.Dropout(),
+                       nn.ReLU(True), 
+                       SelfAttn(channels[i+1])]
+
+        self.main = nn.Sequential(*layers)
+        self.out = nn.Linear(channels[-1], 2)
+
+    def forward(self, x):
+        # note : we want to perform attention on the sequence axis, 
+        # NOT on the channels of the hidden state. 
+        x = x.transpose(2, 1) 
+        out = self.main(x)
+        out = out.max(dim=2)[0] # max over sequence axis
+        
+        return self.out(out)
