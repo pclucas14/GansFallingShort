@@ -288,7 +288,10 @@ def save_models(models, base_dir, epoch):
             torch.save(model.state_dict(), save_name + '.pth')
         except: 
             assert 'critic' in name or model is None 
-        torch.save(opt.state_dict(), save_name + 'opt.pth')
+        
+        if opt is not None: 
+            torch.save(opt.state_dict(), save_name + 'opt.pth')
+    
     print('saved {} models'.format(len(models)))
     
 
@@ -328,7 +331,12 @@ def remove_pad_tokens(tensor, index):
     return summ / is_not_pad
     
        
-def get_oracle(args):
+def get_oracle(args=None):
+    if args is None: 
+        args = get_train_args()
+        args.vocab_size = 5000
+        args.max_seq_len = 20
+
     args_dict = vars(args).copy()
     args_copy = to_attr(args_dict)
     args_copy.num_layers_gen = 1
