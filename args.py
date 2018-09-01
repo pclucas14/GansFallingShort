@@ -167,7 +167,7 @@ def get_rlm_args():
 
     # DATA args
     args.stream_data = False
-    args.max_seq_len = 60
+    args.max_seq_len = 22
     args.mask_padding = True
 
     # OTHER args
