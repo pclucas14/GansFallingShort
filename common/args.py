@@ -41,6 +41,8 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--gen_lr', type=float, default=1e-3)
     parser.add_argument('--disc_lr', type=float, default=1e-3)
     parser.add_argument('--critic_lr', type=float, default=1e-3)
+    parser.add_argument('--mle_warmup_epochs', type=int, default=25)
+    parser.add_argument('--lambda_mle', type=float, default=0.1)
 
     # DATA args
     parser.add_argument('--data_dir', type=str, default='data/news')
