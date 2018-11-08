@@ -25,4 +25,4 @@ For any questions / comments / concerns, feel free to open an issue via github, 
 
 We strongly believe in fully reproducible research. To that end, if you find any discrepancy between our code and the paper, please let us know, and we will make sure to address it.  <br />
 
-Happy NLG-ing :)
+Happy text modeling :)
