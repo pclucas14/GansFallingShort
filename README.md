@@ -11,7 +11,7 @@ Code for reproducing all results in our paper, which can be found [here](https:/
 ## Structure
 - `common` folder: most of the important code is here, including all models and utilities
 - `synthetic_data_experiments` folder: code to run and reproduce all oracle experiments
-- `real_data_experimentsfoder`: code to run results for ImageCoco and News datasets
+- `real_data_experiments` folder: code to run results for ImageCoco and News datasets
 
 ## Reproducibility
 - For synthetic data, simply run `oracle_eval.py` found in the `synthetic_data_experiments` folder. 
