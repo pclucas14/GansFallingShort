@@ -1,33 +1,28 @@
-# repository for Exposure Bias experiments
+# Language GANs Falling Short
+
+Code for reproducing all results in our paper, which can be found [here](https://arxiv.org/abs/1811.02549)
 
 
-## What we need for AAAI -- sep 5th (decreasing order)
+## (key) Requirements 
+- Python 3.x
+- Pytorch 0.4.1
+- TensorboardX
 
-1) LM score vs RLM score w.r.t temperatures for MLE and GANs with multiple CV techniques :: News dataset
+## Structure
+- common folder: most of the important code is here, including all models and utilities
+- synthetic_data_experiments folder: code to run and reproduce all oracle experiments
+- real_data_experimentsfoder: code to run results for ImageCoco and News datasets
 
-2) repeat 1) with LeakGAN and Leak MLE
+## Reproducibility
+- For synthetic data, simply run `oracle_eval.py` found in the `synthetic_data_experiments` folder. 
+- For real data, we uploaded the weights (and corresponding hyperparameters) in `real_data_experiments/trained_models` folder. You can load the model by using the `--load_{gen/disc}_from_file` argument. For example, 
+```
+python main.py --load_gen_path trained_models/news/word/best_mle
+```
 
-3) repeat 1) & 2) on a new dataset (ptb or coco)
+## Contact
+For any questions / comments / concerns, feel free to open an issue via github, or to send me an email at <br /> `lucas.page-caccia@mail.mcgill.ca`. <br />
 
-4) redo a Figure similar to 1) but in the synthetic data case (NLL_oracle vs NLL_test) 
+We strongly believe in fully reproducible research. To that end, if you find any discrepancy between our code and the paper, please let us know, and we will make sure to address it.  <br />
 
-5) repeat 1) & 2) in the conditional setting i.e. Sentence Completion task
-
-6) repeat 1) & 2) w.r.t Adversarial Epochs
-
-#### Bonus
-
-Find an experiment that could shine light on why Adv training achieves a worse tradeoff than MLE
-e.g. Use synthetic data were you can control the (optimal) Discriminator and the use of REINFORCE
-hypothesis is that, nothing in the adv training pushes the Generator to be diverse
-
-
-#### TODO: from Lucas to Mass
-1) How do we want to handle discrminator pretraining for the leak-GAN case ? Right now, I'm doing 1 discriminator epoch at the very beginning, and then running args.disc_pretrain_epochs between MLE and Adversarial training (as currently done)
-
-
-## Life after AAAI
-
-
-
-
+Happy NLG-ing :)
