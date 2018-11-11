@@ -53,7 +53,29 @@ def reinforce_gen_loss(cumulative_rewards, fake_logits, fake_sentence, baseline,
         ment_reg = args.beta * dist.entropy()
         loss += log_prob * advantages[:, t] + ment_reg
     return -loss.sum() / bs # average loss over batches
-            
+
+def cot_gen_loss(gen_logits, med_logits):
+    '''
+    gen_logits: (bs, seq_len, vocab_size)
+    med_logits: (bs, seq_len, vocab_size)
+    '''
+
+    assert gen_logits.size() == med_logits.size()
+    bs, seq_len, vocab_size = gen_logits.size()
+
+    gen_logits = gen_logits.reshape(bs * seq_len, vocab_size)
+    med_logits = med_logits.reshape(bs * seq_len, vocab_size)
+
+    # target = Categorical(logits=med_logits)
+    # pred   = Categorical(logits=gen_logits)
+
+    # loss = torch.distributions.kl.kl_divergence(target, pred)
+    # loss as done in https://github.com/desire2020/CoT/blob/master/generator.py line 125
+    
+    loss = -1 * F.softmax(gen_logits, -1) * (F.log_softmax(med_logits, -1) - F.log_softmax(gen_logits, -1))
+    return loss.sum() / bs
+
+
 '''
 Metrics and Divergences
 '''        

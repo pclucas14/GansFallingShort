@@ -24,6 +24,7 @@ def main(args=None, max_writes=1e5):
 
     # add extra args
     args.vocab_size = 5000
+    args.max_seq_len = 20
     args.num_oracle_samples = 10000
     args.num_oracle_samples_test = 5000
     args.cuda = False if args.no_cuda else True
@@ -36,7 +37,7 @@ def main(args=None, max_writes=1e5):
     writes = 0
 
     gen  = Generator(args)
-    disc = Discriminator(args)
+    disc = Generator(args) if args.cot else Discriminator(args)
     oracle = get_oracle(args)
 
     if args.cuda: 
@@ -45,8 +46,12 @@ def main(args=None, max_writes=1e5):
         oracle = oracle.cuda()
 
     optimizer_gen    = optim.Adam(gen.parameters(),         lr=args.gen_lr)
-    optimizer_critic = optim.Adam(disc.critic.parameters(), lr=args.critic_lr)
-    optimizer_disc   = optim.Adam([p for (n,p) in disc.named_parameters() if 'critic' not in n], lr=args.disc_lr)
+    if args.cot:  
+        optimizer_disc   = optim.Adam(disc.parameters(), lr=args.disc_lr)
+        optimizer_critic = None
+    else:
+        optimizer_critic = optim.Adam(disc.critic.parameters(), lr=args.critic_lr)
+        optimizer_disc   = optim.Adam([p for (n,p) in disc.named_parameters() if 'critic' not in n], lr=args.disc_lr)
 
     # makes logging easier
     MODELS = [ ('gen', gen, optimizer_gen), ('disc', disc, optimizer_disc), ('critic', None, optimizer_critic)]
@@ -105,7 +110,7 @@ def main(args=None, max_writes=1e5):
                     target = minibatch
              
                     gen_logits, _ = gen(input, disc=disc)
-                    loss = F.cross_entropy(gen_logits.view(-1, gen_logits.size(-1)), target.flatten()) 
+                    loss = NLL(gen_logits, target)
                     losses_test += [loss.data]
 
                 start_token = start_token[[0]].expand(1000, -1)
@@ -134,8 +139,8 @@ def main(args=None, max_writes=1e5):
     '''
     for epoch in range(args.adv_epochs):
         print('ADV training epoch {}'.format(epoch))
-        gen_losses, disc_losses, critic_losses, ps_real, ps_fake, real_accs, fake_accs, nlls = \
-                [[] for _ in range(8)]
+        gen_losses, disc_losses, critic_losses, ps_real, ps_fake, real_accs, fake_accs, nlls, \
+                cot_real_loss, cot_fake_loss = [[] for _ in range(10)]
         gen.train(); disc.train()
 
         # Training loop
@@ -151,30 +156,42 @@ def main(args=None, max_writes=1e5):
 
             if should_train_disc:
                 # train disc on real data
-                real_out, _  = disc(target)
-                real_loss = F.binary_cross_entropy_with_logits(real_out, torch.ones_like(real_out))
-                p_real = F.sigmoid(real_out)
-                real_acc = (p_real[:, -1] > 0.5).type(torch.float).mean().data
-                p_real = p_real.mean().data
-                ps_real += [p_real]
-                real_accs += [real_acc]
+                if args.cot:
+                    real_logits, _ = disc(input)
+                    real_loss = NLL(real_logits, target)
+                    cot_real_loss += [real_loss.data]
+                else:
+                    real_out, _  = disc(target)
+                    real_loss = F.binary_cross_entropy_with_logits(real_out, torch.ones_like(real_out))
+                    p_real = F.sigmoid(real_out)
+                    real_acc = (p_real[:, -1] > 0.5).type(torch.float).mean().data
+                    p_real = p_real.mean().data
+                    ps_real += [p_real]
+                    real_accs += [real_acc]
                                
                 # train disc on fake data
                 _, fake_sentences = gen(input[:, [0]], disc=disc)
-                fake_out, fake_baseline = disc(fake_sentences.detach())
-                fake_loss = F.binary_cross_entropy_with_logits(fake_out, torch.zeros_like(fake_out))
-                p_fake = F.sigmoid(fake_out)
-                fake_acc = (p_fake[:, -1] < 0.5).type(torch.float).mean().data
-                p_fake = p_fake.mean().data
-                ps_fake += [p_fake]
-                fake_accs += [fake_acc]
+                if args.cot:
+                    # prepend sos_token to generated sentence
+                    fake_logits, _ = disc(torch.cat([input[:, [0]], fake_sentences[:, :-1]], dim=1))
+                    fake_loss = NLL(fake_logits, fake_sentences)
+                    cot_fake_loss += [fake_loss.data]
+                else:
+                    fake_out, fake_baseline = disc(fake_sentences.detach())
+                    fake_loss = F.binary_cross_entropy_with_logits(fake_out, torch.zeros_like(fake_out))
+                    p_fake = F.sigmoid(fake_out)
+                    fake_acc = (p_fake[:, -1] < 0.5).type(torch.float).mean().data
+                    p_fake = p_fake.mean().data
+                    ps_fake += [p_fake]
+                    fake_accs += [fake_acc]
+                
                 disc_loss = (fake_loss + real_loss) / 2
                 disc_losses += [disc_loss.data]
 
                 apply_loss(optimizer_disc, disc_loss, clip_norm=args.grad_clip)
                 
                 # train critic
-                if args.use_baseline: 
+                if args.use_baseline and not args.cot: 
                     cumulative_rewards = get_cumulative_rewards(fake_out, args)
                     critic_loss = reinforce_critic_loss(cumulative_rewards, fake_baseline)
                     critic_losses += [critic_loss.data]            
@@ -185,9 +202,15 @@ def main(args=None, max_writes=1e5):
                 # train generator
                 fake_logits, fake_sentence = gen(input[:, [0]], disc=disc)
                 fake_out, fake_baseline = disc(fake_sentence.detach())
-                cumulative_rewards = get_cumulative_rewards(fake_out, args)
-                gen_loss = reinforce_gen_loss(cumulative_rewards, fake_logits, fake_sentence, 
+
+                if args.cot: 
+                    disc_logits, _ = disc(torch.cat([input[:, [0]], fake_sentence[:, :-1]], dim=1))
+                    gen_loss = cot_gen_loss(fake_logits, disc_logits)
+                else:
+                    cumulative_rewards = get_cumulative_rewards(fake_out, args)
+                    gen_loss = reinforce_gen_loss(cumulative_rewards, fake_logits, fake_sentence, 
                                               fake_baseline, args)
+                
                 gen_losses += [gen_loss.data]
 
                 apply_loss(optimizer_gen, gen_loss, clip_norm=args.grad_clip)
@@ -208,13 +231,15 @@ def main(args=None, max_writes=1e5):
         print_and_log_scalar(writer, 'train/nll', nlls, writes)      
         print_and_log_scalar(writer, 'train/Gen Loss', gen_losses, writes)      
         print_and_log_scalar(writer, 'train/Disc Loss', disc_losses, writes)      
-        print_and_log_scalar(writer, 'train/Critic Loss', critic_losses, writes, end_token='\n')      
+        print_and_log_scalar(writer, 'train/Critic Loss', critic_losses, writes)
+        print_and_log_scalar(writer, 'train/CoT Real Loss', cot_real_loss, writes)
+        print_and_log_scalar(writer, 'train/CoT Fake Loss', cot_fake_loss, writes, end_token='\n')      
 
 
         if (epoch + 1) % args.test_every == 0: 
             with torch.no_grad():
-                gen_losses, disc_losses, critic_losses, ps_real, ps_fake, real_accs, \
-                    fake_accs, nlls, oracle_nlls, mixed_nlls = [[] for _ in range(10)]
+                gen_losses, disc_losses, critic_losses, ps_real, ps_fake, real_accs, fake_accs, nlls, \
+                        oracle_nlls, cot_real_loss, cot_fake_loss = [[] for _ in range(11)]
                 gen.eval(); disc.eval()
 
                 # Test loop
@@ -227,50 +252,66 @@ def main(args=None, max_writes=1e5):
                     target = minibatch
                     
                     # disc on real data
-                    real_out, _  = disc(target)
-                    real_loss = F.binary_cross_entropy_with_logits(real_out, torch.ones_like(real_out))
-                    p_real = F.sigmoid(real_out)
-                    real_acc = (p_real[:, -1] > 0.5).type(torch.float).mean().data
-                    p_real = p_real.mean().data
-                    ps_real += [p_real]
-                    real_accs += [real_acc]
+                    if args.cot:
+                        real_logits, _ = disc(input)
+                        real_loss = NLL(real_logits, target)
+                        cot_real_loss += [real_loss.data]
+                    else:
+                        real_out, _  = disc(target)
+                        real_loss = F.binary_cross_entropy_with_logits(real_out, torch.ones_like(real_out))
+                        p_real = F.sigmoid(real_out)
+                        real_acc = (p_real[:, -1] > 0.5).type(torch.float).mean().data
+                        p_real = p_real.mean().data
+                        ps_real += [p_real]
+                        real_accs += [real_acc]
+                        
                                    
                     # disc on fake data
                     _, fake_sentences = gen(input[:, [0]], disc=disc)
-                    fake_out, fake_baseline = disc(fake_sentences.detach())
-                    fake_loss = F.binary_cross_entropy_with_logits(fake_out, torch.zeros_like(fake_out))
-                    p_fake = F.sigmoid(fake_out)
-                    fake_acc = (p_fake[:, -1] < 0.5).type(torch.float).mean().data
-                    p_fake = p_fake.mean().data
-                    ps_fake += [p_fake]
-                    fake_accs += [fake_acc]
+                    if args.cot:
+                        # prepend sos_token to generated sentence
+                        fake_logits, _ = disc(torch.cat([input[:, [0]], fake_sentences[:, :-1]], dim=1))
+                        fake_loss = NLL(fake_logits, fake_sentences)
+                        cot_fake_loss += [fake_loss.data]
+                    else:
+                        fake_out, fake_baseline = disc(fake_sentences.detach())
+                        fake_loss = F.binary_cross_entropy_with_logits(fake_out, torch.zeros_like(fake_out))
+                        p_fake = F.sigmoid(fake_out)
+                        fake_acc = (p_fake[:, -1] < 0.5).type(torch.float).mean().data
+                        p_fake = p_fake.mean().data
+                        ps_fake += [p_fake]
+                        fake_accs += [fake_acc]
+                    
                     disc_loss = (fake_loss + real_loss) / 2
                     disc_losses += [disc_loss.data]
                     
                     # critic
-                    if args.use_baseline: 
+                    if args.use_baseline and not args.cot: 
                         cumulative_rewards = get_cumulative_rewards(fake_out, args)
                         critic_loss = reinforce_critic_loss(cumulative_rewards, fake_baseline)
                         critic_losses += [critic_loss.data]            
                       
                     # generator in free sampling mode
                     fake_logits, fake_sentence = gen(input[:, [0]], disc=disc)
-                    fake_out, fake_baseline = disc(fake_sentence.detach())
-                    cumulative_rewards = get_cumulative_rewards(fake_out, args)
-                    gen_loss = reinforce_gen_loss(cumulative_rewards, fake_logits, fake_sentence, 
+                    if args.cot: 
+                        disc_logits, _ = disc(torch.cat([input[:, [0]], fake_sentence[:, :-1]], dim=1))
+                        gen_loss = cot_gen_loss(fake_logits, disc_logits)
+                    else:
+                        cumulative_rewards = get_cumulative_rewards(fake_out, args)
+                        gen_loss = reinforce_gen_loss(cumulative_rewards, fake_logits, fake_sentence, 
                                                   fake_baseline, args)
                     gen_losses += [gen_loss.data]
 
                     # generator in teacher forcing mode
                     fake_logits, _  = gen(input, disc=disc)
-                    nll = F.cross_entropy(fake_logits.view(-1, fake_logits.size(-1)), target.flatten()) 
+                    nll = NLL(fake_logits, target)
                     nlls += [nll.data]
 
                     # oracle nll
                     oracle_input = torch.cat([start_token, fake_sentence], dim=1)
                     oracle_logits, _ = oracle(oracle_input)
                     oracle_nll = NLL(oracle_logits[:, :-1], fake_sentence)
-                    oracle_nlls += [nll.data] 
+                    oracle_nlls += [oracle_nll.data] 
 
 
                 # logging
@@ -280,10 +321,11 @@ def main(args=None, max_writes=1e5):
                 print_and_log_scalar(writer, 'test/P(fake)', ps_fake, writes)
                 print_and_log_scalar(writer, 'test/fake Accuracy', fake_accs, writes)
                 print_and_log_scalar(writer, 'test/nll', nlls, writes)
-                print_and_log_scalar(writer, 'test/mixed nll', mixed_nlls, writes)
                 print_and_log_scalar(writer, 'test/Gen Loss', gen_losses, writes)      
                 print_and_log_scalar(writer, 'test/Disc Loss', disc_losses, writes)      
-                print_and_log_scalar(writer, 'test/Critic Loss', critic_losses, writes, end_token='\n')      
+                print_and_log_scalar(writer, 'test/Critic Loss', critic_losses, writes) 
+                print_and_log_scalar(writer, 'test/CoT Real Loss', cot_real_loss, writes)
+                print_and_log_scalar(writer, 'test/CoT Fake Loss', cot_fake_loss, writes, end_token='\n')      
                 
         writes += 1
         if writes > max_writes: return gen, disc

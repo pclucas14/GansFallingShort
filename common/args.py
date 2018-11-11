@@ -41,6 +41,7 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--gen_lr', type=float, default=1e-3)
     parser.add_argument('--disc_lr', type=float, default=1e-3)
     parser.add_argument('--critic_lr', type=float, default=1e-3)
+    parser.add_argument('--cot', type=int, default=0, help='perform CoT training')
 
     # DATA args
     parser.add_argument('--data_dir', type=str, default='data/news')
