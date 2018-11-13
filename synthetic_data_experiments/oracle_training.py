@@ -36,16 +36,18 @@ def main(args=None, max_writes=1e5):
     writer = tensorboardX.SummaryWriter(log_dir=os.path.join(args.base_dir, 'TB'))
     writes = 0
 
-    gen  = Generator(args)
-    disc = Generator(args) if args.cot else Discriminator(args)
     oracle = get_oracle(args)
+    gen  = Generator(args)
+    disc = Generator(get_cot_args(args)) if args.cot else Discriminator(args)
+    print('generator', gen, '\ndiscriminator', disc)
 
     if args.cuda: 
         gen  = gen.cuda()
         disc = disc.cuda()
         oracle = oracle.cuda()
 
-    optimizer_gen    = optim.Adam(gen.parameters(),         lr=args.gen_lr)
+    optimizer_gen = optim.Adam(gen.parameters(), lr=args.gen_lr)
+
     if args.cot:  
         optimizer_disc   = optim.Adam(disc.parameters(), lr=args.disc_lr)
         optimizer_critic = None
@@ -122,9 +124,12 @@ def main(args=None, max_writes=1e5):
                         
                 nll = NLL(oracle_logits[:, :-1], gen_sample)
                 oracle_nlls += [nll.data] 
+                
+                final_obj = oracle_nlls[0].mean() + torch.stack(losses_test).mean()
 
                 print_and_log_scalar(writer, 'test/oracle_nll', oracle_nlls, writes)
-                print_and_log_scalar(writer, 'test/nll', losses_test, writes, end_token='\n')
+                print_and_log_scalar(writer, 'test/nll', losses_test, writes)
+                print_and_log_scalar(writer, 'test/final_obj', final_obj, writes, end_token='\n')
 
         writes += 1
         if writes > max_writes: return gen, disc
@@ -313,7 +318,8 @@ def main(args=None, max_writes=1e5):
                     oracle_nll = NLL(oracle_logits[:, :-1], fake_sentence)
                     oracle_nlls += [oracle_nll.data] 
 
-
+                final_obj = sum([x + y for (x,y) in zip(oracle_nlls, nlls)]) / len(nlls)
+ 
                 # logging
                 print_and_log_scalar(writer, 'test/oracle_nll', oracle_nlls, writes)
                 print_and_log_scalar(writer, 'test/P(real)', ps_real, writes)
@@ -325,8 +331,9 @@ def main(args=None, max_writes=1e5):
                 print_and_log_scalar(writer, 'test/Disc Loss', disc_losses, writes)      
                 print_and_log_scalar(writer, 'test/Critic Loss', critic_losses, writes) 
                 print_and_log_scalar(writer, 'test/CoT Real Loss', cot_real_loss, writes)
-                print_and_log_scalar(writer, 'test/CoT Fake Loss', cot_fake_loss, writes, end_token='\n')      
-                
+                print_and_log_scalar(writer, 'test/CoT Fake Loss', cot_fake_loss, writes)      
+                print_and_log_scalar(writer, 'test/final_obj', final_obj, writes, end_token='\n')               
+ 
         writes += 1
         if writes > max_writes: return gen, disc
 

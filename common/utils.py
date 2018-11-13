@@ -328,8 +328,19 @@ def remove_pad_tokens(tensor, index):
         print('batch contains %d / %d active sentences' % (is_not_pad.item(), tensor.size(0)))
 
     return summ / is_not_pad
-    
-       
+
+
+def get_cot_args(args):
+    # current codebase was not meant fot a discriminator with the structure of a generator.
+    # We therefore need to modify the args to obtain the results we want
+
+    # First, we create a duplicate of the arguments
+    args_copy = to_attr(vars(args).copy())
+    args_copy.hidden_dim_gen = args.hidden_dim_disc    
+    args_copy.num_layers_gen = args.num_layers_disc
+    args_copy.var_dropout_p_gen = args.var_dropout_p_disc
+    return args_copy       
+
 def get_oracle(args=None):
     from models import Generator
     
