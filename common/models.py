@@ -86,10 +86,7 @@ class Generator(Model):
                 dist = dist * alpha
    
             if not teacher_force:
-                if self.training or self.is_oracle or True: 
-                    input_idx = Categorical(logits=dist.squeeze(1)).sample().unsqueeze(1)
-                else: 
-                    input_idx = dist.squeeze(1).max(dim=1)[1].unsqueeze(1)
+                input_idx = Categorical(logits=dist.squeeze(1)).sample().unsqueeze(1)
                 words += [input_idx]
 
             # note : these are 1-off with input, or aligned with target
