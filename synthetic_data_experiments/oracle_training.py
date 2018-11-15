@@ -206,12 +206,12 @@ def main(args=None, max_writes=1e5):
             if should_train_gen:
                 # train generator
                 fake_logits, fake_sentence = gen(input[:, [0]], disc=disc)
-                fake_out, fake_baseline = disc(fake_sentence.detach())
 
                 if args.cot: 
                     disc_logits, _ = disc(torch.cat([input[:, [0]], fake_sentence[:, :-1]], dim=1))
                     gen_loss = cot_gen_loss(fake_logits, disc_logits)
                 else:
+                    fake_out, fake_baseline = disc(fake_sentence.detach())
                     cumulative_rewards = get_cumulative_rewards(fake_out, args)
                     gen_loss = reinforce_gen_loss(cumulative_rewards, fake_logits, fake_sentence, 
                                               fake_baseline, args)
@@ -302,6 +302,7 @@ def main(args=None, max_writes=1e5):
                         disc_logits, _ = disc(torch.cat([input[:, [0]], fake_sentence[:, :-1]], dim=1))
                         gen_loss = cot_gen_loss(fake_logits, disc_logits)
                     else:
+                        fake_out, fake_baseline = disc(fake_sentence.detach())
                         cumulative_rewards = get_cumulative_rewards(fake_out, args)
                         gen_loss = reinforce_gen_loss(cumulative_rewards, fake_logits, fake_sentence, 
                                                   fake_baseline, args)

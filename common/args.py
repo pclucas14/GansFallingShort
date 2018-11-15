@@ -76,6 +76,11 @@ def get_train_args(allow_unmatched_args=False):
                 'GEN and DISC architectures must be identical to enable weight sharing'
         assert not args.leak_info, 'not compatible with LeakGAN setup'
 
+    if 'coco' in args.data_dir: 
+        if 'news' in args.lm_path:
+            print('overriding path to language model')
+            args.lm_path = args.lm_path.replace('news', 'coco')
+
     return (args, unmatched) if allow_unmatched_args else args
 
 

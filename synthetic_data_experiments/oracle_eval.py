@@ -60,7 +60,7 @@ class Model_eval:
             args[key] = value
         
         args = to_attr(args)
-        base_dir = '/home/lpagec/scratch/OnExposureBias/synthetic_eval'
+        base_dir = 'synthetic_eval'
         args.base_dir = os.path.join(base_dir, name)
         args.max_seq_len = 20
 
@@ -140,7 +140,7 @@ class Model_eval:
         print('processing model %s' % self.name)    
         self.get_trained_models()
         self.eval_gen()
-        # self.log()
+        self.log()
 
 
 if __name__ == '__main__':
@@ -283,11 +283,70 @@ if __name__ == '__main__':
                                        'hidden_dim_gen' : 128, 
                                        'mle_epochs' : 300}, 139)
 
+
+    best_cot_both = Model_eval('best_cot_both', 
+            {'cot'                : 1,
+             'var_dropout_p_gen'  : 0.5, 
+             'var_dropout_p_disc' : 0.3, 
+             'batch_size'         : 256, 
+             'gen_lr'             : 5e-4, 
+             'disc_lr'            : 1e-3, 
+             'mle_epochs'         : 40,
+             'adv_epochs'         : 300 - 40,
+             'disc_pretrain_epochs': 8,
+             'disc_train_iterations' : 1, 
+             'hidden_dim_gen'     : 256, 
+             'hidden_dim_disc'    : 512,
+             'num_layers_gen'     : 1, 
+             'num_layers_disc'    : 1,
+             'transfer_weights_after_pretraining' : 0}, 299)
+    # COT/COT_VDGEN0.5_VDDISC0.3_BS256_GLR0.0005_DLR0.001_MLE40_DE8_DTI1_GTI1_MTI0_HDG256_HDD512/TB
+
+
+    # actually on both, little worse but more stable
+    best_cot_stable = Model_eval('best_cot_stable', 
+            {'cot'                : 1,
+             'var_dropout_p_gen'  : 0.6, 
+             'var_dropout_p_disc' : 0.5, 
+             'batch_size'         : 64, 
+             'gen_lr'             : 1e-3, 
+             'disc_lr'            : 1e-3, 
+             'mle_epochs'         : 0,
+             'adv_epochs'         : 300,
+             'disc_train_iterations' : 1, 
+             'hidden_dim_gen'     : 512, 
+             'hidden_dim_disc'    : 1024, 
+             'num_layers_gen'     : 1, 
+             'num_layers_disc'    : 1,
+             'transfer_weights_after_pretraining' : 0}, 299)
+    # COT/COT_VDGEN0.6_VDDISC0.5_BS64_GLR0.001_DLR0.001_MLE0_DE0_DTI1_GTI1_MTI0_HDG512_HDD1024/TB
+
+    
+    best_cot_cvt = Model_eval('best_cot_cvt', 
+            {'cot'                : 1,
+             'var_dropout_p_gen'  : 0.4, 
+             'var_dropout_p_disc' : 0.2, 
+             'batch_size'         : 64, 
+             'gen_lr'             : 5e-5, 
+             'disc_lr'            : 1e-4, 
+             'mle_epochs'         : 40,
+             'adv_epochs'         : 300 - 40,
+             'disc_pretrain_epochs': 1,
+             'disc_train_iterations' : 1, 
+             'hidden_dim_gen'     : 512, 
+             'hidden_dim_disc'    : 1024, 
+             'num_layers_gen'     : 1, 
+             'num_layers_disc'    : 1,
+             'transfer_weights_after_pretraining' : 0}, 137)
+    # COT/COT_VDGEN0.4_VDDISC0.2_BS64_GLR0.0005_DLR0.0001_MLE40_DE1_DTI1_GTI1_MTI0_HDG512_HDD1024/TB
+
+
+
     args = get_train_args()
     # models = [best_gan_but_volatile, best_mle, best_gan, best_gan_mle]
     # models = [best_gan_beta, best_gan_beta_cvo]
     # models = [best_mle_cvt, best_gan, best_gan_cvo, best_gan_mle, best_gan_beta, best_gan_beta_cvo]
-    models = [best_mle_cvt]
+    models = [best_cot_cvt, best_cot_both]
     for model in models:
         model()
 
