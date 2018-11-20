@@ -11,11 +11,13 @@ import matplotlib; matplotlib.use('Agg')
 from tsne import compute_tsne
 from tsne_utils import create_matrix_for_tsne
 
-from utils  import * 
-from data   import * 
-from models import * 
-from losses import * 
-from args   import * 
+import __init__
+
+from common.utils  import * 
+from common.data   import * 
+from common.models import * 
+from common.losses import * 
+from common.args   import * 
 from main   import main
 
 args  = get_test_args()
