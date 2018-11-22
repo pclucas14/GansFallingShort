@@ -11,11 +11,13 @@ import matplotlib; matplotlib.use('Agg')
 from tsne import compute_tsne
 from tsne_utils import create_matrix_for_tsne
 
-from utils  import * 
-from data   import * 
-from models import * 
-from losses import * 
-from args   import * 
+import __init__
+
+from common.utils  import * 
+from common.data   import * 
+from common.models import * 
+from common.losses import * 
+from common.args   import * 
 from main   import main
 
 args  = get_test_args()
@@ -55,8 +57,6 @@ MODE = [('free_running', test_batch, OD(), [], [])]
 
 TEMPERATURES = [0.9, 0.95, 1.0, 1.03, 1.06, 1.09, 1.12, 1.15, 1.20,
                 1.25, 1.30, 1.35, 1.40, 1.50, 1.60, 1.70, 1.8, 1.9, 2.0, 3.0, 4.0 ]
-
-TEMPERATURES = [0.2, 0.3, 0.4, 0.5, 0.6, 0.70, 0.75, 0.8, 0.85 ]
 
 
 for alpha in TEMPERATURES:

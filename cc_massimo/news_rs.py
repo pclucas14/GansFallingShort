@@ -14,20 +14,22 @@ for _ in range(runs):
 
     ## MLE or GAN
     # for now just MLE
-    loss = ['mle','gan']
-    p = [.0, 1.0]
+    loss = ['mle','gan', 'cot']
+    p = [.0, 0, 1.0]
     loss = np.random.choice(loss, 1, p=p)[0]
 
     ## layers
     num_layers = [1,2]
-    p = [0.5]*2
+    p = [1, 0]
     num_layers = np.random.choice(num_layers, 1, p=p)[0]
 
     ## dim
     hd = [128, 256, 512]
     p = [0.2, 0.3, 0.5]
     hd  = np.random.choice(hd, 1, p=p)[0]
-    
+    hdg = hd
+    hdd = hd   
+ 
     ## batch_size
     bs = [64, 128, 256, 512, 1024]
     p = [0.2]*5
@@ -39,11 +41,7 @@ for _ in range(runs):
     gen_lr = np.random.choice(gen_lr, 1, p=p)[0]
 
     ## seq_len
-    #seq_len = [20, 25, 30, 35]
-    #p = [0.25]*4
-    #seq_len = np.random.choice(seq_len, 1, p=p)[0]
     seq_len=51
-    #seq_len=250
 
     ## dropout
     gen_vdp = [0.6, 0.5, 0.4, 0.3]
@@ -61,14 +59,16 @@ for _ in range(runs):
     disc_vdp=0
     beta=0
     ats=1
+    transfer_weights = 1
+    cot = int(loss == 'cot')
 
     ## Gan related stuff:
     # TODO(MASSIMO):
-    if loss=='gan':
+    if loss=='gan' or loss == 'cot':
 
         # mle pretrain
         mle_epochs = [0, 10, 40, 80]
-        p = [0.4, 0.2, 0.2, 0.2]
+        p = [0.8, 0.1, 0.1, 0]
         mle_epochs = np.random.choice(mle_epochs, 1, p=p)[0]
             
         # disc pretrain
@@ -83,7 +83,7 @@ for _ in range(runs):
 
         # dti
         dti = [1,  5, 10, 20]
-        p = [0.25] *4
+        p = [0.8, 0.1, 0.05, 0.05]
         dti = np.random.choice(dti, 1, p=p)[0]
 
         # gti
@@ -91,11 +91,11 @@ for _ in range(runs):
 
         # mti 
         mti = [0, 1]
-        p = [0.6, 0.4]
+        p = [0.9, 0.1]
         mti = np.random.choice(mti, 1, p=p)[0]
 
         # dlr
-        disc_lr = [5e-4, 1e-4, 5e-5]
+        disc_lr = [1e-3, 1e-4, 5e-4]
         p = [0.25, 0.5, 0.25]
         disc_lr = np.random.choice(disc_lr, 1, p=p)[0]
         
@@ -108,16 +108,23 @@ for _ in range(runs):
         beta = [0.0, 0.1, 1.0, 2.0]
         p = [0.25]*4
         beta = np.random.choice(beta, 1, p=p)[0]
+        # OVERRIDE
         beta=0
 
         # alpha test
         ats = [1.0, 1.2, 1.4, 1.6] 
         p = [0.55, 0.15, 0.15, 0.15 ]
         ats = np.random.choice(ats, 1, p=p)[0]
-        ats=1
+        # OVERRIDE
+        ats=1 
 
-        # use conv disc
-        #mode = 0 
+        # COT specific. Authors said mediator should be twice as big
+        if loss == 'cot':
+            hdd = [hdg, hdg * 2]
+            p = [0.1, 0.9]
+            hdd = np.random.choice(hdd, 1, p=p)[0]            
+
+        transfer_weights = int(hdd == hdg)
     
     #_____________________________________________________
     # launch model:
@@ -127,6 +134,9 @@ for _ in range(runs):
     
     elif loss=='gan':
         base_dir="%(BASE_DIR)s/news/gan_VDGEN%(gen_vdp)s_VDDISC%(disc_vdp)s_BS%(bs)s_GLR%(gen_lr)s_DLR%(disc_lr)s_MLE%(mle_epochs)s_DE%(disc_epochs)s_DTI%(dti)s_GTI%(gti)s_MTI%(mti)s_HD%(hd)s_SQ%(seq_len)s_ats%(ats)s_beta%(beta)s" % locals() 
+    
+    elif loss=='cot':
+        base_dir="%(BASE_DIR)s/news/COT_VDGEN%(gen_vdp)s_VDDISC%(disc_vdp)s_BS%(bs)s_GLR%(gen_lr)s_DLR%(disc_lr)s_MLE%(mle_epochs)s_DE%(disc_epochs)s_DTI%(dti)s_GTI%(gti)s_MTI%(mti)s_HDG%(hdg)s_HDD%(hdd)s" % locals() 
     
     print(base_dir)
 
@@ -145,14 +155,17 @@ for _ in range(runs):
         -mti %(mti)s \
         --num_layers_gen %(num_layers)s \
         --num_layers_disc %(num_layers)s \
-        --hidden_dim_gen %(hd)s \
-        --hidden_dim_disc %(hd)s \
+        --hidden_dim_gen %(hdg)s \
+        --hidden_dim_disc %(hdd)s \
         --max_seq_len %(seq_len)s \
         --alpha_test %(ats)s \
+        --transfer_weights_after_pretraining %(transfer_weights)s \
+        --cot %(cot)s \
         --beta %(beta)s " % locals()
+    
     print(command)
     
-    command = "{} cc_launch_news.sh {}".format(sys.argv[1], command) 
+    #command = "{} cc_launch_news.sh {}".format(sys.argv[1], command) 
 
 
     os.system(command)
