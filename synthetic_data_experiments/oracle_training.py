@@ -320,7 +320,10 @@ def main(args=None, max_writes=1e5):
                     oracle_nlls += [oracle_nll.data] 
 
                 final_obj = sum([x + y for (x,y) in zip(oracle_nlls, nlls)]) / len(nlls)
- 
+                if args.cot: 
+                    final_obj_cot = sum([x + y for (x,y) in zip(disc_losses, nlls)]) / len(nlls)
+                    print_and_log_scalar(writer, 'test/final_obj_cot', final_obj_cot, writes)
+
                 # logging
                 print_and_log_scalar(writer, 'test/oracle_nll', oracle_nlls, writes)
                 print_and_log_scalar(writer, 'test/P(real)', ps_real, writes)
