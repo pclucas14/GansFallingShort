@@ -62,7 +62,7 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--rlm_log_dir', type=str, default="")
     parser.add_argument('--rlm_tb', type=str, default="")
     parser.add_argument('--model_path', type=str, default="")
-    parser.add_argument('--num_samples', type=int, default="")
+    parser.add_argument('--num_samples', type=str, default="")
     parser.add_argument('--decoder', type=str, default="")
 
     if allow_unmatched_args: 
@@ -92,16 +92,14 @@ def get_train_args(allow_unmatched_args=False):
 def get_test_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_path', type=str, default="trained_models/news/word/best_mle", help='path to model')
-    parser.add_argument('--base_dir', type=str, default="trained_models/news/word/best_mle", help='path to model')
     parser.add_argument('--model_epoch', type=int, default=None, help='epoch of saved model')
-    parser.add_argument('--n_iter', type=int, default=10, help="number of tsne iterations")
     parser.add_argument('--oracle_nll_log_every', type=int, default=2)
     parser.add_argument('--n_grams', nargs="+", type=int)
     parser.add_argument('--use_conv_net', action='store_true')
     
     parser.add_argument('--decoder', type=str, default="temp",
-        choices=['temp','topk','weighted topk','beam','gen ll','disc ll'], help='path to model')
-    parser.add_argument('--num_samples', type=int, default=250000, help="number of samples to compute LM ans RLM")
+        choices=['temp','topk','weighted_topk','beam','gen_ll','disc_ll'], help='path to model')
+    parser.add_argument('--num_samples', type=int, default=268590, help="number of samples to compute LM ans RLM")
 
     args, unmatched = parser.parse_known_args()
 

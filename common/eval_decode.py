@@ -327,6 +327,59 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
     print('took {:.6f} seconds to sample {} with method {}'.format(time.time() - start, int(output.size(0)), method))
     return output 
 
+def compute_lm_score(sentences, oracle_lm, verbose=False, word_dict=None, args=None):
+
+    with torch.no_grad():
+        hidden_state_oracle = None
+        oracle_nlls = []
+        
+        for t in range(-1,args.max_seq_len): 
+            if t > -1: 
+                # query the oracle for NLL of the next word (i.e. use x_t to index p(x_t | x_{i<t})
+                # oracle_nlls += [-1. * oracle_dist.log_prob(input_idx.squeeze()).mean(dim=0).item()]
+                oracle_nll_t = -1. * oracle_dist.log_prob(sentences[:,[t]].squeeze())
+                oracle_nlls += [remove_pad_tokens(oracle_nll_t, sentences[:,[t]].squeeze()).item()]
+                full_oracle_nll = oracle_nll_t.view(-1,1) if t==0 \
+                    else torch.cat((full_oracle_nll,oracle_nll_t.view(-1,1)),1)
+        
+            # feed the current word to the model.
+            if t==-1: 
+                # first feed SOS_TOKEN=2 
+                input_oracle = oracle_lm.embedding(torch.ones_like(sentences[:,[t]])*2)
+            else:
+                input_oracle = oracle_lm.embedding(sentences[:,[t]])
+            output_oracle, hidden_state_oracle = oracle_lm.step(input_oracle, \
+                    hidden_state_oracle, t)
+            oracle_dist = oracle_lm.output_layer(output_oracle)
+            oracle_dist = Categorical(logits=oracle_dist.squeeze(1))
+    
+        # print most/less likely sequences
+        seq_len = (sentences != 0).sum(1)
+        tot_oracle_nll = full_oracle_nll.sum(1)
+        avg_oracle_nll = tot_oracle_nll.cpu().numpy() / seq_len.cpu().numpy()
+    
+        sentences_ = id_to_words(sentences.cpu().data.numpy(), word_dict)
+        sorted_idx = np.argsort(avg_oracle_nll)
+    
+        if args.character_level: sentences_ = remove_sep_spaces(sentences_)
+       
+        if verbose: 
+            print("most likely sentences under oracle: \n")
+            for i in range(3):
+                print(sentences_[sorted_idx[i]])
+                print("nll oracle: {:.4f}".format(avg_oracle_nll[sorted_idx[i]]))
+            
+            print("least likely sentences under oracle: \n ")
+            for i in range(1,3):
+                print(sentences_[sorted_idx[-i]])
+                print("nll oracle: {:.4f}".format(avg_oracle_nll[sorted_idx[-i]]))
+    
+            print('some samples \n')
+            for i in range(1,3):
+                print(sentences_[-i])
+                print("nll oracle: {:.4f}".format(avg_oracle_nll[-i]))
+    
+        return np.mean(avg_oracle_nll)
 if __name__ == '__main__':
     lm_path = '../real_data_experiments/trained_models/news/word/best_mle'
     model = load_model_from_file(lm_path, None)[0].cuda()
