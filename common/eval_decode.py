@@ -305,9 +305,6 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
                 # we actually use the last conditional, and not the joint for this prob.
                 joint_ll = is_real
 
-            # TODO: remove this
-            th = joint_ll.mean().item()
-
             accept = (joint_ll > th).long()
             arange = torch.arange(accept.size(0))
             if model.args.cuda: arange = arange.cuda()
