@@ -83,6 +83,8 @@ def get_train_args(allow_unmatched_args=False):
             print('overriding path to language model')
             args.lm_path = args.lm_path.replace('news', 'coco')
 
+    assert args.num_layers_gen == args.num_layers_disc == 1, 'only 1 layer architectures are fully supported'
+
     return (args, unmatched) if allow_unmatched_args else args
 
 

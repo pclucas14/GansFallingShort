@@ -242,10 +242,11 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
                     ll_t   = torch.take(ll_t, sample + offset)
                     ll_t   = buffer.unsqueeze(-1).expand_as(ll_t) + ll_t
 
+                    # TODO(lucas): do we want to mask out pad tokens and normalize inside the beam search?
+
                     # pick sentences with highest likelihood
                     top_v, top_i = torch.topk(ll_t.view(ll_t.size(0), -1), beam_size, dim=-1)
                     
-                    # TODO: check if this is correct
                     buffer = top_v
 
                     # we need to make sure we know the index of the prefix for v \in top_v
@@ -264,9 +265,7 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
                     input_idx = sample_t.reshape(-1, 1)
                 
                     # choose correct words given the new vectors
-                    # ww = words.reshape(bs, beam_size, -1)
                     words = torch.index_select(words, 0, prefix) 
-                    # wwt = words.reshape(bs, beam_size, -1)
 
                 # we need to expand hidden state for compatibility
                 if isinstance(hidden_state, tuple):
@@ -300,10 +299,14 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
                 joint_ll = (words_ll * is_not_pad).sum(dim=1) / is_not_pad.sum(dim=1)
             
             elif 'disc' in method:
-                # push the generated sentences through the discrimiator to get score
+                # push the generated sentences through the discriminator to get score
                 is_real  = F.sigmoid(disc(words)[0])[:, -1]
                 # we actually use the last conditional, and not the joint for this prob.
                 joint_ll = is_real
+
+                # TODO(lucas) do we want to do something about PAD tokens ? in this setting I would assume not
+                # The only feasible way would be to consider all conditionals (not just the last), mask out the 
+                # conditionals over PAD tokens, and average them out.
 
             accept = (joint_ll > th).long()
             arange = torch.arange(accept.size(0))
@@ -321,8 +324,16 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
         all_words += [words]
         
     output =  torch.cat(all_words, dim=0) if len(all_words) > 1 else all_words[0]
+    
+    # let's track sentence length (to investigate sharp drop at beam size == 2)
+    EOS = 1
+    is_eos = output == EOS
+    sentence_length = is_eos.argmax(dim=1)
+    print('average sentence length : {:.4f}'.format(sentence_length.float().mean().item()))
+
     print('took {:.6f} seconds to sample {} with method {}'.format(time.time() - start, int(output.size(0)), method))
     return output 
+
 
 def compute_lm_score(sentences, oracle_lm, verbose=False, word_dict=None, args=None):
 
@@ -377,6 +388,8 @@ def compute_lm_score(sentences, oracle_lm, verbose=False, word_dict=None, args=N
                 print("nll oracle: {:.4f}".format(avg_oracle_nll[-i]))
     
         return np.mean(avg_oracle_nll)
+
+
 if __name__ == '__main__':
     lm_path = '../real_data_experiments/trained_models/news/word/best_mle'
     model = load_model_from_file(lm_path, None)[0].cuda()
@@ -384,9 +397,12 @@ if __name__ == '__main__':
     model.args.num_layers_disc = 1
     model.args.hidden_dim_disc = 512
     model.args.var_dropout_p_disc = 0.5
-
-    kwargs = {'k':10, 'beam_size':5, 'alpha':2, 'threshold' : 0.6}
-    sentences = sample_from_model(model, 'beam', 1000, **kwargs)
-
+    
     _, word_dict = tokenize('../real_data_experiments/data/news/train.txt', train=True)
-    print_and_save_samples(sentences, word_dict, 'test', 0, max_print=100)
+
+    for beam_size in [1, 2, 5]:
+        print('\n\n')
+        print('beam size : %d' % beam_size)
+        kwargs = {'k':10, 'beam_size':beam_size, 'alpha':2, 'threshold' : 0.6}
+        sentences = sample_from_model(model, 'beam', 1000, **kwargs)
+        print_and_save_samples(sentences, word_dict, 'test', 0, max_print=20)
