@@ -281,7 +281,12 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
                         # what remains from here is to put very low values for values in `ll_t` 
                         # where mask == 1, i.e. where values are duplicates. This way, duplicates
                         # will only be sampled if all non-duplicate values first all been sampled
-                        ll_t.masked_fill_(mask.byte(), -9999999.)
+                        # ll_t.masked_fill_(mask.byte(), -9999999.)
+
+                        # actually, by adding a big negative penalty, we can keep the original ordering.
+                        # this way, if there are too many duplicates, we will still select them based on ll.
+                        ll_t_with_dup_penalty = ll_t.clone() + -99999999
+                        ll_t_ = ll_t_with_dup_penalty * mask + (1 - mask) * ll_t
                         """ end of edit  """ 
                         
                     # pick sentences with highest likelihood
@@ -440,7 +445,7 @@ if __name__ == '__main__':
     
     _, word_dict = tokenize('../real_data_experiments/data/news/train.txt', train=True)
 
-    for beam_size in [1, 5, 10]: 
+    for beam_size in [1, 5, 10, 25]: 
         for rm in [True, False]:
             print('\n\n')
             print('beam size : %d\t remove duplicates %d' % (beam_size, rm))
