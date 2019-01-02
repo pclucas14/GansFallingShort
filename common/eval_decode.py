@@ -145,7 +145,7 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
     all_words = []
 
     # always carry at most 1000 samples on GPU to avoid memory issues
-    bs        = 1000 // (kwargs['beam_size'] if 'beam' in method else 1)
+    bs        = 1000 // kwargs.get('beam_size', 1)
     sos_token = torch.LongTensor(bs, 1).fill_(2)
     if model.args.cuda: sos_token = sos_token.cuda()
 
@@ -242,11 +242,50 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
                     ll_t   = torch.take(ll_t, sample + offset)
                     ll_t   = buffer.unsqueeze(-1).expand_as(ll_t) + ll_t
 
+                    # (bs, beam_size, beam_size) --> (bs, beam_size ** 2)
+                    ll_t   = ll_t.view(ll_t.size(0), -1)
+
                     # TODO(lucas): do we want to mask out pad tokens and normalize inside the beam search?
 
+                    if kwargs['remove_duplicates'] and beam_size > 1: 
+                        """ edit: let's try and remove duplicates """ 
+                        vals, ids = torch.sort(ll_t, dim=-1, descending=True)
+                        delta = vals[:, :-1] - vals[:, 1:]
+                        valid_ids = delta != 0
+                        
+                        # by construction of delta, 0th position is not included
+                        valid_ids = torch.cat([torch.ones_like(valid_ids[:, [0]]), 
+                                               valid_ids], dim=1)
+
+                        # we mask out valid indices
+                        invalid_indices = ids.clone()
+                        invalid_indices.masked_fill_(valid_ids, -1)
+
+                        # we add the offset to the mask
+                        offset = torch.arange(ll_t.size(0)).long() * beam_size ** 2
+                        offset = offset.cuda() if model.args.cuda else offset
+
+                        to_be_masked = (invalid_indices + offset.view(-1, 1))
+                        
+                        # add 1 and substract 1 to use torch.nonzero() as filtering
+                        to_be_masked = (to_be_masked+1) * (invalid_indices != -1).long()
+                        to_be_masked = to_be_masked.flatten().squeeze()
+                        non_zero_ids = to_be_masked.nonzero()
+                        to_be_masked = to_be_masked[non_zero_ids] - 1
+
+                        # mask for non unique values
+                        mask = torch.zeros_like(ll_t.flatten())
+                        mask[to_be_masked] = 1
+                        mask = mask.view(*ll_t.size())
+                        
+                        # what remains from here is to put very low values for values in `ll_t` 
+                        # where mask == 1, i.e. where values are duplicates. This way, duplicates
+                        # will only be sampled if all non-duplicate values first all been sampled
+                        ll_t.masked_fill_(mask.byte(), -9999999.)
+                        """ end of edit  """ 
+                        
                     # pick sentences with highest likelihood
-                    top_v, top_i = torch.topk(ll_t.view(ll_t.size(0), -1), beam_size, dim=-1)
-                    
+                    top_v, top_i = torch.topk(ll_t, beam_size, dim=-1)
                     buffer = top_v
 
                     # we need to make sure we know the index of the prefix for v \in top_v
@@ -330,6 +369,7 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
     is_eos = output == EOS
     sentence_length = is_eos.argmax(dim=1)
     print('average sentence length : {:.4f}'.format(sentence_length.float().mean().item()))
+    print('%d / %d sentences are unique' % (np.unique(output, axis=0).shape[0], output.shape[0]))
 
     print('took {:.6f} seconds to sample {} with method {}'.format(time.time() - start, int(output.size(0)), method))
     return output 
@@ -400,9 +440,11 @@ if __name__ == '__main__':
     
     _, word_dict = tokenize('../real_data_experiments/data/news/train.txt', train=True)
 
-    for beam_size in [1, 2, 5]:
-        print('\n\n')
-        print('beam size : %d' % beam_size)
-        kwargs = {'k':10, 'beam_size':beam_size, 'alpha':2, 'threshold' : 0.6}
-        sentences = sample_from_model(model, 'beam', 1000, **kwargs)
-        print_and_save_samples(sentences, word_dict, 'test', 0, max_print=20)
+    for beam_size in [1, 5, 10]: 
+        for rm in [True, False]:
+            print('\n\n')
+            print('beam size : %d\t remove duplicates %d' % (beam_size, rm))
+            kwargs = {'k':10, 'beam_size':beam_size, 'alpha':2, 'threshold' : 0.6, 'remove_duplicates' : rm}
+            sentences = sample_from_model(model, 'beam', 1000, **kwargs)
+            print_and_save_samples(sentences, word_dict, 'test', 0, max_print=20)
+        
