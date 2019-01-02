@@ -247,7 +247,7 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
 
                     # TODO(lucas): do we want to mask out pad tokens and normalize inside the beam search?
 
-                    if kwargs['remove_duplicates'] and beam_size > 1: 
+                    if kwargs.get('remove_duplicates', False) and beam_size > 1: 
                         """ edit: let's try and remove duplicates """ 
                         vals, ids = torch.sort(ll_t, dim=-1, descending=True)
                         delta = vals[:, :-1] - vals[:, 1:]
