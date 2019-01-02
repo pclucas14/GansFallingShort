@@ -259,6 +259,7 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
                     prefix = (prefix_i + offset).flatten()
                     
                     # words chosen at timestep t that maximize likelihood for a given beam
+                    
                     offset    = torch.arange(bs).reshape(-1, 1) * beam_size * beam_size
                     offset    = offset.cuda().long() if model.args.cuda else offset.long()
                     sample_t  = torch.take(sample, top_i + offset) 
@@ -268,13 +269,21 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
                     words = torch.index_select(words, 0, prefix) 
 
                 # we need to expand hidden state for compatibility
-                if isinstance(hidden_state, tuple):
-                    h_t, c_t = hidden_state
-                    h_t = torch.index_select(h_t, 1, prefix)
-                    c_t = torch.index_select(c_t, 1, prefix)
-                    hidden_state = (h_t, c_t)
-                else: 
-                    hidden_state = torch.index_select(hidden_state, 1, prefix)
+                new_hidden_state = []
+                
+                # iterate over layers
+                for hs in hidden_state:
+                    if isinstance(hs, tuple):
+                        h_t, c_t = hs
+                        h_t = torch.index_select(h_t, 1, prefix)
+                        c_t = torch.index_select(c_t, 1, prefix)
+                        hs = (h_t, c_t)
+                    else: 
+                        hs = torch.index_select(hs, 1, prefix)
+                    
+                    new_hidden_state += [hs]
+
+                hidden_state = new_hidden_state
             
             else:
                 raise ValueError('%s does not match any known method' % method)
@@ -392,6 +401,7 @@ def compute_lm_score(sentences, oracle_lm, verbose=False, word_dict=None, args=N
 
 if __name__ == '__main__':
     lm_path = '../real_data_experiments/trained_models/news/word/best_mle'
+    lm_path = '../real_data_experiments/exps/news/2l_fixed'
     model = load_model_from_file(lm_path, None)[0].cuda()
     model.args.data_dir = '../real_data_experiments/data/news'
     model.args.num_layers_disc = 1
