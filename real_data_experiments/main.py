@@ -145,6 +145,7 @@ def main(rlm=False, rlm_dir=None):
     # if in rlm mode, store the rlm_score
     if rlm:
         return best_test
+    
 
     if args.transfer_weights_after_pretraining and args.mle_epochs > 0:
         transfer_weights(gen, disc)
@@ -154,11 +155,12 @@ def main(rlm=False, rlm_dir=None):
     '''
     Adversarial training
     '''
+    best_acc = 0.
     for epoch in range(args.adv_epochs):
         print('ADV training epoch {}'.format(epoch))
         train_loader = minibatch_generator(dataset_train, args, shuffle=True)
-        gen_losses, disc_losses, critic_losses, ps_real, ps_fake, real_accs, fake_accs, \
-                nlls, cot_real_loss, cot_fake_loss = [[] for _ in range(10)]
+        gen_losses, disc_losses, critic_losses, ps_real, ps_fake, real_accs, fake_accs, avg_accs, \
+            nlls, cot_real_loss, cot_fake_loss = [[] for _ in range(11)]
         gen.train(); disc.train()
 
         # Training loop
@@ -197,6 +199,8 @@ def main(rlm=False, rlm_dir=None):
                     p_fake = p_fake.mean().data
                     ps_fake += [p_fake]
                     fake_accs += [fake_acc]
+                
+                avg_accs += [(fake_acc+real_acc)/2]
                 
                 disc_loss = (fake_loss + real_loss) / 2
                 disc_losses += [disc_loss.data]
@@ -241,6 +245,7 @@ def main(rlm=False, rlm_dir=None):
         print_and_log_scalar(writer, 'train/real Accuracy', real_accs, writes)
         print_and_log_scalar(writer, 'train/P(fake)', ps_fake, writes)      
         print_and_log_scalar(writer, 'train/fake Accuracy', fake_accs, writes)
+        print_and_log_scalar(writer, 'train/Average Accuracy', avg_accs, writes)
         print_and_log_scalar(writer, 'train/nll', nlls, writes)      
         print_and_log_scalar(writer, 'train/Gen Loss', gen_losses, writes)      
         print_and_log_scalar(writer, 'train/Disc Loss', disc_losses, writes)      
@@ -253,8 +258,8 @@ def main(rlm=False, rlm_dir=None):
             valid_loader  = minibatch_generator(dataset_valid,  args, shuffle=False)
             with torch.no_grad():
                 gen_losses, disc_losses, critic_losses, ps_real, ps_fake, real_accs, fake_accs, \
-                nlls, oracle_nlls, mixed_nlls, entropy, cot_real_loss, cot_fake_loss \
-                    = [[] for _ in range(13)]
+                avg_accs, nlls, oracle_nlls, mixed_nlls, entropy, cot_real_loss, cot_fake_loss \
+                    = [[] for _ in range(14)]
                 
                 gen.eval(); disc.eval()
 
@@ -293,7 +298,8 @@ def main(rlm=False, rlm_dir=None):
                         ps_fake += [p_fake]
                         fake_accs += [fake_acc]
                     
-                    
+                    avg_accs += [(fake_acc+real_acc)/2]
+                     
                     disc_loss = (fake_loss + real_loss) / 2
                     disc_losses += [disc_loss.data]
                     entropy += [Categorical(logits=gen_logits.squeeze(1)).entropy()]
@@ -340,6 +346,7 @@ def main(rlm=False, rlm_dir=None):
                 print_and_log_scalar(writer, 'valid/real Accuracy', real_accs, writes)
                 print_and_log_scalar(writer, 'valid/P(fake)', ps_fake, writes)
                 print_and_log_scalar(writer, 'valid/fake Accuracy', fake_accs, writes)
+                print_and_log_scalar(writer, 'valid/Average Accuracy', avg_accs, writes)
                 print_and_log_scalar(writer, 'valid/nll', nlls, writes)
                 print_and_log_scalar(writer, 'valid/mixed nll', mixed_nlls, writes)
                 print_and_log_scalar(writer, 'valid/Gen Loss', gen_losses, writes)      
@@ -348,6 +355,14 @@ def main(rlm=False, rlm_dir=None):
                 print_and_log_scalar(writer, 'valid/CoT Real Loss', cot_real_loss, writes)
                 print_and_log_scalar(writer, 'valid/CoT Fake Loss', cot_fake_loss, writes, end_token='\n')      
                 
+                # currently working on finding the best Discriminator
+                # for now lets just save when discs outperforms:
+                avg_acc = torch.mean(torch.stack(avg_accs))
+                if avg_acc > best_acc:
+                    print('saving model because disc outperformed')
+                    save_models([('disc', disc, optimizer_disc)], args.base_dir, writes)
+                    best_acc = avg_acc 
+        
         writes += 1
 
         # save samples
@@ -358,6 +373,7 @@ def main(rlm=False, rlm_dir=None):
         # save models
         if (epoch + 1) % args.save_every == 0: 
             save_models(MODELS, args.base_dir, writes)
+
 
 
 if __name__ == '__main__':
