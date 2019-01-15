@@ -9,11 +9,15 @@ import time
 from utils  import * 
 from models import * 
 
-def train_discriminator(gen, disc=None, args=None):
+def train_discriminator(gen, path, disc=None, args=None):
 
     # fetch args used to train generator if not provided
     args = args or gen.args
     print(args)
+
+    if args.num_layers_disc==2:
+        print('multi layer LSTM bug --> setting to single layer')
+        args.num_layers_disc=1
 
     # dataset creation
     dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'train.txt'), \
@@ -127,6 +131,9 @@ def train_discriminator(gen, disc=None, args=None):
     
     # I want the model to also have the arguments of the Discriminator, so I'm copying back the weights
     disc.load_state_dict(best_disc_yet.state_dict())
+    
+    # save model
+    save_models([('disc', disc, optimizer_disc)], path, 0)  
     return disc
     
 
@@ -149,12 +156,18 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
     sos_token = torch.LongTensor(bs, 1).fill_(2)
     if model.args.cuda: sos_token = sos_token.cuda()
 
-    if 'disc' in method: 
-        # check first if a discriminator network was given in the kwargs
-        if 'disc' in kwargs.keys():
-            disc = kwards['disc']
+    if 'disc' in method:
+        model_path = kwargs['model_path']
+        files = os.listdir(os.path.join(model_path,'models'))
+        if len([s for s in files  if 'disc' in s]) > 0:
+            try:
+                disc = load_model_from_file(model_path, model='disc')[0]
+            except:
+                disc = load_model_from_file(model_path, epoch=0, model='disc')[0]
+            print('loading old Discriminator')
+            disc.cuda()
         else:
-            disc = train_discriminator(model)
+            disc = train_discriminator(model, model_path)
 
     while sum([x.size(0) for x in all_words]) < num_samples:
         hidden_state    = None
@@ -248,7 +261,7 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
                     # TODO(lucas): do we want to mask out pad tokens and normalize inside the beam search?
 
                     if kwargs.get('remove_duplicates', False) and beam_size > 1: 
-                        """ edit: let's try and remove duplicates """ 
+                        """ edit: let's try and remove duplicates """
                         vals, ids = torch.sort(ll_t, dim=-1, descending=True)
                         delta = vals[:, :-1] - vals[:, 1:]
                         valid_ids = delta != 0
@@ -341,6 +354,7 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
                 # get the likelihood of the joint by summing over the joint likelihoods
                 # (bs, ) tensor 
                 joint_ll = (words_ll * is_not_pad).sum(dim=1) / is_not_pad.sum(dim=1)
+                accept = (joint_ll > -th).long()
             
             elif 'disc' in method:
                 # push the generated sentences through the discriminator to get score
@@ -351,8 +365,8 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
                 # TODO(lucas) do we want to do something about PAD tokens ? in this setting I would assume not
                 # The only feasible way would be to consider all conditionals (not just the last), mask out the 
                 # conditionals over PAD tokens, and average them out.
-
-            accept = (joint_ll > th).long()
+                accept = (joint_ll > th).long()
+            
             arange = torch.arange(accept.size(0))
             if model.args.cuda: arange = arange.cuda()
 

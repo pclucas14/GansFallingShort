@@ -1,2 +1,0 @@
-/var/spool/slurmd/job11101429/slurm_script: line 11: 69554 Killed                  python "$@"
-slurmstepd: error: Detected 1 oom-kill event(s) in step 11101429.batch cgroup.
