@@ -14,7 +14,7 @@ from common.models import *
 from common.losses import * 
 from common.args   import * 
 
-TEMPERATURES = np.arange(0.7, 2.5, 0.03)
+TEMPERATURES = np.arange(0.1, 2.5, 0.03)
 
 # wrapper for loss
 NLL = lambda logits, target: F.cross_entropy(logits.reshape(-1, logits.size(-1)), target.flatten())
@@ -70,11 +70,11 @@ class Model_eval:
     def get_trained_models(self):
         try:
             gen = load_model_from_file(self.args.base_dir, model='gen')[0]
-            disc = load_model_from_file(self.args.base_dir, model='disc')[0]
+            # disc = load_model_from_file(self.args.base_dir, model='disc')[0]
             if self.args.cuda: 
-                gen.cuda(), disc.cuda()
+                gen.cuda(), # disc.cuda()
 
-            self.gen, self.disc = gen, disc
+            self.gen, self.disc = gen, None #disc
             print('loaded pretrained model')
         except:
             print('training models')
@@ -93,7 +93,7 @@ class Model_eval:
             for alpha in TEMPERATURES:
                 oracle_nlls, test_nlls = [], []
                 gen, disc = self.gen, self.disc
-                gen.eval(); disc.eval()
+                gen.eval(); # disc.eval()
                 assert not gen.training
 
                 gen.args.alpha_test = alpha; 
@@ -283,70 +283,28 @@ if __name__ == '__main__':
                                        'hidden_dim_gen' : 128, 
                                        'mle_epochs' : 300}, 139)
 
-
-    best_cot_both = Model_eval('best_cot_both', 
-            {'cot'                : 1,
-             'var_dropout_p_gen'  : 0.5, 
-             'var_dropout_p_disc' : 0.3, 
-             'batch_size'         : 256, 
-             'gen_lr'             : 5e-4, 
-             'disc_lr'            : 1e-3, 
-             'mle_epochs'         : 40,
-             'adv_epochs'         : 300 - 40,
-             'disc_pretrain_epochs': 8,
-             'disc_train_iterations' : 1, 
-             'hidden_dim_gen'     : 256, 
-             'hidden_dim_disc'    : 512,
-             'num_layers_gen'     : 1, 
-             'num_layers_disc'    : 1,
-             'transfer_weights_after_pretraining' : 0}, 299)
-    # COT/COT_VDGEN0.5_VDDISC0.3_BS256_GLR0.0005_DLR0.001_MLE40_DE8_DTI1_GTI1_MTI0_HDG256_HDD512/TB
-
-
-    # actually on both, little worse but more stable
-    best_cot_stable = Model_eval('best_cot_stable', 
-            {'cot'                : 1,
-             'var_dropout_p_gen'  : 0.6, 
-             'var_dropout_p_disc' : 0.5, 
-             'batch_size'         : 64, 
-             'gen_lr'             : 1e-3, 
-             'disc_lr'            : 1e-3, 
-             'mle_epochs'         : 0,
-             'adv_epochs'         : 300,
-             'disc_train_iterations' : 1, 
-             'hidden_dim_gen'     : 512, 
-             'hidden_dim_disc'    : 1024, 
-             'num_layers_gen'     : 1, 
-             'num_layers_disc'    : 1,
-             'transfer_weights_after_pretraining' : 0}, 299)
-    # COT/COT_VDGEN0.6_VDDISC0.5_BS64_GLR0.001_DLR0.001_MLE0_DE0_DTI1_GTI1_MTI0_HDG512_HDD1024/TB
-
-    
-    best_cot_cvt = Model_eval('best_cot_cvt', 
-            {'cot'                : 1,
-             'var_dropout_p_gen'  : 0.4, 
-             'var_dropout_p_disc' : 0.2, 
-             'batch_size'         : 64, 
-             'gen_lr'             : 5e-5, 
-             'disc_lr'            : 1e-4, 
-             'mle_epochs'         : 40,
-             'adv_epochs'         : 300 - 40,
-             'disc_pretrain_epochs': 1,
-             'disc_train_iterations' : 1, 
-             'hidden_dim_gen'     : 512, 
-             'hidden_dim_disc'    : 1024, 
-             'num_layers_gen'     : 1, 
-             'num_layers_disc'    : 1,
-             'transfer_weights_after_pretraining' : 0}, 137)
-    # COT/COT_VDGEN0.4_VDDISC0.2_BS64_GLR0.0005_DLR0.0001_MLE40_DE1_DTI1_GTI1_MTI0_HDG512_HDD1024/TB
-
-
-
+    #COT_VDGEN0.3_VDDISC0.2_BS128_GLR0.0005_DLR0.0005_MLE0_DE0_DTI1_GTI1_MTI0_HDG512_HDD1024
+    best_cot_cvt = Model_eval('best_cot_cvt_fixed', 
+                                        {'cot'                : 1,
+                                         'var_dropout_p_gen'  : 0.3, 
+                                         'var_dropout_p_disc' : 0.2, 
+                                         'batch_size'         : 128, 
+                                         'gen_lr'             : 0.0005, 
+                                         'disc_lr'            : 0.0005, 
+                                         'mle_epochs'         : 0,
+                                         'adv_epochs'         : 300,
+                                         'disc_train_iterations' : 1, 
+                                         'hidden_dim_gen'     : 512, 
+                                         'hidden_dim_disc'    : 1024, 
+                                         'num_layers_gen'     : 1, 
+                                         'num_layers_disc'    : 1,
+                                         'transfer_weights_after_pretraining' : 0}, 33) 
+                                        
     args = get_train_args()
     # models = [best_gan_but_volatile, best_mle, best_gan, best_gan_mle]
     # models = [best_gan_beta, best_gan_beta_cvo]
     # models = [best_mle_cvt, best_gan, best_gan_cvo, best_gan_mle, best_gan_beta, best_gan_beta_cvo]
-    models = [best_cot_cvt, best_cot_both]
+    models = [best_cot_cvt] 
     for model in models:
         model()
 

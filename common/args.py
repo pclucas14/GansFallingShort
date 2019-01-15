@@ -14,8 +14,8 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--rnn', type=str, default='LSTM', choices=['LSTM', 'GRU'])
     parser.add_argument('--hidden_dim_disc', type=int, default=512)
     parser.add_argument('--hidden_dim_gen', type=int, default=512)
-    parser.add_argument('--num_layers_disc', type=int, default=2)
-    parser.add_argument('--num_layers_gen', type=int, default=2)
+    parser.add_argument('--num_layers_disc', type=int, default=1)
+    parser.add_argument('--num_layers_gen', type=int, default=1)
     parser.add_argument('--var_dropout_p_gen', type=float, default=0.5)
     parser.add_argument('--var_dropout_p_disc', type=float, default=0.5)
     parser.add_argument('--gamma', type=float, default=0.95)
@@ -62,6 +62,8 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--rlm_log_dir', type=str, default="")
     parser.add_argument('--rlm_tb', type=str, default="")
     parser.add_argument('--model_path', type=str, default="")
+    parser.add_argument('--num_samples', type=str, default="")
+    parser.add_argument('--decoder', type=str, default="")
 
     if allow_unmatched_args: 
         args, unmatched = parser.parse_known_args()
@@ -81,6 +83,8 @@ def get_train_args(allow_unmatched_args=False):
             print('overriding path to language model')
             args.lm_path = args.lm_path.replace('news', 'coco')
 
+    assert args.num_layers_gen == args.num_layers_disc == 1, 'only 1 layer architectures are fully supported'
+
     return (args, unmatched) if allow_unmatched_args else args
 
 
@@ -91,40 +95,25 @@ def get_test_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_path', type=str, default="trained_models/news/word/best_mle", help='path to model')
     parser.add_argument('--model_epoch', type=int, default=None, help='epoch of saved model')
-    parser.add_argument('--tsne_log_every', type=int, default=1, help='... every _ timestep')
-    parser.add_argument('--tsne_max_t', type=int, default=55, help='run tsne exp for _ steps')
-    parser.add_argument('--tsne_batch_size', type=int, default=10000)
-    parser.add_argument('--draw_ellipse', action='store_true', default=False)
-    parser.add_argument('--n_topics', type=int, default=2, help="topics in VTSNE")
-    parser.add_argument('--n_iter', type=int, default=10, help="number of tsne iterations")
-    parser.add_argument('--tsne_perp', type=int, default=30, help="perplexity in TSNE")
     parser.add_argument('--oracle_nll_log_every', type=int, default=2)
-    parser.add_argument('--alpha_test', type=float, default=1.0)
-    parser.add_argument('--breakpoint', type=int, default=8, help="sentence completion breakpoint")
     parser.add_argument('--n_grams', nargs="+", type=int)
     parser.add_argument('--use_conv_net', action='store_true')
-    parser.add_argument('--classify_embeddings', action='store_true')
     
-    # classifer exps
-    parser.add_argument('--run_svm',  action='store_true', default=False)
-    parser.add_argument('--run_nn' ,  action='store_true', default=False)
-    parser.add_argument('--run_rnn',  action='store_true', default=False)
-    parser.add_argument('--run_tsne', action='store_true', default=False)
-    parser.add_argument('--run_rlm',  action='store_true', default=False)
-    parser.add_argument('--run_sc',  action='store_true', default=False)
-
+    parser.add_argument('--decoder', type=str, default="temp",
+        choices=['temp','topk','weighted_topk','beam','gen_ll','disc_ll'], help='path to model')
+    parser.add_argument('--num_samples', type=int, default=268590, help="number of samples to compute LM ans RLM")
 
     args, unmatched = parser.parse_known_args()
 
-    args.batch_size = args.tsne_batch_size
 
     # TODO: Check with Will & Mass what kind of behavior we want.
     args.stream_data = False
-    args.max_seq_len = args.tsne_max_t
     args.mask_padding = False
 
     train_args, train_unmatched = get_train_args(allow_unmatched_args=True)
     args.data_dir = train_args.data_dir
+    args.max_seq_len = train_args.max_seq_len
+    args.batch_size = train_args.batch_size
     args.cuda = train_args.cuda
     args.lm_path = train_args.lm_path
     args.lm_epoch = train_args.lm_epoch

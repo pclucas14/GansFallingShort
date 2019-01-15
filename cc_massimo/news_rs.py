@@ -165,8 +165,7 @@ for _ in range(runs):
     
     print(command)
     
-    #command = "{} cc_launch_news.sh {}".format(sys.argv[1], command) 
-
+    command = "{} cc_launch_news.sh {}".format(sys.argv[1], command) 
 
     os.system(command)
     time.sleep(2)

@@ -7,5 +7,5 @@
 #SBATCH --account=rpp-bengioy
 
 source ~/torch/bin/activate 
-cd ~/OnExposureBias/
+cd ~/GansFallingShort/real_data_experiments
 python "$@"
