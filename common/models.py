@@ -27,6 +27,11 @@ class Model(nn.Module):
     def step(self, x, hidden_state, step, var_drop_p=0.5):
         assert x.size(1)  == 1, 'this method is for single timestep use only'
         
+        new_hidden_state = [] 
+        # wrap hid. states in arrays even if single-layer model
+        if not isinstance(hidden_state, list): 
+            hidden_state = [hidden_state] * len(self.rnns)
+
         if step == 0 and self.training and var_drop_p > 0.: 
             # new sequence --> create mask
             self.mask = x.data.new(x.size(0), 1, x.size(2)).bernoulli_(1 - var_drop_p)
@@ -35,10 +40,12 @@ class Model(nn.Module):
         output = x * self.mask if self.training and var_drop_p > 0. else x
 
         for l, rnn in enumerate(self.rnns):
-            output, hidden_state = rnn(output, hidden_state)
+            output, new_hs = rnn(output, hidden_state[l])
             if self.training and var_drop_p > 0: output = output * self.mask
 
-        return output, hidden_state 
+            new_hidden_state += [new_hs]
+
+        return output, new_hidden_state
 
 
 class Generator(Model):

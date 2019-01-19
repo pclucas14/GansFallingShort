@@ -9,11 +9,15 @@ import time
 from utils  import * 
 from models import * 
 
-def train_discriminator(gen, disc=None, args=None):
+def train_discriminator(gen, path, disc=None, args=None):
 
     # fetch args used to train generator if not provided
     args = args or gen.args
     print(args)
+
+    if args.num_layers_disc==2:
+        print('multi layer LSTM bug --> setting to single layer')
+        args.num_layers_disc=1
 
     # dataset creation
     dataset_train, word_dict = tokenize(os.path.join(args.data_dir, 'train.txt'), \
@@ -127,6 +131,9 @@ def train_discriminator(gen, disc=None, args=None):
     
     # I want the model to also have the arguments of the Discriminator, so I'm copying back the weights
     disc.load_state_dict(best_disc_yet.state_dict())
+    
+    # save model
+    save_models([('disc', disc, optimizer_disc)], path, 0)  
     return disc
     
 
@@ -145,16 +152,22 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
     all_words = []
 
     # always carry at most 1000 samples on GPU to avoid memory issues
-    bs        = 1000 // (kwargs['beam_size'] if 'beam' in method else 1)
+    bs        = 1000 // kwargs.get('beam_size', 1)
     sos_token = torch.LongTensor(bs, 1).fill_(2)
     if model.args.cuda: sos_token = sos_token.cuda()
 
-    if 'disc' in method: 
-        # check first if a discriminator network was given in the kwargs
-        if 'disc' in kwargs.keys():
-            disc = kwards['disc']
+    if 'disc' in method:
+        model_path = kwargs['model_path']
+        files = os.listdir(os.path.join(model_path,'models'))
+        if len([s for s in files  if 'disc' in s]) > 0:
+            try:
+                disc = load_model_from_file(model_path, model='disc')[0]
+            except:
+                disc = load_model_from_file(model_path, epoch=0, model='disc')[0]
+            print('loading old Discriminator')
+            disc.cuda()
         else:
-            disc = train_discriminator(model)
+            disc = train_discriminator(model, model_path)
 
     while sum([x.size(0) for x in all_words]) < num_samples:
         hidden_state    = None
@@ -242,10 +255,55 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
                     ll_t   = torch.take(ll_t, sample + offset)
                     ll_t   = buffer.unsqueeze(-1).expand_as(ll_t) + ll_t
 
+                    # (bs, beam_size, beam_size) --> (bs, beam_size ** 2)
+                    ll_t   = ll_t.view(ll_t.size(0), -1)
+
+                    # TODO(lucas): do we want to mask out pad tokens and normalize inside the beam search?
+
+                    if kwargs.get('remove_duplicates', False) and beam_size > 1: 
+                        """ edit: let's try and remove duplicates """
+                        vals, ids = torch.sort(ll_t, dim=-1, descending=True)
+                        delta = vals[:, :-1] - vals[:, 1:]
+                        valid_ids = delta != 0
+                        
+                        # by construction of delta, 0th position is not included
+                        valid_ids = torch.cat([torch.ones_like(valid_ids[:, [0]]), 
+                                               valid_ids], dim=1)
+
+                        # we mask out valid indices
+                        invalid_indices = ids.clone()
+                        invalid_indices.masked_fill_(valid_ids, -1)
+
+                        # we add the offset to the mask
+                        offset = torch.arange(ll_t.size(0)).long() * beam_size ** 2
+                        offset = offset.cuda() if model.args.cuda else offset
+
+                        to_be_masked = (invalid_indices + offset.view(-1, 1))
+                        
+                        # add 1 and substract 1 to use torch.nonzero() as filtering
+                        to_be_masked = (to_be_masked+1) * (invalid_indices != -1).long()
+                        to_be_masked = to_be_masked.flatten().squeeze()
+                        non_zero_ids = to_be_masked.nonzero()
+                        to_be_masked = to_be_masked[non_zero_ids] - 1
+
+                        # mask for non unique values
+                        mask = torch.zeros_like(ll_t.flatten())
+                        mask[to_be_masked] = 1
+                        mask = mask.view(*ll_t.size())
+                        
+                        # what remains from here is to put very low values for values in `ll_t` 
+                        # where mask == 1, i.e. where values are duplicates. This way, duplicates
+                        # will only be sampled if all non-duplicate values first all been sampled
+                        # ll_t.masked_fill_(mask.byte(), -9999999.)
+
+                        # actually, by adding a big negative penalty, we can keep the original ordering.
+                        # this way, if there are too many duplicates, we will still select them based on ll.
+                        ll_t_with_dup_penalty = ll_t.clone() + -99999999
+                        ll_t_ = ll_t_with_dup_penalty * mask + (1 - mask) * ll_t
+                        """ end of edit  """ 
+                        
                     # pick sentences with highest likelihood
-                    top_v, top_i = torch.topk(ll_t.view(ll_t.size(0), -1), beam_size, dim=-1)
-                    
-                    # TODO: check if this is correct
+                    top_v, top_i = torch.topk(ll_t, beam_size, dim=-1)
                     buffer = top_v
 
                     # we need to make sure we know the index of the prefix for v \in top_v
@@ -258,24 +316,31 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
                     prefix = (prefix_i + offset).flatten()
                     
                     # words chosen at timestep t that maximize likelihood for a given beam
+                    
                     offset    = torch.arange(bs).reshape(-1, 1) * beam_size * beam_size
                     offset    = offset.cuda().long() if model.args.cuda else offset.long()
                     sample_t  = torch.take(sample, top_i + offset) 
                     input_idx = sample_t.reshape(-1, 1)
                 
                     # choose correct words given the new vectors
-                    # ww = words.reshape(bs, beam_size, -1)
                     words = torch.index_select(words, 0, prefix) 
-                    # wwt = words.reshape(bs, beam_size, -1)
 
                 # we need to expand hidden state for compatibility
-                if isinstance(hidden_state, tuple):
-                    h_t, c_t = hidden_state
-                    h_t = torch.index_select(h_t, 1, prefix)
-                    c_t = torch.index_select(c_t, 1, prefix)
-                    hidden_state = (h_t, c_t)
-                else: 
-                    hidden_state = torch.index_select(hidden_state, 1, prefix)
+                new_hidden_state = []
+                
+                # iterate over layers
+                for hs in hidden_state:
+                    if isinstance(hs, tuple):
+                        h_t, c_t = hs
+                        h_t = torch.index_select(h_t, 1, prefix)
+                        c_t = torch.index_select(c_t, 1, prefix)
+                        hs = (h_t, c_t)
+                    else: 
+                        hs = torch.index_select(hs, 1, prefix)
+                    
+                    new_hidden_state += [hs]
+
+                hidden_state = new_hidden_state
             
             else:
                 raise ValueError('%s does not match any known method' % method)
@@ -298,17 +363,19 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
                 # get the likelihood of the joint by summing over the joint likelihoods
                 # (bs, ) tensor 
                 joint_ll = (words_ll * is_not_pad).sum(dim=1) / is_not_pad.sum(dim=1)
+                accept = (joint_ll > -th).long()
             
             elif 'disc' in method:
-                # push the generated sentences through the discrimiator to get score
+                # push the generated sentences through the discriminator to get score
                 is_real  = F.sigmoid(disc(words)[0])[:, -1]
                 # we actually use the last conditional, and not the joint for this prob.
                 joint_ll = is_real
 
-            # TODO: remove this
-            th = joint_ll.mean().item()
-
-            accept = (joint_ll > th).long()
+                # TODO(lucas) do we want to do something about PAD tokens ? in this setting I would assume not
+                # The only feasible way would be to consider all conditionals (not just the last), mask out the 
+                # conditionals over PAD tokens, and average them out.
+                accept = (joint_ll > th).long()
+            
             arange = torch.arange(accept.size(0))
             if model.args.cuda: arange = arange.cuda()
 
@@ -324,8 +391,17 @@ def sample_from_model(model, method, num_samples, *args, **kwargs):
         all_words += [words]
         
     output =  torch.cat(all_words, dim=0) if len(all_words) > 1 else all_words[0]
+    
+    # let's track sentence length (to investigate sharp drop at beam size == 2)
+    EOS = 1
+    is_eos = output == EOS
+    sentence_length = is_eos.argmax(dim=1)
+    print('average sentence length : {:.4f}'.format(sentence_length.float().mean().item()))
+    print('%d / %d sentences are unique' % (np.unique(output, axis=0).shape[0], output.shape[0]))
+
     print('took {:.6f} seconds to sample {} with method {}'.format(time.time() - start, int(output.size(0)), method))
     return output 
+
 
 def compute_lm_score(sentences, oracle_lm, verbose=False, word_dict=None, args=None):
 
@@ -380,16 +456,24 @@ def compute_lm_score(sentences, oracle_lm, verbose=False, word_dict=None, args=N
                 print("nll oracle: {:.4f}".format(avg_oracle_nll[-i]))
     
         return np.mean(avg_oracle_nll)
+
+
 if __name__ == '__main__':
     lm_path = '../real_data_experiments/trained_models/news/word/best_mle'
+    lm_path = '../real_data_experiments/exps/news/2l_fixed'
     model = load_model_from_file(lm_path, None)[0].cuda()
     model.args.data_dir = '../real_data_experiments/data/news'
     model.args.num_layers_disc = 1
     model.args.hidden_dim_disc = 512
     model.args.var_dropout_p_disc = 0.5
-
-    kwargs = {'k':10, 'beam_size':5, 'alpha':2, 'threshold' : 0.6}
-    sentences = sample_from_model(model, 'beam', 1000, **kwargs)
-
+    
     _, word_dict = tokenize('../real_data_experiments/data/news/train.txt', train=True)
-    print_and_save_samples(sentences, word_dict, 'test', 0, max_print=100)
+
+    for beam_size in [1, 5, 10, 25]: 
+        for rm in [True, False]:
+            print('\n\n')
+            print('beam size : %d\t remove duplicates %d' % (beam_size, rm))
+            kwargs = {'k':10, 'beam_size':beam_size, 'alpha':2, 'threshold' : 0.6, 'remove_duplicates' : rm}
+            sentences = sample_from_model(model, 'beam', 1000, **kwargs)
+            print_and_save_samples(sentences, word_dict, 'test', 0, max_print=20)
+        
