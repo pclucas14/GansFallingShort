@@ -12,7 +12,7 @@ sns.set_style("whitegrid")
 all_dicts = {}
 temp, gen_ll, beam = {}, {}, {}
 mapper = {'temp':temp, 'gen_ll':gen_ll, 'beam':beam}
-title = {'temp':'Temerature', 'gen_ll':'Generator Rejection', 'beam':'Beam Search'}
+title = {'temp':'Temperature', 'gen_ll':'Generator Rejection', 'beam':'Beam Search'}
 color = {'temp':'red', 'gen_ll':'green', 'beam':'blue'}
 
 for f in onlyfiles:
@@ -61,15 +61,16 @@ for method in ['temp', 'gen_ll', 'beam']:
     print(method)
     dd = final[method]
     start = 0 if 'll' in method else 0
-    end = -5 if 'beam' in method else len(dd)
+    end = -6 if 'beam' in method else len(dd)
     ys = [x[1] for x in dd][start:end]
-    xs = [-y[2] for y in dd][start:end]
+    xs = [y[2] for y in dd][start:end]
     mtd = plt.scatter if 'beam' in method else plt.plot
     mtd(xs, ys, label=title[method], color=color[method])
 
 plt.ylabel('Decoding Time (s)')
-plt.xlabel('negative LM score')
+plt.xlabel('LM score')
 plt.legend(markerfirst=False, frameon=False)
 plt.yscale('log')
+plt.xlim(left=1.5)
 #plt.show()
 plt.savefig('decoding_time.pdf', bbox_inches='tight')
