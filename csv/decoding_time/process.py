@@ -6,7 +6,7 @@ onlyfiles = [f for f in listdir(os.getcwd()) if isfile(join(os.getcwd(), f))]
 
 
 import seaborn as sns
-sns.set(font_scale=1.9)  # Make sure everything is readable.
+sns.set(font_scale=1.5)  # Make sure everything is readable.
 sns.set_style("whitegrid")
 
 all_dicts = {}
@@ -62,12 +62,14 @@ for method in final:
     dd = final[method]
     start = 0 if 'll' in method else 0
     end = -5 if 'beam' in method else len(dd)
-    ys = [np.log(x[1]) for x in dd][start:end]
+    ys = [x[1] for x in dd][start:end]
     xs = [-y[2] for y in dd][start:end]
     mtd = plt.scatter if 'beam' in method else plt.plot
     mtd(xs, ys, label=title[method], color=color[method])
 
-plt.ylabel('Log time in seconds')
-plt.xlabel(' - LM score')
-plt.legend()
-plt.show()
+plt.ylabel('Decoding Time (s)')
+plt.xlabel('negative LM score')
+plt.legend(markerfirst=False, frameon=False)
+plt.yscale('log')
+#plt.show()
+plt.savefig('decoding_time.pdf', bbox_inches='tight')
