@@ -57,7 +57,7 @@ for dd in mapper:
 
 import matplotlib.pyplot as plt
 
-for method in final:
+for method in ['temp', 'gen_ll', 'beam']:
     print(method)
     dd = final[method]
     start = 0 if 'll' in method else 0
