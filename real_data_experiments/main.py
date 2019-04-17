@@ -356,7 +356,7 @@ def main(rlm=False, rlm_dir=None):
                 
                 # currently working on finding the best Discriminator
                 # for now lets just save when discs outperforms:
-                if args.cot:
+                if not args.cot:
                     avg_acc = torch.mean(torch.stack(avg_accs))
                     if avg_acc > best_acc:
                         print('saving model because disc outperformed')
