@@ -414,7 +414,11 @@ def load_model_from_file(path, args=None, epoch=None, model='gen'):
 
     old_args = to_attr(old_args)
     if 'gen' in model.lower():
-        model_ = Generator(old_args)
+        if 'best_' in model.lower():
+            # ASSUMING THIS IS A PRETRAINED MODEL AVAILABLE ON THE GITHUB
+            model_ = OldGenerator(old_args)
+        else:
+            model_ = Generator(old_args)
     elif 'dis' in model.lower():
         model_ = Discriminator(old_args)
     else: 
