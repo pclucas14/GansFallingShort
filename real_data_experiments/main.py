@@ -199,8 +199,7 @@ def main(rlm=False, rlm_dir=None):
                     p_fake = p_fake.mean().data
                     ps_fake += [p_fake]
                     fake_accs += [fake_acc]
-                
-                avg_accs += [(fake_acc+real_acc)/2]
+                    avg_accs += [(fake_acc+real_acc)/2]
                 
                 disc_loss = (fake_loss + real_loss) / 2
                 disc_losses += [disc_loss.data]
@@ -298,7 +297,7 @@ def main(rlm=False, rlm_dir=None):
                         ps_fake += [p_fake]
                         fake_accs += [fake_acc]
                     
-                    avg_accs += [(fake_acc+real_acc)/2]
+                        avg_accs += [(fake_acc+real_acc)/2]
                      
                     disc_loss = (fake_loss + real_loss) / 2
                     disc_losses += [disc_loss.data]
@@ -357,11 +356,12 @@ def main(rlm=False, rlm_dir=None):
                 
                 # currently working on finding the best Discriminator
                 # for now lets just save when discs outperforms:
-                avg_acc = torch.mean(torch.stack(avg_accs))
-                if avg_acc > best_acc:
-                    print('saving model because disc outperformed')
-                    save_models([('disc', disc, optimizer_disc)], args.base_dir, writes)
-                    best_acc = avg_acc 
+                if not args.cot:
+                    avg_acc = torch.mean(torch.stack(avg_accs))
+                    if avg_acc > best_acc:
+                        print('saving model because disc outperformed')
+                        save_models([('disc', disc, optimizer_disc)], args.base_dir, writes)
+                        best_acc = avg_acc 
         
         writes += 1
 
