@@ -168,6 +168,8 @@ class RNNClassifier(nn.Module):
 
 """ The stored models used a different version that the one above. This model should  """ 
 """ only be used with the pretrained weights available with this repository           """
+""" Note that the two models are equivalent for single layer models 		      """
+""" The 2+ layer model provided for those who wish to build on this codebase 	      """
 """ For more information, see the pull requests                                       """
 
 class OldModel(nn.Module):
@@ -256,3 +258,27 @@ class OldGenerator(OldModel):
         
         logits = torch.cat(outputs, dim=1)
         return logits, words
+
+class OldDiscriminator(OldModel):
+    def __init__(self, args):
+        super(OldDiscriminator, self).__init__(args.num_layers_disc, args.hidden_dim_disc, args)
+        self.output_layer = nn.Linear(args.hidden_dim_disc, 1)
+        self.critic       = nn.Linear(args.hidden_dim_disc, 1)
+    
+    def forward(self, x, hidden_state=None):
+        assert len(x.size()) == 2 # bs x seq_len
+        ''' note that x[:, 0] is NOT SOS token, but the first word of sentence '''
+
+        baseline = torch.ones_like(x[:, [0]]).float() * np.log(0.5)
+
+        emb = self.embedding(x)
+        outputs  = []
+        for t in range(emb.size(1)):
+            output, hidden_state = self.step(emb[:, [t]], hidden_state, t, var_drop_p=self.args.var_dropout_p_disc)
+            outputs += [output]
+
+        output = torch.cat(outputs, dim=1)
+        disc_logits = self.output_layer(output).squeeze(-1)
+        baseline_ = self.critic(output.detach()).squeeze(-1) # critic gradient should not flow
+        baseline = torch.cat([baseline, baseline_], dim=1)[:, :-1]
+        return disc_logits, baseline

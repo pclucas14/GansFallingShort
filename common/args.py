@@ -21,6 +21,7 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--gamma', type=float, default=0.95)
     parser.add_argument('--load_gen_path', type=str, default=None)
     parser.add_argument('--load_disc_path', type=str, default=None)
+    parser.add_argument('--old_model', type=int, default=0, help='load previous version of the recurrent unit, which shared hidden states across layers (old and new are equivalent for single layer models)')
 
     # TRAINING args
     parser.add_argument('--batch_size', type=int, default=128)
@@ -97,6 +98,7 @@ def get_test_args():
     parser.add_argument('--model_epoch', type=int, default=None, help='epoch of saved model')
     parser.add_argument('--oracle_nll_log_every', type=int, default=2)
     parser.add_argument('--n_grams', nargs="+", type=int)
+    parser.add_argument('--alpha_test', type=float, default=1.)
     parser.add_argument('--use_conv_net', action='store_true')
     
     parser.add_argument('--decoder', type=str, default="temp",
