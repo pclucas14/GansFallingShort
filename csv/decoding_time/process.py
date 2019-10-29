@@ -6,7 +6,7 @@ onlyfiles = [f for f in listdir(os.getcwd()) if isfile(join(os.getcwd(), f))]
 
 
 import seaborn as sns
-sns.set(font_scale=1.5)  # Make sure everything is readable.
+sns.set(font_scale=1.9)  # Make sure everything is readable.
 sns.set_style("whitegrid")
 
 all_dicts = {}
