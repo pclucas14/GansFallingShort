@@ -325,7 +325,8 @@ def remove_pad_tokens(tensor, index):
         print('batch is only PAD token')
         return summ * 0. + -.1
     else: 
-        print('batch contains %d / %d active sentences' % (is_not_pad.item(), tensor.size(0)))
+        xx = 1
+        # print('batch contains %d / %d active sentences' % (is_not_pad.item(), tensor.size(0)))
 
     return summ / is_not_pad
 
@@ -398,7 +399,7 @@ def get_oracle(args=None):
 
 def load_model_from_file(path, args=None, epoch=None, model='gen'):
     import json
-    from models import Generator, Discriminator
+    from models import Generator, Discriminator, OldGenerator, OldDiscriminator
 
     with open(os.path.join(path, 'args.json'), 'r') as f: 
         old_args = json.load(f)
@@ -414,9 +415,16 @@ def load_model_from_file(path, args=None, epoch=None, model='gen'):
 
     old_args = to_attr(old_args)
     if 'gen' in model.lower():
-        model_ = Generator(old_args)
+        if old_args.old_model: 
+            print('loading old model')
+            model_ = OldGenerator(old_args)
+        else:
+            model_ = Generator(old_args)
     elif 'dis' in model.lower():
-        model_ = Discriminator(old_args)
+        if args.old_model:
+            model_ = OldDiscriminator(old_args)
+        else:
+            model_ = Discriminator(old_args)
     else: 
         raise ValueError('%s is not a valid model name' % model)
 

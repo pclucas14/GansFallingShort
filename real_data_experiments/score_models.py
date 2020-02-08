@@ -56,14 +56,21 @@ if args.cuda:
 
 MODE = [('free_running', test_batch, OD(), [], [])]
 
-
-TEMPERATURES = [0.9, 0.95, 1.0, 1.03, 1.06, 1.09, 1.12, 1.15, 1.20,
+TEMPERATURES = [0.9, 0.95, 1.0, 1.05, 1.1,  1.15, 1.20,
                 1.25, 1.30, 1.35, 1.40, 1.50, 1.60, 1.70, 1.8, 1.9, 2.0, 3.0, 4.0 ]
 BEAM_SIZES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] 
-TOP_K = [1000, 500,  300,  200,  100,  80,  60,  50,  25, 10] 
-WTOP_K = [5500, 5000, 4000, 3000, 2000, 1000, 500, 250, 100, 50, 20] 
-GEN_THRES = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1 ] 
-DISC_THRES = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 ] 
+TOP_K = [10, 25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 500] 
+WTOP_K = [20, 50, 100, 250, 500, 1000, 2000, 3000, 4000, 5000, 5500] 
+GEN_THRES = [ 2.5, 2.75, 3.25, 3.5, 3.75, 4.0, 4.25, 4.5, 4.75, 5, 5.25, 5.50,
+                 5.75, 6.0, 6.5, 7, 8, 9, 10 ] 
+DISC_THRES = [0.0, 0.1, 0.2, 0.3, 0.4, 0.45, 0.48, 0.5, 0.52, 0.55, 
+                   0.6, 0.7, 0.8, 0.9 ] 
+
+#######
+GEN_THRES = [ 2., 2.25, 3., 3.62, 3.87 ] 
+TEMPERATURES = [1.01, 1.02, 1.03, 1.04, 1.06, 1.07, 1.08, 1.09, 2.25, 2.5, 2.75, 3.25, 3.5, 3.75]
+DISC_THRES = [0.82, 0.84, 0.86, 0.88, 0.90, 0.92, 0.94, 0.96, 0.98] 
+
 
 if   args.decoder == 'temp':          PARAMS = TEMPERATURES
 elif args.decoder == 'beam':          PARAMS = BEAM_SIZES
@@ -83,7 +90,12 @@ for param in PARAMS:
     elif args.decoder=='weighted_topk': kwargs = {'k':param}
     elif args.decoder=='gen_ll':        kwargs = {'threshold':param}
     elif args.decoder=='disc_ll':       kwargs = {'threshold':param}
-       
+
+    ## trying this:
+    kwargs['remove_duplicates'] = True
+    
+    kwargs['model_path'] = args.model_path
+           
     sentences = sample_from_model(gen, args.decoder, args.num_samples, **kwargs)
    
     ### LM Score:
@@ -100,6 +112,7 @@ for param in PARAMS:
      
     if args.decoder=='temp': param = int(param*100)
     if args.decoder=='disc_ll': param = int(param*100)
+    if args.decoder=='gen_ll': param = int(param*100)
     
     print_and_log_scalar(writer, 'eval/{}/lm_score'.format(args.decoder), lm_score, param)
     
