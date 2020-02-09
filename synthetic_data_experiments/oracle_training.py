@@ -7,11 +7,11 @@ import torch.optim as optim
 import tensorboardX
 import __init__
 
-from common.utils  import * 
-from common.data   import * 
-from common.models import * 
-from common.losses import * 
-from common.args   import * 
+from common.utils  import *
+from common.data   import *
+from common.models import *
+from common.losses import *
+from common.args   import *
 
 
 def main(args=None, max_writes=1e5):
@@ -37,18 +37,26 @@ def main(args=None, max_writes=1e5):
     writes = 0
 
     oracle = get_oracle(args)
-    gen  = Generator(args)
-    disc = Generator(get_cot_args(args)) if args.cot else Discriminator(args)
+
+    # to reproduce old results, we need to load the old version of the Generator
+    if args.old_model:
+        print('\n\n\nLOADING OLD MODEL\n\n\n')
+        gen  = OldGenerator(args)
+        disc = OldGenerator(get_cot_args(args)) if args.cot else OldDiscriminator(args)
+    else:
+        gen  = Generator(args)
+        disc = Generator(get_cot_args(args)) if args.cot else Discriminator(args)
+
     print('generator', gen, '\ndiscriminator', disc)
 
-    if args.cuda: 
+    if args.cuda:
         gen  = gen.cuda()
         disc = disc.cuda()
         oracle = oracle.cuda()
 
     optimizer_gen = optim.Adam(gen.parameters(), lr=args.gen_lr)
 
-    if args.cot:  
+    if args.cot:
         optimizer_disc   = optim.Adam(disc.parameters(), lr=args.disc_lr)
         optimizer_critic = None
     else:
@@ -59,7 +67,7 @@ def main(args=None, max_writes=1e5):
     MODELS = [ ('gen', gen, optimizer_gen), ('disc', disc, optimizer_disc), ('critic', None, optimizer_critic)]
 
     # we first create the synthetic dataset
-    start_token = Variable(torch.zeros(args.batch_size, 1)).long().cuda() 
+    start_token = Variable(torch.zeros(args.batch_size, 1)).long().cuda()
     if args.cuda: start_token = start_token.cuda()
 
     sentences = []
@@ -79,6 +87,7 @@ def main(args=None, max_writes=1e5):
     '''
     MLE pretraining
     '''
+    best_final_test = float('inf')
     for epoch in range(args.mle_epochs):
         print('MLE pretraining epoch {}/{}'.format(epoch, args.mle_epochs))
         losses_train, losses_test, oracle_nlls = [], [], []
@@ -86,31 +95,31 @@ def main(args=None, max_writes=1e5):
 
         # Training loop
         for i, minibatch in enumerate(train_loader):
-            if args.cuda: 
+            if args.cuda:
                 minibatch = minibatch.cuda()
 
             start_token = torch.zeros_like(minibatch[:, [0]])
             input  = torch.cat([start_token, minibatch[:, :-1]], dim=1)
             target = minibatch
- 
+
             # provide discriminator for leak signal (if args.leak_info is True)
             gen_logits, _ = gen(input, disc=disc)
             loss = NLL(gen_logits, target)
             losses_train += [loss.data]
             apply_loss(optimizer_gen, loss, clip_norm=args.grad_clip)
-        
+
         print_and_log_scalar(writer, 'train/nll', losses_train, writes, end_token='\n')
 
         if (epoch + 1) % args.test_every == 0 :
             with torch.no_grad():
                 for i, minibatch in enumerate(test_loader):
-                    if args.cuda: 
+                    if args.cuda:
                         minibatch = minibatch.cuda()
 
                     start_token = torch.zeros_like(minibatch[:, [0]])
                     input  = torch.cat([start_token, minibatch[:, :-1]], dim=1)
                     target = minibatch
-             
+
                     gen_logits, _ = gen(input, disc=disc)
                     loss = NLL(gen_logits, target)
                     losses_test += [loss.data]
@@ -121,15 +130,19 @@ def main(args=None, max_writes=1e5):
                 gen_logits, gen_sample = gen(start_token, disc=disc)
                 oracle_input = torch.cat([start_token, gen_sample], dim=1)
                 oracle_logits, _ = oracle(oracle_input.detach())
-                        
+
                 nll = NLL(oracle_logits[:, :-1], gen_sample)
-                oracle_nlls += [nll.data] 
-                
+                oracle_nlls += [nll.data]
+
                 final_obj = oracle_nlls[0].mean() + torch.stack(losses_test).mean()
+                best_final_test = min(final_obj, best_final_test)
 
                 print_and_log_scalar(writer, 'test/oracle_nll', oracle_nlls, writes)
                 print_and_log_scalar(writer, 'test/nll', losses_test, writes)
-                print_and_log_scalar(writer, 'test/final_obj', final_obj, writes, end_token='\n')
+                print_and_log_scalar(writer, 'test/final_obj', final_obj, writes)
+                print_and_log_scalar(writer, 'test/best_final_obj', best_final_test, writes, end_token='\n')
+
+
 
         writes += 1
         if writes > max_writes: return gen, disc
@@ -150,13 +163,13 @@ def main(args=None, max_writes=1e5):
 
         # Training loop
         for i, minibatch in enumerate(train_loader):
-            if args.cuda: 
+            if args.cuda:
                 minibatch = minibatch.cuda()
 
             start_token = torch.zeros_like(minibatch[:, [0]])
             input  = torch.cat([start_token, minibatch[:, :-1]], dim=1)
             target = minibatch
-            
+
             should_train_gen, should_train_disc, should_train_mle = assign_training(i, epoch, args)
 
             if should_train_disc:
@@ -173,7 +186,7 @@ def main(args=None, max_writes=1e5):
                     p_real = p_real.mean().data
                     ps_real += [p_real]
                     real_accs += [real_acc]
-                               
+
                 # train disc on fake data
                 _, fake_sentences = gen(input[:, [0]], disc=disc)
                 if args.cot:
@@ -189,33 +202,33 @@ def main(args=None, max_writes=1e5):
                     p_fake = p_fake.mean().data
                     ps_fake += [p_fake]
                     fake_accs += [fake_acc]
-                
+
                 disc_loss = (fake_loss + real_loss) / 2
                 disc_losses += [disc_loss.data]
 
                 apply_loss(optimizer_disc, disc_loss, clip_norm=args.grad_clip)
-                
+
                 # train critic
-                if args.use_baseline and not args.cot: 
+                if args.use_baseline and not args.cot:
                     cumulative_rewards = get_cumulative_rewards(fake_out, args)
                     critic_loss = reinforce_critic_loss(cumulative_rewards, fake_baseline)
-                    critic_losses += [critic_loss.data]            
+                    critic_losses += [critic_loss.data]
 
                     apply_loss(optimizer_critic, critic_loss, clip_norm=args.grad_clip)
-            
+
             if should_train_gen:
                 # train generator
                 fake_logits, fake_sentence = gen(input[:, [0]], disc=disc)
 
-                if args.cot: 
+                if args.cot:
                     disc_logits, _ = disc(torch.cat([input[:, [0]], fake_sentence[:, :-1]], dim=1))
                     gen_loss = cot_gen_loss(fake_logits, disc_logits)
                 else:
                     fake_out, fake_baseline = disc(fake_sentence.detach())
                     cumulative_rewards = get_cumulative_rewards(fake_out, args)
-                    gen_loss = reinforce_gen_loss(cumulative_rewards, fake_logits, fake_sentence, 
+                    gen_loss = reinforce_gen_loss(cumulative_rewards, fake_logits, fake_sentence,
                                               fake_baseline, args)
-                
+
                 gen_losses += [gen_loss.data]
 
                 apply_loss(optimizer_gen, gen_loss, clip_norm=args.grad_clip)
@@ -224,24 +237,24 @@ def main(args=None, max_writes=1e5):
                 fake_logits, _  = gen(input, disc=disc)
                 nll = NLL(fake_logits, target)
                 nlls += [nll.data]
-                
+
                 apply_loss(optimizer_gen, nll, clip_norm=args.grad_clip)
-            
+
 
         # logging
-        print_and_log_scalar(writer, 'train/P(real)', ps_real, writes)      
+        print_and_log_scalar(writer, 'train/P(real)', ps_real, writes)
         print_and_log_scalar(writer, 'train/real Accuracy', real_accs, writes)
-        print_and_log_scalar(writer, 'train/P(fake)', ps_fake, writes)      
+        print_and_log_scalar(writer, 'train/P(fake)', ps_fake, writes)
         print_and_log_scalar(writer, 'train/fake Accuracy', fake_accs, writes)
-        print_and_log_scalar(writer, 'train/nll', nlls, writes)      
-        print_and_log_scalar(writer, 'train/Gen Loss', gen_losses, writes)      
-        print_and_log_scalar(writer, 'train/Disc Loss', disc_losses, writes)      
+        print_and_log_scalar(writer, 'train/nll', nlls, writes)
+        print_and_log_scalar(writer, 'train/Gen Loss', gen_losses, writes)
+        print_and_log_scalar(writer, 'train/Disc Loss', disc_losses, writes)
         print_and_log_scalar(writer, 'train/Critic Loss', critic_losses, writes)
         print_and_log_scalar(writer, 'train/CoT Real Loss', cot_real_loss, writes)
-        print_and_log_scalar(writer, 'train/CoT Fake Loss', cot_fake_loss, writes, end_token='\n')      
+        print_and_log_scalar(writer, 'train/CoT Fake Loss', cot_fake_loss, writes, end_token='\n')
 
 
-        if (epoch + 1) % args.test_every == 0: 
+        if (epoch + 1) % args.test_every == 0:
             with torch.no_grad():
                 gen_losses, disc_losses, critic_losses, ps_real, ps_fake, real_accs, fake_accs, nlls, \
                         oracle_nlls, cot_real_loss, cot_fake_loss = [[] for _ in range(11)]
@@ -249,13 +262,13 @@ def main(args=None, max_writes=1e5):
 
                 # Test loop
                 for i, minibatch in enumerate(test_loader):
-                    if args.cuda: 
+                    if args.cuda:
                         minibatch = minibatch.cuda()
 
                     start_token = torch.zeros_like(minibatch[:, [0]])
                     input  = torch.cat([start_token, minibatch[:, :-1]], dim=1)
                     target = minibatch
-                    
+
                     # disc on real data
                     if args.cot:
                         real_logits, _ = disc(input)
@@ -269,8 +282,8 @@ def main(args=None, max_writes=1e5):
                         p_real = p_real.mean().data
                         ps_real += [p_real]
                         real_accs += [real_acc]
-                        
-                                   
+
+
                     # disc on fake data
                     _, fake_sentences = gen(input[:, [0]], disc=disc)
                     if args.cot:
@@ -286,25 +299,25 @@ def main(args=None, max_writes=1e5):
                         p_fake = p_fake.mean().data
                         ps_fake += [p_fake]
                         fake_accs += [fake_acc]
-                    
+
                     disc_loss = (fake_loss + real_loss) / 2
                     disc_losses += [disc_loss.data]
-                    
+
                     # critic
-                    if args.use_baseline and not args.cot: 
+                    if args.use_baseline and not args.cot:
                         cumulative_rewards = get_cumulative_rewards(fake_out, args)
                         critic_loss = reinforce_critic_loss(cumulative_rewards, fake_baseline)
-                        critic_losses += [critic_loss.data]            
-                      
+                        critic_losses += [critic_loss.data]
+
                     # generator in free sampling mode
                     fake_logits, fake_sentence = gen(input[:, [0]], disc=disc)
-                    if args.cot: 
+                    if args.cot:
                         disc_logits, _ = disc(torch.cat([input[:, [0]], fake_sentence[:, :-1]], dim=1))
                         gen_loss = cot_gen_loss(fake_logits, disc_logits)
                     else:
                         fake_out, fake_baseline = disc(fake_sentence.detach())
                         cumulative_rewards = get_cumulative_rewards(fake_out, args)
-                        gen_loss = reinforce_gen_loss(cumulative_rewards, fake_logits, fake_sentence, 
+                        gen_loss = reinforce_gen_loss(cumulative_rewards, fake_logits, fake_sentence,
                                                   fake_baseline, args)
                     gen_losses += [gen_loss.data]
 
@@ -317,10 +330,10 @@ def main(args=None, max_writes=1e5):
                     oracle_input = torch.cat([start_token, fake_sentence], dim=1)
                     oracle_logits, _ = oracle(oracle_input)
                     oracle_nll = NLL(oracle_logits[:, :-1], fake_sentence)
-                    oracle_nlls += [oracle_nll.data] 
+                    oracle_nlls += [oracle_nll.data]
 
                 final_obj = sum([x + y for (x,y) in zip(oracle_nlls, nlls)]) / len(nlls)
-                if args.cot: 
+                if args.cot:
                     final_obj_cot = sum([x + y for (x,y) in zip(disc_losses, nlls)]) / len(nlls)
                     print_and_log_scalar(writer, 'test/final_obj_cot', final_obj_cot, writes)
 
@@ -331,18 +344,18 @@ def main(args=None, max_writes=1e5):
                 print_and_log_scalar(writer, 'test/P(fake)', ps_fake, writes)
                 print_and_log_scalar(writer, 'test/fake Accuracy', fake_accs, writes)
                 print_and_log_scalar(writer, 'test/nll', nlls, writes)
-                print_and_log_scalar(writer, 'test/Gen Loss', gen_losses, writes)      
-                print_and_log_scalar(writer, 'test/Disc Loss', disc_losses, writes)      
-                print_and_log_scalar(writer, 'test/Critic Loss', critic_losses, writes) 
+                print_and_log_scalar(writer, 'test/Gen Loss', gen_losses, writes)
+                print_and_log_scalar(writer, 'test/Disc Loss', disc_losses, writes)
+                print_and_log_scalar(writer, 'test/Critic Loss', critic_losses, writes)
                 print_and_log_scalar(writer, 'test/CoT Real Loss', cot_real_loss, writes)
-                print_and_log_scalar(writer, 'test/CoT Fake Loss', cot_fake_loss, writes)      
-                print_and_log_scalar(writer, 'test/final_obj', final_obj, writes, end_token='\n')               
- 
+                print_and_log_scalar(writer, 'test/CoT Fake Loss', cot_fake_loss, writes)
+                print_and_log_scalar(writer, 'test/final_obj', final_obj, writes, end_token='\n')
+
         writes += 1
         if writes > max_writes: return gen, disc
 
         # save models
-        if (epoch + 1) % args.save_every == 0: 
+        if (epoch + 1) % args.save_every == 0:
             save_models(MODELS, args.base_dir, writes)
 
     return gen, disc
