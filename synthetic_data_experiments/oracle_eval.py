@@ -60,7 +60,7 @@ class Model_eval:
             args[key] = value
 
         args = to_attr(args)
-        base_dir = 'synthetic_eval'
+        base_dir = 'reproduce_synthetic_results' #'synthetic_eval'
         args.base_dir = os.path.join(base_dir, name)
         args.max_seq_len = 20
 
@@ -146,12 +146,6 @@ class Model_eval:
 if __name__ == '__main__':
 
     """ Cross-Validating on NLL_{oracle + test} """
-    best_mle = Model_eval('best_mle', {'num_layers_gen' : 1,
-                                       'var_dropout_p_gen' : 0.6,
-                                       'batch_size' : 256,
-                                       'gen_lr' : 0.0005,
-                                       'hidden_dim_gen' : 512,
-                                       'mle_epochs' : 300}, 165)
 
     best_gan = Model_eval('best_gan', {'var_dropout_p_gen' : 0.5,
                                        'var_dropout_p_disc' : 0.2,
@@ -167,114 +161,12 @@ if __name__ == '__main__':
                                        'hidden_dim_disc' : 256,
                                        'seqgan_reward' : 1,
                                        'num_layers_gen' : 1,
+                                       'old_model':True,
                                        'num_layers_disc' : 1}, 299)
-
-    best_gan_mle = Model_eval('best_gan_mle',
-                                      {'var_dropout_p_gen' : 0.6,
-                                       'var_dropout_p_disc' : 0.3,
-                                       'batch_size' : 64,
-                                       'gen_lr' : 0.0005,
-                                       'disc_lr' : 5e-5,
-                                       'mle_epochs' : 80,
-                                       'disc_pretrain_epochs' : 16,
-                                       'disc_train_iterations' : 10,
-                                       'gen_train_iterations' : 1,
-                                       'mle_train_iterations' : 1,
-                                       'hidden_dim_disc' : 512,
-                                       'seqgan_reward' : 0,
-                                       'num_layers_gen' : 1}, 299)
-
-    # gan_VDGEN0.6_VDDISC0.2_BS512_GLR0.0005_DLR0.0005_MLE80_DE40_DTI5_GTI1_MTI0_HD256_SQ20_ats1_beta2.0_SQR0_LEAK1
-    best_gan_beta = Model_eval('best_gan_beta',
-                                      {'var_dropout_p_gen' : 0.6,
-                                       'var_dropout_p_disc' : 0.2,
-                                       'batch_size' : 512,
-                                       'gen_lr' : 0.0005,
-                                       'disc_lr' : 0.0005,
-                                       'mle_epochs' : 80,
-                                       'disc_pretrain_epochs' : 40,
-                                       'disc_train_iterations' : 5,
-                                       'gen_train_iterations' : 1,
-                                       'mle_train_iterations' : 0,
-                                       'hidden_dim_disc' : 256,
-                                       'hidden_dim_gen' : 256,
-                                       'seqgan_reward' : 0,
-                                       'leak_info' : 1,
-                                       'transfer_weights_after_pretraining' : 0,
-                                       'beta' : 2,
-                                       'num_layers_gen' : 1}, 280)
-
-
-    """ Cross-Validating on NLL_{oracle} only """
-
-    # gan_VDGEN0.4_VDDISC0.5_BS512_GLR0.001_DLR0.0005_MLE10_DE1_DTI1_GTI1_MTI0_HD512_SQ20_ats1_beta0_SQR0_LEAK0
-    best_gan_cvo = Model_eval('best_gan_cvo',
-                                      {'var_dropout_p_gen' : 0.4,
-                                       'var_dropout_p_disc' : 0.5,
-                                       'batch_size' : 512,
-                                       'gen_lr' : 0.001,
-                                       'disc_lr' : 0.0005,
-                                       'mle_epochs' : 10,
-                                       'disc_pretrain_epochs' : 1,
-                                       'disc_train_iterations' : 1,
-                                       'gen_train_iterations' : 1,
-                                       'mle_train_iterations' : 0,
-                                       'hidden_dim_disc' : 512,
-                                       # default gen_size is 512, so no need to rerun
-                                       'seqgan_reward' : 0,
-                                       'num_layers_gen' : 1,
-                                       'num_layers_disc' : 1}, 100)
-
-    # gan_VDGEN0.6_VDDISC0.3_BS64_GLR0.0005_DLR5e-05_MLE80_DE16_DTI10_GTI1_MTI1_HD512_SQ20_ats1_beta0_SQR0_LEAK0
-    # actually the same as the other gan_mle, so we won't rerun it.
-    #best_gan_mle_cvo = Model_eval('best_gan_mle_cvo',
-    #                                  {'var_dropout_p_gen' : 0.6,
-    #                                   'var_dropout_p_disc' : 0.3,
-    #                                   'batch_size' : 64,
-    #                                   'gen_lr' : 0.0005,
-    #                                   'disc_lr' : 5e-5,
-    #                                   'mle_epochs' : 80,
-    #                                   'disc_pretrain_epochs' : 16,
-    #                                   'disc_train_iterations' : 10,
-    #                                   'gen_train_iterations' : 1,
-    #                                   'mle_train_iterations' : 1,
-    #                                   'hidden_dim_disc' : 512,
-    #                                  # default gen_size is 512, so no need to rerun
-    #                                   'seqgan_reward' : 0,
-    #                                   'num_layers_gen' : 1}, 299)
-
-    # mle_LY1_VDGEN0.4_BS128_GLR0.0005_HD512_SQ20
-    best_mle_cvo = Model_eval('best_mle_cvo',
-                                      {'num_layers_gen' : 1,
-                                       'var_dropout_p_gen' : 0.4,
-                                       'batch_size' : 128,
-                                       'gen_lr' : 0.0005,
-                                       'hidden_dim_gen' : 512,
-                                       'mle_epochs' : 300}, 300)
-
-    # gan_VDGEN0.5_VDDISC0.2_BS256_GLR0.001_DLR0.0005_MLE40_DE20_DTI1_GTI1_MTI0_HD512_SQ20_ats1_beta1.0_SQR0_LEAK1
-    best_gan_beta_cvo = Model_eval('best_gan_beta_cvo2',
-                                      {'var_dropout_p_gen' : 0.5,
-                                       'var_dropout_p_disc' : 0.2,
-                                       'batch_size' : 256,
-                                       'gen_lr' : 0.001,
-                                       'disc_lr' : 0.0005,
-                                       'mle_epochs' : 40,
-                                       'disc_pretrain_epochs' : 20,
-                                       'disc_train_iterations' : 1,
-                                       'gen_train_iterations' : 1,
-                                       'mle_train_iterations' : 0,
-                                       'hidden_dim_disc' : 512,
-                                       'hidden_dim_gen' : 512,
-                                       'seqgan_reward' : 0,
-                                       'leak_info' : 1,
-                                       'transfer_weights_after_pretraining' : 0,
-                                       'beta' : 1.0,
-                                       'num_layers_gen' : 1,
-                                       'num_layers_disc' : 1}, 150)
 
     """ MLE CROSS VALIDATED ON NLL_TEST AS SHOULD ALWAYS BE DONE """
     # mle_LY2_VDGEN0.6_BS256_GLR0.001_HD128_SQ20
+    # best_mle_cvt = Model_eval('best_mle_cvt',
     best_mle_cvt = Model_eval('best_mle_cvt',
                                       {'num_layers_gen' : 2,
                                        'var_dropout_p_gen' : 0.6,
@@ -299,13 +191,11 @@ if __name__ == '__main__':
                                          'hidden_dim_disc'    : 1024,
                                          'num_layers_gen'     : 1,
                                          'num_layers_disc'    : 1,
+                                         'old_model':True,
                                          'transfer_weights_after_pretraining' : 0}, 33)
 
     args = get_train_args()
-    # models = [best_gan_but_volatile, best_mle, best_gan, best_gan_mle]
-    # models = [best_gan_beta, best_gan_beta_cvo]
-    # models = [best_mle_cvt, best_gan, best_gan_cvo, best_gan_mle, best_gan_beta, best_gan_beta_cvo]
-    models = [best_mle_cvt]
+    models = [best_gan,  best_cot_cvt, best_mle_cvt]
     for model in models:
         model()
 
