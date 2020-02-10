@@ -3,17 +3,17 @@ All files specific to the real data tasks are in this folder
 
 ### Structure
 
-- `main.py` handles all the training of models. You can also load a pretrained model using the following flag 
+- `main.py` handles all the training of models. You can also resume training of a saved run using the `load_gen_path` flag e.g.
 ```
 python main.py --load_gen_path trained_models/news/word/best_mle
 ```
-- `eval_bleu.py` generates BLEU5 and SBLEU5 given a trained model e.g.
+- `eval_bleu.py` generates BLEU5 and SBLEU5 given a trained model using the `model_path` flag e.g.
 ```
-python eval_bleu.py --load_gen_path trained_models/news/word/best_mle
+python eval_bleu.py --model_path trained_models/news/word/best_mle
 ```
-- `score_models.py` generates LM / RLM curves given a trained model e.g.
+- `score_models.py` generates LM / RLM curves given a trained model using the `model_path` flag e.g.
 ```
-python score_models.py --load_gen_path trained_models/news/word/best_mle
+python score_models.py --model_path trained_models/news/word/best_mle
 ```
 
 ### Reproducing Figure 4
