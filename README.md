@@ -17,8 +17,8 @@ Code for reproducing all results in our paper, which can be found [here](https:/
 - For synthetic experiments, we provide the best hyperparameters for every method to reproduce the results. We also provide the [hyperparameter script](https://github.com/pclucas14/GansFallingShort/blob/master/scripts/synthetic_rs.py) that was used to launch the hyperparameter search. More info can be found [here] (https://github.com/pclucas14/GansFallingShort/tree/master/synthetic_data_experiments#synthetic-task)
 
 - For real data, we uploaded the weights (and corresponding hyperparameters) in `real_data_experiments/trained_models` folder.
-We give more detail on reproducing the EMNLPNEWS dataset [here](https://github.com/pclucas14/GansFallingShort/tree/master/real_data_experiments#real-data-experiments)
-
+We give more detail on reproducing the EMNLPNEWS dataset results
+[here](https://github.com/pclucas14/GansFallingShort/tree/master/real_data_experiments#real-data-experiments)
 
 ## Contact
 For any questions / comments / concerns, feel free to open an issue via github, or to send me an email at <br /> `lucas.page-caccia@mail.mcgill.ca`. <br />
