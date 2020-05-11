@@ -35,9 +35,9 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--seqgan_reward', type=int, default=0, help='reward is only at the final timestep')
     parser.add_argument('--leak_info', action='store_true', help='give the generator access to disc. state')
     parser.add_argument('--use_baseline', type=int, default=1)
-    parser.add_argument('--disc_train_iterations', '-dti', type=int, default=5) 
-    parser.add_argument('--gen_train_iterations',  '-gti', type=int, default=1) 
-    parser.add_argument('--mle_train_iterations',  '-mti', type=int, default=0) 
+    parser.add_argument('--disc_train_iterations', '-dti', type=int, default=5)
+    parser.add_argument('--gen_train_iterations',  '-gti', type=int, default=1)
+    parser.add_argument('--mle_train_iterations',  '-mti', type=int, default=0)
     parser.add_argument('--disc_pretrain_epochs', type=int, default=0)
     parser.add_argument('--gen_lr', type=float, default=1e-3)
     parser.add_argument('--disc_lr', type=float, default=1e-3)
@@ -66,11 +66,11 @@ def get_train_args(allow_unmatched_args=False):
     parser.add_argument('--num_samples', type=str, default="")
     parser.add_argument('--decoder', type=str, default="")
 
-    if allow_unmatched_args: 
+    if allow_unmatched_args:
         args, unmatched = parser.parse_known_args()
-    else: 
+    else:
         args = parser.parse_args()
-    
+
     args.cuda = False if args.no_cuda else True
     # validate a few things
     if args.transfer_weights_after_pretraining:
@@ -79,7 +79,7 @@ def get_train_args(allow_unmatched_args=False):
                 'GEN and DISC architectures must be identical to enable weight sharing'
         assert not args.leak_info, 'not compatible with LeakGAN setup'
 
-    if 'coco' in args.data_dir: 
+    if 'coco' in args.data_dir:
         if 'news' in args.lm_path:
             print('overriding path to language model')
             args.lm_path = args.lm_path.replace('news', 'coco')
@@ -100,7 +100,7 @@ def get_test_args():
     parser.add_argument('--n_grams', nargs="+", type=int)
     parser.add_argument('--alpha_test', type=float, default=1.)
     parser.add_argument('--use_conv_net', action='store_true')
-    
+
     parser.add_argument('--decoder', type=str, default="temp",
         choices=['temp','topk','weighted_topk','beam','gen_ll','disc_ll'], help='path to model')
     parser.add_argument('--num_samples', type=int, default=268590, help="number of samples to compute LM ans RLM")
@@ -123,8 +123,8 @@ def get_test_args():
 
     # make sure we did not parse any invalid args
     unmatched = [x for x in unmatched if '--' in x]
-    for arg_ in unmatched: 
-        if arg_ in train_unmatched: 
+    for arg_ in unmatched:
+        if arg_ in train_unmatched:
             raise ValueError('%s is not a valid argument' % arg_)
 
     return args
@@ -135,7 +135,7 @@ def get_test_args():
 def get_rlm_args():
 
     args, _ = get_train_args(allow_unmatched_args=True)
-    
+
     args.setup = 'rlm'
 
     # LOGGING args
@@ -169,6 +169,9 @@ def get_rlm_args():
 
     # OTHER args
     args.lm_path = None
+
+    # to reproduce the old results
+    args.old_model = True
 
     return args
 
