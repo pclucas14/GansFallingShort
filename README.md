@@ -4,7 +4,7 @@ Code for reproducing all results in our paper, which can be found [here](https:/
 
 
 ## (key) Requirements 
-- Python 3.x
+- Python 3.6
 - Pytorch 0.4.1
 - TensorboardX
 
@@ -14,11 +14,11 @@ Code for reproducing all results in our paper, which can be found [here](https:/
 - `real_data_experiments` folder: code to run results for ImageCoco and News datasets
 
 ## Reproducibility
-- For synthetic data, simply run `oracle_eval.py` found in the `synthetic_data_experiments` folder. 
-- For real data, we uploaded the weights (and corresponding hyperparameters) in `real_data_experiments/trained_models` folder. You can load the model by using the `--load_{gen/disc}_from_file` argument. For example, 
-```
-python main.py --load_gen_path trained_models/news/word/best_mle
-```
+- For synthetic experiments, we provide the best hyperparameters for every method to reproduce the results. We also provide the [hyperparameter script](https://github.com/pclucas14/GansFallingShort/blob/master/scripts/synthetic_rs.py) that was used to launch the hyperparameter search. More info can be found [here](https://github.com/pclucas14/GansFallingShort/tree/master/synthetic_data_experiments#synthetic-task)
+
+- For real data, we uploaded the weights (and corresponding hyperparameters) in `real_data_experiments/trained_models` folder. We also provie the [hyperparameter script](https://github.com/pclucas14/GansFallingShort/blob/master/real_data_experiments/scripts/news_rs.py) used for this experiment.
+We give more detail on reproducing the EMNLPNEWS dataset results
+[here](https://github.com/pclucas14/GansFallingShort/tree/master/real_data_experiments#real-data-experiments)
 
 ## Contact
 For any questions / comments / concerns, feel free to open an issue via github, or to send me an email at <br /> `lucas.page-caccia@mail.mcgill.ca`. <br />
