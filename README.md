@@ -21,8 +21,4 @@ We give more detail on reproducing the EMNLPNEWS dataset results
 [here](https://github.com/pclucas14/GansFallingShort/tree/master/real_data_experiments#real-data-experiments)
 
 ## Contact
-For any questions / comments / concerns, feel free to open an issue via github, or to send me an email at <br /> `lucas.page-caccia@mail.mcgill.ca`. <br />
-
-We strongly believe in fully reproducible research. To that end, if you find any discrepancy between our code and the paper, please let us know, and we will make sure to address it.  <br />
-
-Happy text modeling :)
+This repository is no longer maintained. Feel free to file an issue if need be, however response may be slow. 
